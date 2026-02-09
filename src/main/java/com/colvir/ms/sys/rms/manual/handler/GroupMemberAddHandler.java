@@ -5,8 +5,9 @@ import com.colvir.ms.sys.rms.dto.AggregationResult;
 import com.colvir.ms.sys.rms.dto.GroupMemberAddDto;
 import com.colvir.ms.sys.rms.dto.GroupMemberAddJournalDto;
 import com.colvir.ms.sys.rms.generated.domain.GroupMember;
-import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.RequirementsGroup;
+import com.colvir.ms.sys.rms.manual.dao.GroupMemberDao;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.GroupPaymentStrategy;
 import com.colvir.ms.sys.rms.manual.service.RequirementGroupService;
 import com.colvir.ms.sys.rms.manual.util.StepsNames;
@@ -22,11 +23,19 @@ public class GroupMemberAddHandler extends AbstractStepRunnerHandler<GroupMember
 
     RequirementGroupService requirementGroupService;
 
+    GroupMemberDao groupMemberDao;
+
+    RequirementDao requirementDao;
+
     @Inject
     public GroupMemberAddHandler(RequirementGroupService requirementGroupService,
+                                 GroupMemberDao groupMemberDao,
+                                 RequirementDao requirementDao,
                                  Logger log) {
         super(StepsNames.SYS_RMS_GROUP_MEMBER_ADD, log);
         this.requirementGroupService = requirementGroupService;
+        this.groupMemberDao = groupMemberDao;
+        this.requirementDao = requirementDao;
     }
 
     @Override
@@ -51,7 +60,7 @@ public class GroupMemberAddHandler extends AbstractStepRunnerHandler<GroupMember
     public void undo(GroupMemberAddJournalDto journal) {
         if (journal != null) {
             if (journal.groupId != null && journal.addedGroupMemberId != null) {
-                GroupMember groupMember = GroupMember.findById(journal.addedGroupMemberId);
+                GroupMember groupMember = groupMemberDao.findById(journal.addedGroupMemberId);
                 if (groupMember != null && !Boolean.TRUE.equals(groupMember.isDeleted)) {
                     groupMember.isDeleted = true;
                     groupMember.update();
@@ -79,10 +88,7 @@ public class GroupMemberAddHandler extends AbstractStepRunnerHandler<GroupMember
         if (!GroupPaymentStrategy.INAPPLICABLE.equals(group.groupPaymentStrategy)) {
             // требование может входить не более чем в одну группу
             // за исключением групп, в которых правило оплаты = "не применяется"
-            long countExisting = GroupMember.count("requirement.id = ?1" +
-                    " and (isDeleted is null or isDeleted = false) ",
-                request.requirement.id
-            );
+            long countExisting = groupMemberDao.countActiveByRequirementId(request.requirement.id);
             if (countExisting > 0) {
                 throw new RuntimeException(String.format("Requirement (%s) is already included in another group", request.requirement));
             }
@@ -91,7 +97,7 @@ public class GroupMemberAddHandler extends AbstractStepRunnerHandler<GroupMember
         GroupMember newMember = new GroupMember();
         newMember.num = request.num;
         newMember.part = request.part;
-        newMember.requirement = Requirement.getEntityManager().getReference(Requirement.class, request.requirement.id);
+        newMember.requirement = requirementDao.getReference(request.requirement.id);
         newMember.persist();
         journal.addedGroupMemberId = newMember.id;
         group.members.add(newMember);

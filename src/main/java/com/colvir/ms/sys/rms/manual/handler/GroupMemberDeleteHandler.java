@@ -7,6 +7,7 @@ import com.colvir.ms.sys.rms.dto.GroupMemberDeleteJournalDto;
 import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.generated.domain.GroupMember;
 import com.colvir.ms.sys.rms.generated.domain.RequirementsGroup;
+import com.colvir.ms.sys.rms.manual.dao.GroupMemberDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementGroupService;
 import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -21,11 +22,15 @@ public class GroupMemberDeleteHandler extends AbstractStepRunnerHandler<GroupMem
 
     RequirementGroupService requirementGroupService;
 
+    GroupMemberDao groupMemberDao;
+
     @Inject
     public GroupMemberDeleteHandler(RequirementGroupService requirementGroupService,
-                                        Logger log) {
+                                    GroupMemberDao groupMemberDao,
+                                    Logger log) {
         super(StepsNames.SYS_RMS_GROUP_MEMBER_DELETE, log);
         this.requirementGroupService = requirementGroupService;
+        this.groupMemberDao = groupMemberDao;
     }
 
     @Override
@@ -63,7 +68,7 @@ public class GroupMemberDeleteHandler extends AbstractStepRunnerHandler<GroupMem
     public void undo(GroupMemberDeleteJournalDto journal) {
         if (journal != null) {
             if (journal.groupId != null && journal.deletedGroupMemberId != null) {
-                GroupMember groupMember = GroupMember.findById(journal.deletedGroupMemberId);
+                GroupMember groupMember = groupMemberDao.findById(journal.deletedGroupMemberId);
                 if (groupMember != null && Boolean.TRUE.equals(groupMember.isDeleted)) {
                     groupMember.isDeleted = false;
                     groupMember.update();

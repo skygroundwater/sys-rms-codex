@@ -1,11 +1,13 @@
 package com.colvir.ms.sys.rms.manual.dao.impl;
 
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
+import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +42,11 @@ public class RequirementDaoImpl implements RequirementDao {
     }
 
     @Override
+    public Requirement getReference(Long id) {
+        return entityManager.getReference(Requirement.class, id);
+    }
+
+    @Override
     public List<Requirement> findActiveByIds(Set<Long> ids) {
         Map<String, Object> params = new HashMap<>();
         params.put("ids", ids);
@@ -59,6 +66,35 @@ public class RequirementDaoImpl implements RequirementDao {
         }
         query.append(" order by r.priority, r.serialNumber ");
         return Requirement.list(query.toString(), params);
+    }
+
+    @Override
+    public List<Requirement> findWaitByBaseDocumentAndBusinessDate(String baseDocument, LocalDate businessDate) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("baseDocument", baseDocument);
+        params.put("state", RequirementStatus.WAIT);
+        params.put("businessDate", businessDate);
+        String query = "select r from Requirement r where r.baseDocument = :baseDocument " +
+            " and r.state = :state " +
+            " and ((r.startPaymentDate is null and r.date <= :businessDate) " +
+            " or (r.startPaymentDate is not null and r.startPaymentDate <= :businessDate)) " +
+            " and (r.isDeleted is null or r.isDeleted = false) " +
+            " order by r.priority, r.serialNumber ";
+        return Requirement.list(query, params);
+    }
+
+    @Override
+    public List<Requirement> findByIdsAndStateWithPriorityLessThan(List<Long> requirementIdList, RequirementStatus state, BigDecimal priority) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("requirementIdList", requirementIdList);
+        params.put("state", state);
+        params.put("priority", priority);
+        String query = "select r from Requirement r where " +
+            " r.id in (:requirementIdList) " +
+            " and r.state = :state " +
+            " and (r.isDeleted is null or r.isDeleted = false) " +
+            " and r.priority < :priority";
+        return Requirement.list(query, params);
     }
 
     @Override
