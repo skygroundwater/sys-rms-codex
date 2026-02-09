@@ -33,6 +33,9 @@ import com.colvir.ms.sys.rms.generated.service.dto.PaymentDTO;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
 import com.colvir.ms.sys.rms.generated.service.mapper.PaymentMapper;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
+import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.service.RouterService;
@@ -90,6 +93,15 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Inject
     RequirementTypeService requirementTypeService;
 
+    @Inject
+    RequirementDao requirementDao;
+
+    @Inject
+    PaymentDao paymentDao;
+
+    @Inject
+    RefundingPaymentDao refundingPaymentDao;
+
     @Override
     @Transactional
     public RegistrationOfPaymentResponse registrationOfPayment(RegistrationOfPaymentDto request) {
@@ -109,7 +121,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         Map<Long, Requirement> requirementMap = new HashMap<>();
         for (var requirementRef : request.requirements) {
-            Requirement requirement = Requirement.findById(requirementRef.id);
+            Requirement requirement = requirementDao.findById(requirementRef.id);
             if (requirement == null) {
                 throw new RuntimeException(String.format("Requirement with id=%s is not found", requirementRef.id));
             }
@@ -130,18 +142,12 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             paymentInfo.amount = withdrawal.amount;
             Payment payment;
             // ищем платеж
-            Map<String, Object> paymentParams = new HashMap<>();
-            paymentParams.put("reference", withdrawal.reference);
-            paymentParams.put("currencyId", withdrawal.currency.id);
-            paymentParams.put("amount", withdrawal.amountPaid);
-            paymentParams.put("withdrawalTypeId", withdrawal.withdrawalType.id);
-            payment = Payment.find("select p from Payment p where" +
-                    " (p.reference = :reference or p.payment = :reference) " +
-                    " and (p.isDeleted is null or p.isDeleted = false) " +
-                    " and p.withdrawalTypeId = :withdrawalTypeId" +
-                    " and p.currencyId = :currencyId" +
-                    " and p.amount = :amount ", paymentParams)
-                .firstResult();
+            payment = paymentDao.findActiveByReferenceCurrencyAmountAndWithdrawalType(
+                withdrawal.reference,
+                withdrawal.currency.id,
+                withdrawal.amountPaid,
+                withdrawal.withdrawalType.id
+            );
 
             if (payment != null) {
                 paymentInfo.payment = paymentMapper.toDto(payment);
@@ -373,10 +379,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         Map<String, Object> params = new HashMap<>();
         params.put("ids", idSet);
 
-        List<Requirement> requirements = Requirement.list(
-            " id in (:ids) " +
-                " and (isDeleted is null or isDeleted = false) ", params
-        );
+        List<Requirement> requirements = requirementDao.findActiveByIds(idSet);
 
         if (requirements.isEmpty()) {
             return response;
@@ -550,7 +553,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         // создаем записи по суммам возврата
         for (var paymentId : paymentRefundMap.keySet()) {
-            Payment payment = Payment.findById(paymentId);
+            Payment payment = paymentDao.findById(paymentId);
             RefundingPayment paymentRefund = createRefundingPayment(paymentId, paymentRefundMap.get(paymentId));
             paymentRefund.persist();
             payment.refundPayments.add(paymentRefund);
@@ -579,7 +582,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         if (request.payment == null || request.payment.id == null) {
             return response;
         }
-        Payment payment = Payment.findById(request.payment.id);
+        Payment payment = paymentDao.findById(request.payment.id);
         if (payment == null || Boolean.TRUE.equals(payment.isDeleted)) {
             return response;
         }
@@ -629,12 +632,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             .map(rp -> rp.requirementOfRelatedPayments.id)
             .collect(Collectors.toSet());
 
-        Map<String, Object> requirementParams = new HashMap<>();
-        requirementParams.put("ids", requirementIdSet);
-        List<Requirement> requirements = Requirement.list(
-            " id in (:ids) " +
-                " and (isDeleted is null or isDeleted = false) ", requirementParams
-        );
+        List<Requirement> requirements = requirementDao.findActiveByIds(requirementIdSet);
 
         // проверяем состояние требований
         List<Long> incorrectData = requirements.stream()
@@ -838,7 +836,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         if (request.requirementJournal != null) {
             for (RequirementJournalDto journal : request.requirementJournal.values()) {
-                Requirement requirement = Requirement.findById(journal.id);
+                Requirement requirement = requirementDao.findById(journal.id);
                 if (requirement != null && !Boolean.TRUE.equals(requirement.isDeleted)) {
 
                     // восстановление атрибутов требований
@@ -886,7 +884,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         // удаление созданных записей по возврату платежей
         if (request.createdPaymentRefunds != null && !request.createdPaymentRefunds.isEmpty()) {
             for (Long refundId : request.createdPaymentRefunds) {
-                RefundingPayment paymentRefund = RefundingPayment.findById(refundId);
+                RefundingPayment paymentRefund = refundingPaymentDao.findById(refundId);
                 if (paymentRefund != null && !Boolean.TRUE.equals(paymentRefund.isDeleted)) {
                     final ObjectNode paymentBody = objectMapper.createObjectNode();
                     paymentBody.put("id", paymentRefund.paymentOfRefundPayments.id);
@@ -917,7 +915,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementMapByPpc = new HashMap<>();
 
         decreasingRequirements.forEach(pair -> {
-            Requirement requirement = Requirement.findById(pair.b.id);
+            Requirement requirement = requirementDao.findById(pair.b.id);
             if (requirement == null) {
                 log.errorf("adjustByPastDate: requirement id=%d not found", pair.b.id);
                 throw new RuntimeException(String.format("Requirement id=%s does not exist", pair.b.id));

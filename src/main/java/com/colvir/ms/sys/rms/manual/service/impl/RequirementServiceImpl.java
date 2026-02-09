@@ -23,6 +23,9 @@ import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
+import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
@@ -35,7 +38,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -47,7 +49,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +84,13 @@ public class RequirementServiceImpl implements RequirementService {
     Logger log;
 
     @Inject
-    EntityManager entityManager;
+    RequirementDao requirementDao;
+
+    @Inject
+    PaymentDao paymentDao;
+
+    @Inject
+    RefundingPaymentDao refundingPaymentDao;
 
     @Inject
     RequirementRouterService requirementRouterService;
@@ -184,7 +191,7 @@ public class RequirementServiceImpl implements RequirementService {
             .filter(Objects::nonNull)
             .toList();
         if (!newRequirementIds.isEmpty()) {
-            long countExisting = Requirement.count("id in (?1)", newRequirementIds);
+            long countExisting = requirementDao.countByIds(newRequirementIds);
             if (countExisting > 0) {
                 throw new RuntimeException("Some of new requirements already exist");
             }
@@ -283,7 +290,7 @@ public class RequirementServiceImpl implements RequirementService {
         // удаление созданных платежей
         if (createdPayments != null && !createdPayments.isEmpty()) {
             createdPayments.forEach(p -> {
-                Payment payment = Payment.findById(p);
+                Payment payment = paymentDao.findById(p);
                 if (payment != null && !Boolean.TRUE.equals(payment.isDeleted)) {
                     final ObjectNode paymentBody = objectMapper.createObjectNode();
                     paymentBody.put("id", payment.id);
@@ -303,7 +310,7 @@ public class RequirementServiceImpl implements RequirementService {
         // удаление созданных возвратов клиенту
         if (createdRefundingPayments != null && !createdRefundingPayments.isEmpty()) {
             createdRefundingPayments.forEach(p -> {
-                RefundingPayment refundingPayment = RefundingPayment.findById(p);
+                RefundingPayment refundingPayment = refundingPaymentDao.findById(p);
                 if (refundingPayment != null && !Boolean.TRUE.equals(refundingPayment.isDeleted)) {
                     final ObjectNode paymentBody = objectMapper.createObjectNode();
                     paymentBody.put("id", refundingPayment.id);
@@ -383,7 +390,7 @@ public class RequirementServiceImpl implements RequirementService {
                     journal.refundJournal = refundResponse.refundJournal;
 
                     // данные по суммам и состояниям поменялись
-                    entityManager.refresh(requirement);
+                    requirementDao.refresh(requirement);
                 }
                 requirement.amount = request.amount;
                 requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
@@ -444,7 +451,7 @@ public class RequirementServiceImpl implements RequirementService {
         if (id == null) {
             throw new RuntimeException("Requirement id is null");
         }
-        Requirement requirement = Requirement.findById(id);
+        Requirement requirement = requirementDao.findById(id);
         if (requirement == null || Boolean.TRUE.equals(requirement.isDeleted)) {
             throw new RuntimeException(String.format("Requirement with id=%s is not found or marked as deleted", id));
         }
@@ -458,17 +465,9 @@ public class RequirementServiceImpl implements RequirementService {
             return List.of(requirementEntity);
         }
         if (contract != null || client != null) {
-            Map<String, Object> params = new HashMap<>();
-            StringBuilder query = new StringBuilder("select r from Requirement r where (r.isDeleted is null or r.isDeleted = false) ");
-            if (contract != null) {
-                params.put("baseDocument", contract.toString());
-                query.append(" and r.baseDocument = :baseDocument ");
-            } else if (client != null) {
-                params.put("clientId", client.id);
-                query.append(" and r.clientId = :clientId ");
-            }
-            query.append(" order by r.priority, r.serialNumber ");
-            List<Requirement> requirementList = Requirement.list(query.toString(), params);
+            String contractRef = contract != null ? contract.toString() : null;
+            Long clientId = client != null ? client.id : null;
+            List<Requirement> requirementList = requirementDao.findActiveByContractOrClient(contractRef, clientId);
             if (requirementList != null && !requirementList.isEmpty()) {
                 return requirementList;
             } else {
@@ -555,24 +554,7 @@ public class RequirementServiceImpl implements RequirementService {
     private Requirement getOverdueRequirement (ReferenceDto requirement, LocalDate businessDate) {
         // заданная дата больше даты окончания оплаты (или даты требования, если дата окончания оплаты не задана явно)
         // неоплаченная сумма больше нуля или фактическая дата оплаты больше заданной даты
-        Map<String, Object> params = new HashMap<>();
-        params.put("businessDate", businessDate);
-        params.put("id", requirement.id);
-        String query = "select r from Requirement r where r.id = :id" +
-            " and (" +
-            "  (r.paymentEndDate is null and r.date < :businessDate)" +
-            "  or" +
-            "  (r.paymentEndDate is not null and r.paymentEndDate < :businessDate)" +
-            " ) " +
-            " and (" +
-            "  (r.unpaidAmount > 0)" +
-            "  or" +
-            "  (r.actualPaymentDate is not null and r.actualPaymentDate > :businessDate )" +
-            " )" +
-            " and (r.isDeleted is null or r.isDeleted = false)";
-
-        Requirement overdueRequirement = Requirement.find(query, params).firstResult();
-        return overdueRequirement;
+        return requirementDao.findOverdueByRequirementIdAndBusinessDate(requirement.id, businessDate);
     }
 
     // получение признака просрочки на дату
