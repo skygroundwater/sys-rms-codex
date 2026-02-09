@@ -12,6 +12,8 @@ public interface RequirementDao {
 
     Requirement findById(Long id);
 
+    Requirement findByIdOrThrow(Long id, String messageTemplate);
+
     List<Requirement> findActiveByIds(Set<Long> ids);
 
     List<Requirement> findActiveByContractOrClient(String contractRef, Long clientId);

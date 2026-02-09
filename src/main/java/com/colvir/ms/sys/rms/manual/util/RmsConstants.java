@@ -36,5 +36,15 @@ public class RmsConstants {
     public static final String HOLD_RESULT_PATH = "__step_holdResult_";
     public static final String SYS_ACC_WITHDRAWAL_TYPE = "/SYS/ACC/WithdrawalType";
 
+    public static final String PAYMENT_OW_MASS_ACCOUNT_CODE = "KZ836010013186000255";
+    public static final Long CLIENT_CARD_WITHDRAWAL_TYPE_ID = 221282500634271744L;
+
+    public static final String REQUIREMENT_NOT_FOUND_OR_DELETED = "Requirement with id=%s is not found or marked as deleted";
+    public static final String REQUIREMENT_NOT_FOUND = "Requirement with id=%s is not found";
+    public static final String PAYMENT_NOT_FOUND = "Payment with id=%s is not found";
+    public static final String REFUNDING_PAYMENT_NOT_FOUND = "RefundingPayment with id=%s is not found";
+    public static final String REQUIREMENT_GROUP_NOT_FOUND = "Requirement Group (%s) is not found";
+    public static final String REQUIREMENT_GROUP_DELETED = "Requirement Group (%s) is marked as deleted";
+    public static final String REQUIREMENT_TYPE_NOT_FOUND = "RequirementType with id=%s is not found";
 
 }

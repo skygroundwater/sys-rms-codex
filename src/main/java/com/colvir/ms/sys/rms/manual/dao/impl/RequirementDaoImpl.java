@@ -28,6 +28,16 @@ public class RequirementDaoImpl implements RequirementDao {
         return Requirement.findById(id);
     }
 
+
+    @Override
+    public Requirement findByIdOrThrow(Long id, String messageTemplate) {
+        Requirement requirement = findById(id);
+        if (requirement == null || Boolean.TRUE.equals(requirement.isDeleted)) {
+            throw new RuntimeException(String.format(messageTemplate, id));
+        }
+        return requirement;
+    }
+
     @Override
     public List<Requirement> findActiveByIds(Set<Long> ids) {
         Map<String, Object> params = new HashMap<>();

@@ -35,6 +35,7 @@ import com.colvir.ms.sys.rms.generated.service.mapper.PaymentMapper;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
 import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
@@ -102,6 +103,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Inject
     RefundingPaymentDao refundingPaymentDao;
 
+    @Inject
+    RelatedPaymentDao relatedPaymentDao;
+
     @Override
     @Transactional
     public RegistrationOfPaymentResponse registrationOfPayment(RegistrationOfPaymentDto request) {
@@ -121,10 +125,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         Map<Long, Requirement> requirementMap = new HashMap<>();
         for (var requirementRef : request.requirements) {
-            Requirement requirement = requirementDao.findById(requirementRef.id);
-            if (requirement == null) {
-                throw new RuntimeException(String.format("Requirement with id=%s is not found", requirementRef.id));
-            }
+            Requirement requirement = requirementDao.findByIdOrThrow(requirementRef.id, RmsConstants.REQUIREMENT_NOT_FOUND);
             requirementMap.put(requirementRef.id, requirement);
             // сохраняем первоначальные значения для отката
             RequirementJournalDto requirementJournal = RequirementMapperUtils.fillRequirementJournal(requirement);
@@ -153,12 +154,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 paymentInfo.payment = paymentMapper.toDto(payment);
                 paymentInfo.isNewPayment = false;
                 // ищем использованные суммы по таблице связей
-                Map<String, Object> params = new HashMap<>();
-                params.put("paymentId", payment.id);
-                List<RelatedPayment> relatedPayments = RelatedPayment.list("select p from RelatedPayment p where " +
-                    " p.payment.id = :paymentId " +
-                    " and (p.isDeleted is null or p.isDeleted = false) ", params
-                );
+                List<RelatedPayment> relatedPayments = relatedPaymentDao.findNonDeletedByPaymentId(payment.id);
                 // использованная сумма в валюте требования
                 paymentInfo.usedAmount = relatedPayments.stream()
                     .map(p -> p.amount)
@@ -376,9 +372,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             .map(r -> r.id)
             .collect(Collectors.toSet());
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("ids", idSet);
-
         List<Requirement> requirements = requirementDao.findActiveByIds(idSet);
 
         if (requirements.isEmpty()) {
@@ -412,12 +405,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         log.infof("--- remainingAmount = %s", remainingAmount);
 
         // получаем все связанные платежи
-        List<RelatedPayment> relatedPayments = RelatedPayment.list("select r from RelatedPayment r where " +
-            " r.requirementOfRelatedPayments.id in (:ids) " +
-            " and r.payment.paymentResult = 'PAID' " +
-            " and (r.isDeleted is null or r.isDeleted = false) " +
-            " order by r.payment.createTime desc ", params
-        );
+        List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(idSet);
         log.infof("--- relatedPayments \r\n %s", relatedPayments);
 
         if (relatedPayments.isEmpty()) {
@@ -614,14 +602,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         log.infof("--- refundAmount = %s", refundAmount);
 
         // получаем все связанные платежи
-        Map<String, Object> relatedPaymentsParams = new HashMap<>();
-        relatedPaymentsParams.put("id", payment.id);
-        List<RelatedPayment> relatedPayments = RelatedPayment.list("select r from RelatedPayment r where " +
-            " r.payment.id = :id " +
-            " and (r.amount > 0 or r.amountOfPayment > 0) " +
-            " and (r.isDeleted is null or r.isDeleted = false) " +
-            " order by r.payment.createTime desc ", relatedPaymentsParams
-        );
+        List<RelatedPayment> relatedPayments = relatedPaymentDao.findRefundableByPaymentId(payment.id);
         log.infof("--- relatedPayments \r\n %s", relatedPayments);
 
         if (relatedPayments.isEmpty()) {

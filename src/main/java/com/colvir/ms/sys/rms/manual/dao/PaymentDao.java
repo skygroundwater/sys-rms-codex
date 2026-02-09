@@ -9,6 +9,8 @@ public interface PaymentDao {
 
     Payment findById(Long id);
 
+    Payment findByIdOrThrow(Long id, String messageTemplate);
+
     Payment findActiveByReferenceCurrencyAmountAndWithdrawalType(String reference, Long currencyId, BigDecimal amount, Long withdrawalTypeId);
 
     List<Payment> findActiveByIds(List<Long> ids);

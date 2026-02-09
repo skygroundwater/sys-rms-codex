@@ -17,6 +17,16 @@ public class PaymentDaoImpl implements PaymentDao {
         return Payment.findById(id);
     }
 
+
+    @Override
+    public Payment findByIdOrThrow(Long id, String messageTemplate) {
+        Payment payment = findById(id);
+        if (payment == null || Boolean.TRUE.equals(payment.isDeleted)) {
+            throw new RuntimeException(String.format(messageTemplate, id));
+        }
+        return payment;
+    }
+
     @Override
     public Payment findActiveByReferenceCurrencyAmountAndWithdrawalType(String reference, Long currencyId, BigDecimal amount, Long withdrawalTypeId) {
         Map<String, Object> paymentParams = new HashMap<>();

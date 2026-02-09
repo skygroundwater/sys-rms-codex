@@ -11,4 +11,13 @@ public class RefundingPaymentDaoImpl implements RefundingPaymentDao {
     public RefundingPayment findById(Long id) {
         return RefundingPayment.findById(id);
     }
+    @Override
+    public RefundingPayment findByIdOrThrow(Long id, String messageTemplate) {
+        RefundingPayment refundingPayment = findById(id);
+        if (refundingPayment == null || Boolean.TRUE.equals(refundingPayment.isDeleted)) {
+            throw new RuntimeException(String.format(messageTemplate, id));
+        }
+        return refundingPayment;
+    }
+
 }

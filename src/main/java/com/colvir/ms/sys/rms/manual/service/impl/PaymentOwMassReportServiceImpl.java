@@ -4,6 +4,7 @@ import com.colvir.ms.common.router.DDCRouterUtil;
 import com.colvir.ms.common.router.dto.DDCReadRequest;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassResultDto;
 import com.colvir.ms.sys.rms.generated.domain.RelatedPayment;
+import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
 import com.colvir.ms.sys.rms.manual.service.PaymentOwMassReportService;
 import com.colvir.ms.sys.rms.manual.service.RouterService;
 import com.colvir.ms.sys.rms.manual.util.RmsConstants;
@@ -26,14 +27,14 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class PaymentOwMassReportServiceImpl implements PaymentOwMassReportService {
 
-    private static final String KZ_ACCOUNT_CODE = "KZ836010013186000255";
-    private static final Long CLIENT_CARD_WITHDRAWAL_TYPE_ID = 221282500634271744L; // Списание с карт клиентов
-
     @Inject
     Logger log;
 
     @Inject
     RouterService routerService;
+
+    @Inject
+    RelatedPaymentDao relatedPaymentDao;
 
     @Override
     public List<PaymentOwMassResultDto> getPaymentOwMassData(LocalDate date) {
@@ -44,23 +45,15 @@ public class PaymentOwMassReportServiceImpl implements PaymentOwMassReportServic
             .toInstant().minusNanos(1);
         log.infof("Payment Ow Mass Report for date between %s to %s", startOfDay, endOfDay);
 
-        List<RelatedPayment> relatedPayments = RelatedPayment.list(
-            "select rp from RelatedPayment rp where" +
-                " rp.requirementOfRelatedPayments is not null and" +
-                " rp.requirementOfRelatedPayments.isDeleted = false and" +
-                " rp.requirementOfRelatedPayments.baseDocument like '%/BNK/LN/LoanContract:%' and" +
-                " (rp.payment.createTime between :startOfDay and :endOfDay)" +
-                " and rp.payment.withdrawalTypeId = :clientCardWithdrawalTypeId",
-            Map.of(
-                "startOfDay", startOfDay,
-                "endOfDay", endOfDay,
-                "clientCardWithdrawalTypeId", CLIENT_CARD_WITHDRAWAL_TYPE_ID
-            )
-        );
+        List<RelatedPayment> relatedPayments = relatedPaymentDao.findForOwMassReport(startOfDay, endOfDay, RmsConstants.CLIENT_CARD_WITHDRAWAL_TYPE_ID);
 
         Set<Long> requirementIds = relatedPayments.stream()
             .map(rp -> rp.requirementOfRelatedPayments.id)
             .collect(Collectors.toSet());
+
+        if (relatedPayments.isEmpty()) {
+            return List.of();
+        }
 
         log.infof("RelatedPayments for Payment Ow Mass Report: %s", relatedPayments.stream().map(r -> r.id).toList());
         log.infof("Requirements for Payment Ow Mass Report: %s", requirementIds);
@@ -102,7 +95,7 @@ public class PaymentOwMassReportServiceImpl implements PaymentOwMassReportServic
                 .forEach(payment -> {
                     if (!result.containsKey(payment.id)) {
                         PaymentOwMassResultDto dto = new PaymentOwMassResultDto();
-                        dto.accountCode = KZ_ACCOUNT_CODE;
+                        dto.accountCode = RmsConstants.PAYMENT_OW_MASS_ACCOUNT_CODE;
                         dto.currencyCode = currencyCode;
                         dto.code = loanContractCode;
                         dto.name = clientCode;

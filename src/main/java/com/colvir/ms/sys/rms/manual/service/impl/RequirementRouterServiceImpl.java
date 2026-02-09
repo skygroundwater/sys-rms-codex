@@ -6,9 +6,9 @@ import com.colvir.ms.common.router.dto.DDCReadRequest;
 import com.colvir.ms.sys.rms.dto.CreateRequirementDto;
 import com.colvir.ms.sys.rms.dto.RequirementIndicatorDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
-import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.service.RouterService;
@@ -40,15 +40,17 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
     String applicationDomain;
 
     private final RequirementTypeService requirementTypeService;
+    private final RequirementDao requirementDao;
     private final RouterService routerService;
     private final ObjectMapper objectMapper;
     private final SystemParameterService systemParameterService;
     private final Logger log;
 
-    public RequirementRouterServiceImpl(RequirementTypeService requirementTypeService, RouterService routerService,
-                                        ObjectMapper objectMapper, SystemParameterService systemParameterService,
-                                        Logger log) {
+    public RequirementRouterServiceImpl(RequirementTypeService requirementTypeService, RequirementDao requirementDao,
+                                        RouterService routerService, ObjectMapper objectMapper,
+                                        SystemParameterService systemParameterService, Logger log) {
         this.requirementTypeService = requirementTypeService;
+        this.requirementDao = requirementDao;
         this.routerService = routerService;
         this.objectMapper = objectMapper;
         this.systemParameterService = systemParameterService;
@@ -111,7 +113,7 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
         List<DDCModifyRequest> requests = Optional.ofNullable(ids)
             .stream()
             .flatMap(Collection::stream)
-            .map(id -> Requirement.<Requirement>findById(id))
+            .map(requirementDao::findById)
             .filter(Objects::nonNull)
             .filter(requirement -> BooleanUtils.isNotTrue(requirement.isDeleted))
             .map(requirement -> {
