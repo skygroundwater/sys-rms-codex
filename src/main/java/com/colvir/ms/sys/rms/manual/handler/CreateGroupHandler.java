@@ -8,8 +8,9 @@ import com.colvir.ms.sys.rms.dto.CreateRequirementsGroupResultDto;
 import com.colvir.ms.sys.rms.dto.GroupMemberDto;
 import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.generated.domain.GroupMember;
-import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.RequirementsGroup;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
+import com.colvir.ms.sys.rms.manual.dao.RequirementGroupDao;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
 import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,9 +25,17 @@ import java.util.List;
 @ApplicationScoped
 public class CreateGroupHandler extends AbstractStepRunnerHandler<CreateRequirementsGroupDto, CreateRequirementsGroupJournalDto, CreateRequirementsGroupResultDto>{
 
+    RequirementDao requirementDao;
+
+    RequirementGroupDao requirementGroupDao;
+
     @Inject
-    public CreateGroupHandler(Logger log) {
+    public CreateGroupHandler(RequirementDao requirementDao,
+                              RequirementGroupDao requirementGroupDao,
+                              Logger log) {
         super(StepsNames.SYS_RMS_CREATE_GROUP, log);
+        this.requirementDao = requirementDao;
+        this.requirementGroupDao = requirementGroupDao;
     }
 
     @Override
@@ -72,7 +81,7 @@ public class CreateGroupHandler extends AbstractStepRunnerHandler<CreateRequirem
                 newMember.num = member.num;
                 newMember.part = member.part;
                 if (member.requirement != null && member.requirement.id != null) {
-                    newMember.requirement = Requirement.getEntityManager().getReference(Requirement.class, member.requirement.id);
+                    newMember.requirement = requirementDao.getReference(member.requirement.id);
                 } else {
                     throw new RuntimeException("GroupMember 'requirement' should not be empty");
                 }
@@ -90,7 +99,7 @@ public class CreateGroupHandler extends AbstractStepRunnerHandler<CreateRequirem
     public void undo(CreateRequirementsGroupJournalDto journal) {
         if (journal != null && journal.createdGroupId != null) {
             Long groupId = journal.createdGroupId;
-            RequirementsGroup group = RequirementsGroup.findById(groupId);
+            RequirementsGroup group = requirementGroupDao.findById(groupId);
             if (group != null && !Boolean.TRUE.equals(group.isDeleted)) {
                 group.isDeleted = true;
                 if (group.members != null && !group.members.isEmpty()) {

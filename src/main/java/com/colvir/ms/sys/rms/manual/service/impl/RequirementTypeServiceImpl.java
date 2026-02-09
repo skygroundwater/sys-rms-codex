@@ -5,6 +5,7 @@ import com.colvir.ms.sys.rms.generated.domain.IndicatorRequirementTypeMap;
 import com.colvir.ms.sys.rms.generated.domain.RequirementType;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementTypeMapper;
+import com.colvir.ms.sys.rms.manual.dao.RequirementTypeDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.util.AlgorithmHelpers;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,25 +20,23 @@ public class RequirementTypeServiceImpl implements RequirementTypeService {
     private final Logger log;
     private final ObjectMapper objectMapper;
     private final AlgorithmHelpers algorithmHelpers;
-    private final  RequirementTypeMapper requirementTypeMapper;
+    private final RequirementTypeMapper requirementTypeMapper;
+    private final RequirementTypeDao requirementTypeDao;
 
 
     public RequirementTypeServiceImpl(Logger log, ObjectMapper objectMapper,
                                       AlgorithmHelpers algorithmHelpers,
-                                      RequirementTypeMapper requirementTypeMapper) {
+                                      RequirementTypeMapper requirementTypeMapper,
+                                      RequirementTypeDao requirementTypeDao) {
         this.log = log;
         this.objectMapper = objectMapper;
         this.algorithmHelpers = algorithmHelpers;
         this.requirementTypeMapper = requirementTypeMapper;
+        this.requirementTypeDao = requirementTypeDao;
     }
 
     public IndicatorRequirementTypeMap findRequirementTypeMap(Long systemLocale) {
-        return IndicatorRequirementTypeMap.find("localeId", systemLocale).firstResult();
-    }
-
-    @CacheResult(cacheName = "requirement-type-result-cache")
-    public RequirementType getRequirementTypeFromCache(Long requirementTypeId) {
-        return RequirementType.findById(requirementTypeId);
+        return requirementTypeDao.findByLocaleId(systemLocale);
     }
 
     @CacheResult(cacheName = "requirementType-cache")
@@ -73,12 +72,8 @@ public class RequirementTypeServiceImpl implements RequirementTypeService {
         if (requirementTypeId == null) {
             throw new RuntimeException("RequirementType id is not defined for indicatorDesc: " + indicatorDesc);
         }
-        RequirementType requirementType = getRequirementTypeFromCache(requirementTypeId);
-        if (requirementType != null) {
-            return requirementTypeMapper.toDto(requirementType);
-        } else {
-            throw new RuntimeException(String.format("RequirementType with id=%s is not found", requirementTypeId));
-        }
+        RequirementType requirementType = requirementTypeDao.findByIdOrThrow(requirementTypeId);
+        return requirementTypeMapper.toDto(requirementType);
     }
 
 }

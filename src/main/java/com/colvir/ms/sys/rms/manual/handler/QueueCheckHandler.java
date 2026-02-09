@@ -8,7 +8,8 @@ import com.colvir.ms.sys.rms.dto.QueueCheckDto;
 import com.colvir.ms.sys.rms.dto.QueueCheckResultDto;
 import com.colvir.ms.sys.rms.dto.WithdrawalRuleDto;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
-import com.colvir.ms.sys.rms.generated.domain.SysAcc000WithdrawalRule;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
+import com.colvir.ms.sys.rms.manual.dao.SysAccWithdrawalRuleDao;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.manual.domain.ClientAccountSelectionType;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
@@ -16,28 +17,31 @@ import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
 import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.apache.commons.lang3.BooleanUtils;
 import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
-import static com.colvir.ms.sys.acc.generated.domain.enumeration.ClientAccountSelectionType.SPECIFIED;
 
 @ApplicationScoped
 public class QueueCheckHandler extends AbstractStepRunnerHandler<QueueCheckDto, JournalDto, QueueCheckResultDto> {
 
     RequirementService requirementService;
 
+    RequirementDao requirementDao;
+
+    SysAccWithdrawalRuleDao sysAccWithdrawalRuleDao;
+
     @Inject
     public QueueCheckHandler(RequirementService requirementService,
+                             RequirementDao requirementDao,
+                             SysAccWithdrawalRuleDao sysAccWithdrawalRuleDao,
                              Logger log) {
         super(StepsNames.SYS_RMS_DISTRIBUTE_PAID_AMOUNTS, log);
         this.requirementService = requirementService;
+        this.requirementDao = requirementDao;
+        this.sysAccWithdrawalRuleDao = sysAccWithdrawalRuleDao;
     }
 
     @Override
@@ -86,23 +90,11 @@ public class QueueCheckHandler extends AbstractStepRunnerHandler<QueueCheckDto, 
         Long withdrawalTypeId = withdrawalRule.withdrawalType.id;
 
         // получаем список требований с которыми связаны правила
-        Map<String, Object> params = new HashMap<>();
-        params.put("accountNumbers", accountNumbers);
-        params.put("withdrawalTypeId", withdrawalTypeId);
-        params.put("accountSelectionType", SPECIFIED);
-        String query = """
-            select distinct wr from SysAcc000WithdrawalRule wr
-            join fetch wr.accountNumbers an where
-            an.value in (:accountNumbers)
-            and wr.withdrawalTypeId = :withdrawalTypeId
-            and wr.accountSelectionType = :accountSelectionType
-            and (wr.isDeleted is null or wr.isDeleted = false)""";
-        List<Long> requirementIdList = SysAcc000WithdrawalRule.list(query, params)
-            .stream()
-            .map(wr -> ((SysAcc000WithdrawalRule) wr))
-            .filter(wr -> BooleanUtils.isNotTrue(wr.requirementOfWithdrawalRules.isDeleted))
-            .map(wr -> wr.requirementOfWithdrawalRules.id)
-            .filter(id -> !Objects.equals(id, request.requirementId)).toList();
+        List<Long> requirementIdList = sysAccWithdrawalRuleDao.findActiveRequirementIdsByAccountNumbersAndWithdrawalType(
+            accountNumbers,
+            withdrawalTypeId,
+            request.requirementId
+        );
         log.infof("--------- requirementIdList: \r\n" + requirementIdList);
 
         if (requirementIdList.isEmpty()) {
@@ -110,16 +102,11 @@ public class QueueCheckHandler extends AbstractStepRunnerHandler<QueueCheckDto, 
         }
 
         // читаем требования по полученному списку
-        params = new HashMap<>();
-        params.put("requirementIdList", requirementIdList);
-        params.put("state", RequirementStatus.WAIT);
-        params.put("priority", requirement.priority != null ? requirement.priority : BigDecimal.valueOf(Integer.MAX_VALUE));
-        query = "select r from Requirement r where " +
-            " r.id in (:requirementIdList) " +
-            " and r.state = :state " +
-            " and (r.isDeleted is null or r.isDeleted = false) " +
-            " and r.priority < :priority";
-        List<Requirement> requirementList = Requirement.list(query, params);
+        List<Requirement> requirementList = requirementDao.findByIdsAndStateWithPriorityLessThan(
+            requirementIdList,
+            RequirementStatus.WAIT,
+            requirement.priority != null ? requirement.priority : BigDecimal.valueOf(Integer.MAX_VALUE)
+        );
 
         // проверяется только целая часть приоритета (т.е.законодательно установленная), дробная часть приоритета игнорируется
         BigInteger requirementPriority = RequirementMapperUtils.getPriorityInteger(requirement.priority);

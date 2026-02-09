@@ -36,5 +36,8 @@ public class RmsConstants {
     public static final String HOLD_RESULT_PATH = "__step_holdResult_";
     public static final String SYS_ACC_WITHDRAWAL_TYPE = "/SYS/ACC/WithdrawalType";
 
+    public static final String PAYMENT_OW_MASS_ACCOUNT_CODE = "KZ836010013186000255";
+    public static final Long CLIENT_CARD_WITHDRAWAL_TYPE_ID = 221282500634271744L;
+
 
 }

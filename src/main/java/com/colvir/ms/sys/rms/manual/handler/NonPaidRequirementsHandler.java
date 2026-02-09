@@ -6,8 +6,8 @@ import com.colvir.ms.sys.rms.dto.JournalDto;
 import com.colvir.ms.sys.rms.dto.NonPaidRequirementsDto;
 import com.colvir.ms.sys.rms.dto.NonPaidRequirementsResultDto;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
-import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
 import com.colvir.ms.sys.rms.manual.util.StepsNames;
@@ -16,20 +16,22 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @ApplicationScoped
 public class NonPaidRequirementsHandler extends AbstractStepRunnerHandler<NonPaidRequirementsDto, JournalDto, NonPaidRequirementsResultDto> {
 
     RequirementRouterService requirementRouterService;
 
+    RequirementDao requirementDao;
+
     @Inject
     public NonPaidRequirementsHandler(RequirementRouterService requirementRouterService,
+                                      RequirementDao requirementDao,
                                       Logger log) {
         super(StepsNames.SYS_RMS_GET_NON_PAID, log);
         this.requirementRouterService = requirementRouterService;
+        this.requirementDao = requirementDao;
     }
 
     @Override
@@ -47,19 +49,10 @@ public class NonPaidRequirementsHandler extends AbstractStepRunnerHandler<NonPai
         NonPaidRequirementsResultDto result = new NonPaidRequirementsResultDto();
         NonPaidRequirementsDto properties = request.getProperties();
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("baseDocument", properties.contract.toString());
-        params.put("state", RequirementStatus.WAIT);
-        params.put("businessDate", properties.businessDate);
-
-        String query = "select r from Requirement r where r.baseDocument = :baseDocument " +
-            " and r.state = :state " +
-            " and ((r.startPaymentDate is null and r.date <= :businessDate) " +
-            " or (r.startPaymentDate is not null and r.startPaymentDate <= :businessDate)) " +
-            " and (r.isDeleted is null or r.isDeleted = false) " +
-            " order by r.priority, r.serialNumber ";
-
-        List<Requirement> requirementList = Requirement.list(query, params);
+        List<Requirement> requirementList = requirementDao.findWaitByBaseDocumentAndBusinessDate(
+            properties.contract.toString(),
+            properties.businessDate
+        );
 
         result.unpaidAmount = requirementList.stream()
             .map(r -> r.unpaidAmount)

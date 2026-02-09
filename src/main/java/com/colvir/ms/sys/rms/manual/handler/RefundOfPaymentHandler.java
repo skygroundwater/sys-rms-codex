@@ -10,6 +10,7 @@ import com.colvir.ms.sys.rms.dto.RefundOfPaymentResultDto;
 import com.colvir.ms.sys.rms.dto.RefundOfPaymentRunnerDto;
 import com.colvir.ms.sys.rms.dto.RefundResponse;
 import com.colvir.ms.sys.rms.generated.domain.Payment;
+import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
@@ -40,15 +41,19 @@ public class RefundOfPaymentHandler extends AbstractStepRunnerHandler<RefundOfPa
 
     RequirementService requirementService;
 
+    PaymentDao paymentDao;
+
     @Inject
     public RefundOfPaymentHandler(RequirementPaymentService paymentService,
                                   StepCreatorService stepCreatorService,
                                   RequirementService requirementService,
+                                  PaymentDao paymentDao,
                                   Logger log) {
         super(StepsNames.SYS_RMS_REFUND_PAYMENT, log);
         this.paymentService = paymentService;
         this.stepCreatorService = stepCreatorService;
         this.requirementService = requirementService;
+        this.paymentDao = paymentDao;
     }
 
     @Override
@@ -86,7 +91,7 @@ public class RefundOfPaymentHandler extends AbstractStepRunnerHandler<RefundOfPa
                 }
                 if (refundResponse.refundResult.refundsInfo != null && !refundResponse.refundResult.refundsInfo.isEmpty()) {
                     Long paymentId = paymentRef.id;
-                    Payment payment = Payment.findById(paymentId);
+                    Payment payment = paymentDao.findByIdOrThrow(paymentId);
                     changed.put("version", payment.version);
                     if (changed.hasNonNull("paymentRefunds")) {
                         ArrayNode paymentRefunds = ContextObjectMapper.get().createArrayNode();
