@@ -12,7 +12,7 @@ public interface RequirementDao {
 
     Requirement findById(Long id);
 
-    Requirement findByIdOrThrow(Long id, String messageTemplate);
+    Requirement findByIdOrThrow(Long id);
 
     List<Requirement> findActiveByIds(Set<Long> ids);
 

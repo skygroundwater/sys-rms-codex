@@ -9,5 +9,5 @@ public interface RequirementTypeDao {
 
     RequirementType findById(Long id);
 
-    RequirementType findByIdOrThrow(Long id, String messageTemplate);
+    RequirementType findByIdOrThrow(Long id);
 }

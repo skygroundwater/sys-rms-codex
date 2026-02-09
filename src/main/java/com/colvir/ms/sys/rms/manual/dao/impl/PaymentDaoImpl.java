@@ -12,17 +12,18 @@ import java.util.Map;
 @ApplicationScoped
 public class PaymentDaoImpl implements PaymentDao {
 
+    private static final String PAYMENT_NOT_FOUND = "Payment with id=%s is not found";
+
     @Override
     public Payment findById(Long id) {
         return Payment.findById(id);
     }
 
-
     @Override
-    public Payment findByIdOrThrow(Long id, String messageTemplate) {
+    public Payment findByIdOrThrow(Long id) {
         Payment payment = findById(id);
         if (payment == null || Boolean.TRUE.equals(payment.isDeleted)) {
-            throw new RuntimeException(String.format(messageTemplate, id));
+            throw new RuntimeException(String.format(PAYMENT_NOT_FOUND, id));
         }
         return payment;
     }

@@ -6,5 +6,5 @@ public interface RefundingPaymentDao {
 
     RefundingPayment findById(Long id);
 
-    RefundingPayment findByIdOrThrow(Long id, String messageTemplate);
+    RefundingPayment findByIdOrThrow(Long id);
 }

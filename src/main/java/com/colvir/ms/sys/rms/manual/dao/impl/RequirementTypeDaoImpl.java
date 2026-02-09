@@ -8,6 +8,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class RequirementTypeDaoImpl implements RequirementTypeDao {
 
+    private static final String REQUIREMENT_TYPE_NOT_FOUND = "RequirementType with id=%s is not found";
+
     @Override
     public IndicatorRequirementTypeMap findByLocaleId(Long localeId) {
         return IndicatorRequirementTypeMap.find("localeId", localeId).firstResult();
@@ -19,10 +21,10 @@ public class RequirementTypeDaoImpl implements RequirementTypeDao {
     }
 
     @Override
-    public RequirementType findByIdOrThrow(Long id, String messageTemplate) {
+    public RequirementType findByIdOrThrow(Long id) {
         RequirementType requirementType = findById(id);
         if (requirementType == null) {
-            throw new RuntimeException(String.format(messageTemplate, id));
+            throw new RuntimeException(String.format(REQUIREMENT_TYPE_NOT_FOUND, id));
         }
         return requirementType;
     }

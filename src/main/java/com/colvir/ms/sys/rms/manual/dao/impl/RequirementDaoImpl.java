@@ -15,6 +15,8 @@ import java.util.Set;
 @ApplicationScoped
 public class RequirementDaoImpl implements RequirementDao {
 
+    private static final String REQUIREMENT_NOT_FOUND_OR_DELETED = "Requirement with id=%s is not found or marked as deleted";
+
     @PersistenceContext
     EntityManager entityManager;
 
@@ -28,12 +30,11 @@ public class RequirementDaoImpl implements RequirementDao {
         return Requirement.findById(id);
     }
 
-
     @Override
-    public Requirement findByIdOrThrow(Long id, String messageTemplate) {
+    public Requirement findByIdOrThrow(Long id) {
         Requirement requirement = findById(id);
         if (requirement == null || Boolean.TRUE.equals(requirement.isDeleted)) {
-            throw new RuntimeException(String.format(messageTemplate, id));
+            throw new RuntimeException(String.format(REQUIREMENT_NOT_FOUND_OR_DELETED, id));
         }
         return requirement;
     }

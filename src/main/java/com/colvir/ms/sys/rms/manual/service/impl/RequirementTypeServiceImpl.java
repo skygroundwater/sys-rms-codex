@@ -8,7 +8,6 @@ import com.colvir.ms.sys.rms.generated.service.mapper.RequirementTypeMapper;
 import com.colvir.ms.sys.rms.manual.dao.RequirementTypeDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.util.AlgorithmHelpers;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.cache.CacheResult;
@@ -73,7 +72,7 @@ public class RequirementTypeServiceImpl implements RequirementTypeService {
         if (requirementTypeId == null) {
             throw new RuntimeException("RequirementType id is not defined for indicatorDesc: " + indicatorDesc);
         }
-        RequirementType requirementType = requirementTypeDao.findByIdOrThrow(requirementTypeId, RmsConstants.REQUIREMENT_TYPE_NOT_FOUND);
+        RequirementType requirementType = requirementTypeDao.findByIdOrThrow(requirementTypeId);
         return requirementTypeMapper.toDto(requirementType);
     }
 

@@ -125,7 +125,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         Map<Long, Requirement> requirementMap = new HashMap<>();
         for (var requirementRef : request.requirements) {
-            Requirement requirement = requirementDao.findByIdOrThrow(requirementRef.id, RmsConstants.REQUIREMENT_NOT_FOUND);
+            Requirement requirement = requirementDao.findByIdOrThrow(requirementRef.id);
             requirementMap.put(requirementRef.id, requirement);
             // сохраняем первоначальные значения для отката
             RequirementJournalDto requirementJournal = RequirementMapperUtils.fillRequirementJournal(requirement);

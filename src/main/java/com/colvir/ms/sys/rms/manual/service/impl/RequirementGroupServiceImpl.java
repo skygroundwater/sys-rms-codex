@@ -4,7 +4,6 @@ import com.colvir.ms.sys.rms.generated.domain.GroupMember;
 import com.colvir.ms.sys.rms.generated.domain.RequirementsGroup;
 import com.colvir.ms.sys.rms.manual.dao.RequirementGroupDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementGroupService;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -32,11 +31,7 @@ public class RequirementGroupServiceImpl implements RequirementGroupService {
 
     @Override
     public RequirementsGroup findRequirementsGroupById(Long id) {
-        return requirementGroupDao.findActiveByIdOrThrow(
-            id,
-            RmsConstants.REQUIREMENT_GROUP_NOT_FOUND,
-            RmsConstants.REQUIREMENT_GROUP_DELETED
-        );
+        return requirementGroupDao.findActiveByIdOrThrow(id);
     }
 
 }

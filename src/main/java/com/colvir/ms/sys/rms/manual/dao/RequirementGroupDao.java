@@ -11,5 +11,5 @@ public interface RequirementGroupDao {
 
     RequirementsGroup findById(Long id);
 
-    RequirementsGroup findActiveByIdOrThrow(Long id, String notFoundMessageTemplate, String deletedMessageTemplate);
+    RequirementsGroup findActiveByIdOrThrow(Long id);
 }

@@ -451,7 +451,7 @@ public class RequirementServiceImpl implements RequirementService {
         if (id == null) {
             throw new RuntimeException("Requirement id is null");
         }
-        return requirementDao.findByIdOrThrow(id, RmsConstants.REQUIREMENT_NOT_FOUND_OR_DELETED);
+        return requirementDao.findByIdOrThrow(id);
     }
 
     private List<Requirement> getRequirements(ReferenceDto requirement, ReferenceDto contract, ReferenceDto client) {
