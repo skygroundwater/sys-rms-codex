@@ -1,0 +1,11 @@
+Enum{
+  title='RequirementAction'
+  values=
+    Value{key='null', value='CREATE', data='null', description='Создать', enumName='RequirementAction', predecessorValue='null'}
+    Value{key='null', value='SAVE', data='null', description='Сохранить', enumName='RequirementAction', predecessorValue='null'}
+    Value{key='null', value='UPDATE', data='null', description='Обновить', enumName='RequirementAction', predecessorValue='null'}
+    Value{key='null', value='DELETE', data='null', description='Удалить', enumName='RequirementAction', predecessorValue='null'}
+  description='Действие с требованием'
+  namespacePath='/SYS/RMS'
+  fromForeignNamespace='false'
+}

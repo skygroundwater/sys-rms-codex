@@ -1,0 +1,13 @@
+Enum{
+  title='RequirementStatus'
+  values=
+    Value{key='null', value='CANCELED', data='null', description='Аннулировано', enumName='RequirementStatus', predecessorValue='null'}
+    Value{key='null', value='NONEXISTENT', data='null', description='Не сформировано', enumName='RequirementStatus', predecessorValue='null'}
+    Value{key='null', value='PAID', data='null', description='Оплачено', enumName='RequirementStatus', predecessorValue='null'}
+    Value{key='null', value='SUSPENDED', data='null', description='Приостановлено (блокировано)', enumName='RequirementStatus', predecessorValue='null'}
+    Value{key='null', value='WAIT', data='null', description='Ожидает оплаты', enumName='RequirementStatus', predecessorValue='null'}
+    Value{key='null', value='WRITTEN_OFF', data='null', description='Списано', enumName='RequirementStatus', predecessorValue='null'}
+  description='Состояние требования'
+  namespacePath='/SYS/RMS'
+  fromForeignNamespace='false'
+}

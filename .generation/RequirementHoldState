@@ -1,0 +1,10 @@
+Enum{
+  title='RequirementHoldState'
+  values=
+    Value{key='null', value='CREATED', data='null', description='Создан', enumName='RequirementHoldState', predecessorValue='null'}
+    Value{key='null', value='UPDATED', data='null', description='Изменен', enumName='RequirementHoldState', predecessorValue='null'}
+    Value{key='null', value='DELETED', data='null', description='Удален', enumName='RequirementHoldState', predecessorValue='null'}
+  description='Статус холда по требованию'
+  namespacePath='/SYS/RMS'
+  fromForeignNamespace='false'
+}

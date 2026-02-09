@@ -1,0 +1,13 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-11-17" id="rem-requirement.bbp_state_000_state_name" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="bbp_state_000_state_name" tableName="requirement"/>
+            <not>
+                <columnExists columnName="bbp_state_000_state_name__bk30" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="bbp_state_000_state_name__bk30" oldColumnName="bbp_state_000_state_name" tableName="requirement"/>
+        <dropNotNullConstraint columnName="bbp_state_000_state_name__bk30" tableName="requirement"/>
+    </changeSet>
+</databaseChangeLog>

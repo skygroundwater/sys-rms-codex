@@ -1,0 +1,10 @@
+Enum{
+  title='PaymentLinkType'
+  values=
+    Value{key='null', value='AUTO', data='null', description='Cвязан автоматически', enumName='PaymentLinkType', predecessorValue='null'}
+    Value{key='null', value='MANUAL', data='null', description='Cвязан вручную', enumName='PaymentLinkType', predecessorValue='null'}
+    Value{key='null', value='REQUIREMENT', data='null', description='Cоздан при оплате требования', enumName='PaymentLinkType', predecessorValue='null'}
+  description='Вид связи с платежом'
+  namespacePath='/SYS/RMS'
+  fromForeignNamespace='false'
+}

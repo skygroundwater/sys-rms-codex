@@ -1,0 +1,168 @@
+{
+  "generator-jhipster": {
+    "applicationProperties": {
+      "application.domain": "/SYS/RMS",
+      "application.domain.version": "14"
+    },
+    "applicationType": "monolith",
+    "authenticationType": "oauth2",
+    "baseName": "SYSRMS",
+    "blueprints": [
+      {
+        "name": "generator-jhipster-quarkus",
+        "version": "2.0.0"
+      }
+    ],
+    "buildTool": "maven",
+    "cacheProvider": false,
+    "clientFramework": "no",
+    "clientPackageManager": "npm",
+    "clientTheme": "none",
+    "clientThemeVariant": "",
+    "creationTimestamp": 1726499245745,
+    "databaseType": "sql",
+    "devDatabaseType": "h2Disk",
+    "dtoSuffix": "DTO",
+    "embeddableLaunchScript": false,
+    "enableGradleEnterprise": false,
+    "enableHibernateCache": false,
+    "enableSwaggerCodegen": false,
+    "enableTranslation": true,
+    "entities": [
+      "GroupMember",
+      "JhipsterEnumFixSysrms",
+      "MonitoringRule",
+      "Payment",
+      "PaymentChannel",
+      "RelatedPayment",
+      "Requirement",
+      "Requirement000Holds",
+      "Requirement000PayerDetails",
+      "Requirement000RelatedTaxes",
+      "RequirementsGroup",
+      "TransactionLog",
+      "UpdateRequirementModel"
+    ],
+    "entitySuffix": "",
+    "httpRootPath": "sysrms/",
+    "jhiPrefix": "jhi",
+    "jhipsterVersion": "7.9.3",
+    "jpaMetamodelFiltering": true,
+    "jvmArguments": "-Xmx256m",
+    "kubernetes": {
+      "createKubernetesConfiguration": true,
+      "imageGroup": "fb-dev-applications",
+      "imageName": "sysrms",
+      "imagePullSecrets": "colvir-nexus-registry",
+      "imageRegistry": "nexus.colvir.ru",
+      "kubernetesConfigMapping": [
+        {
+          "configFieldName": "cors-enabled",
+          "configName": "application-config",
+          "variableName": "quarkus-http-cors"
+        },
+        {
+          "configFieldName": "kafka",
+          "configName": "services-endpoints",
+          "variableName": "kafka-bootstrap-servers"
+        },
+        {
+          "configFieldName": "redis",
+          "configName": "services-endpoints",
+          "variableName": "quarkus-redis-hosts"
+        },
+        {
+          "configFieldName": "ddc-router",
+          "configName": "services-endpoints",
+          "variableName": "quarkus-rest-client-ddc-router-url"
+        },
+        {
+          "configFieldName": "ddc-info-service",
+          "configName": "services-endpoints",
+          "variableName": "quarkus-rest-client-ddc-info-service-url"
+        }
+      ],
+      "kubernetesProperties": {
+        "quarkus.kubernetes.labels.ddc-object": "sysrms",
+        "quarkus.kubernetes.startup-probe.failure-threshold": "30",
+        "quarkus.kubernetes.startup-probe.initial-delay": "20s",
+        "quarkus.kubernetes.startup-probe.period": "10s",
+        "quarkus.kubernetes.startup-probe.timeout": "1s"
+      },
+      "kubernetesSecretsMapping": [
+        {
+          "secretFieldName": "services-postgresql-jdbc-url",
+          "secretName": "services-postgresql",
+          "variableName": "quarkus-datasource-jdbc-url"
+        },
+        {
+          "secretFieldName": "services-postgresql-username",
+          "secretName": "services-postgresql",
+          "variableName": "quarkus-datasource-username"
+        },
+        {
+          "secretFieldName": "services-postgresql-password",
+          "secretName": "services-postgresql",
+          "variableName": "quarkus-datasource-password"
+        },
+        {
+          "secretFieldName": "keycloak-auth-url",
+          "secretName": "keycloak-secret",
+          "variableName": "quarkus-oidc-auth-server-url"
+        },
+        {
+          "secretFieldName": "keycloak-logout-url",
+          "secretName": "keycloak-secret",
+          "variableName": "jhipster-oidc-logout-url"
+        },
+        {
+          "secretFieldName": "keycloak-oidc-client-id",
+          "secretName": "keycloak-secret",
+          "variableName": "quarkus-oidc-client-id"
+        },
+        {
+          "secretFieldName": "keycloak-oidc-credentials-secret",
+          "secretName": "keycloak-secret",
+          "variableName": "quarkus-oidc-credentials-secret"
+        }
+      ],
+      "namespace": "dev-services"
+    },
+    "languages": ["ru"],
+    "lastLiquibaseTimestamp": 1726499282000,
+    "liquibase": {
+      "addLiquibaseMavenPluginConfig": false,
+      "createDbTablesInSeparateScheme": true,
+      "prodSchemaName": "sysrms"
+    },
+    "messageBroker": false,
+    "nativeArguments": "-Xmx32m",
+    "nativeLanguage": "ru",
+    "otherModules": [
+      {
+        "name": "generator-jhipster-quarkus",
+        "version": "2.0.0"
+      }
+    ],
+    "packageFolder": "com/colvir/ms/sys/rms/generated",
+    "packageName": "com.colvir.ms.sys.rms.generated",
+    "pages": [],
+    "prodDatabaseType": "postgresql",
+    "projectGroupId": "com.colvir.ms",
+    "projectVersion": "2.0.14",
+    "reactive": false,
+    "searchEngine": false,
+    "serverPort": "8080",
+    "serviceDiscoveryType": false,
+    "skipCheckLengthOfIdentifier": false,
+    "skipClient": true,
+    "skipCommitHook": true,
+    "skipFakeData": true,
+    "skipServer": false,
+    "skipUserManagement": true,
+    "testFrameworks": [],
+    "useSass": true,
+    "websocket": false,
+    "withAdminUi": true
+  }
+}

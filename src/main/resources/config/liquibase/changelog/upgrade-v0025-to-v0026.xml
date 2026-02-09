@@ -1,0 +1,55 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-08-14" id="rem-refunding_payment.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="edit_date" tableName="refunding_payment"/>
+            <not>
+                <columnExists columnName="edit_date__bk26" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="edit_date__bk26" oldColumnName="edit_date" tableName="refunding_payment"/>
+        <dropNotNullConstraint columnName="edit_date__bk26" tableName="refunding_payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="rem-refunding_payment.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="editor_id" tableName="refunding_payment"/>
+            <not>
+                <columnExists columnName="editor_id__bk26" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="editor_id__bk26" oldColumnName="editor_id" tableName="refunding_payment"/>
+        <dropNotNullConstraint columnName="editor_id__bk26" tableName="refunding_payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="rem-refunding_payment.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="executor_id" tableName="refunding_payment"/>
+            <not>
+                <columnExists columnName="executor_id__bk26" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="executor_id__bk26" oldColumnName="executor_id" tableName="refunding_payment"/>
+        <dropNotNullConstraint columnName="executor_id__bk26" tableName="refunding_payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="rem-refunding_payment.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="refunding_payment"/>
+            <not>
+                <columnExists columnName="version__bk26" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="version__bk26" oldColumnName="version" tableName="refunding_payment"/>
+        <dropNotNullConstraint columnName="version__bk26" tableName="refunding_payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="del-idx-refunding_payment_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <indexExists indexName="refunding_payment_editor_id"/>
+        </preConditions>
+        <dropIndex indexName="refunding_payment_editor_id" tableName="refunding_payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="del-idx-refunding_payment_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <indexExists indexName="refunding_payment_executor_id"/>
+        </preConditions>
+        <dropIndex indexName="refunding_payment_executor_id" tableName="refunding_payment"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,95 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="upd-enum-codes-account_selection_rule" objectQuotingStrategy="LEGACY">
+        <validCheckSum>1:any</validCheckSum>
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <tableExists tableName="account_selection_rule"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update account_selection_rule set code = 'CURRENCY' where code = 'currency';
+update account_selection_rule set code = 'ORDER' where code = 'order';
+update account_selection_rule set code = 'UNDEFINED' where code = 'undefined';</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="upd-enum-codes-payment_result" objectQuotingStrategy="LEGACY">
+        <validCheckSum>1:any</validCheckSum>
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <tableExists tableName="payment_result"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_result set code = 'CANCELED' where code = 'canceled';
+update payment_result set code = 'NOT_PAID' where code = 'notpaid';
+update payment_result set code = 'PAID' where code = 'paid';</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="upd-enum-codes-payment.payment_link_type" objectQuotingStrategy="LEGACY">
+        <validCheckSum>1:any</validCheckSum>
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="payment"/>
+                <tableExists tableName="payment_link_type"/>
+                <columnExists columnName="payment_link_type_id" tableName="payment"/>
+                <columnExists columnName="payment_link_type" tableName="payment"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment set payment_link_type = 'AUTO' where payment_link_type is null and payment_link_type_id = any(select e.id from payment_link_type e where e.code = 'AUTO');
+update payment set payment_link_type = 'MANUAL' where payment_link_type is null and payment_link_type_id = any(select e.id from payment_link_type e where e.code = 'MANUAL');
+update payment set payment_link_type = 'REQUIREMENT' where payment_link_type is null and payment_link_type_id = any(select e.id from payment_link_type e where e.code = 'REQUIREMENT');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="upd-enum-codes-payment.payment_result" objectQuotingStrategy="LEGACY">
+        <validCheckSum>1:any</validCheckSum>
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="payment"/>
+                <tableExists tableName="payment_result"/>
+                <columnExists columnName="payment_result_id" tableName="payment"/>
+                <columnExists columnName="payment_result" tableName="payment"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment set payment_result = 'CANCELED' where payment_result is null and payment_result_id = any(select e.id from payment_result e where e.code = 'CANCELED');
+update payment set payment_result = 'NOT_PAID' where payment_result is null and payment_result_id = any(select e.id from payment_result e where e.code = 'NOT_PAID');
+update payment set payment_result = 'PAID' where payment_result is null and payment_result_id = any(select e.id from payment_result e where e.code = 'PAID');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="upd-enum-codes-requirement.payment_strategy_000_account_selection_rule" objectQuotingStrategy="LEGACY">
+        <validCheckSum>1:any</validCheckSum>
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirement"/>
+                <tableExists tableName="account_selection_rule"/>
+                <columnExists columnName="payment_strategy_000_account_selection_rule_id" tableName="requirement"/>
+                <columnExists columnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set payment_strategy_000_account_selection_rule = 'CURRENCY' where payment_strategy_000_account_selection_rule is null and payment_strategy_000_account_selection_rule_id = any(select e.id from account_selection_rule e where e.code = 'CURRENCY');
+update requirement set payment_strategy_000_account_selection_rule = 'ORDER' where payment_strategy_000_account_selection_rule is null and payment_strategy_000_account_selection_rule_id = any(select e.id from account_selection_rule e where e.code = 'ORDER');
+update requirement set payment_strategy_000_account_selection_rule = 'UNDEFINED' where payment_strategy_000_account_selection_rule is null and payment_strategy_000_account_selection_rule_id = any(select e.id from account_selection_rule e where e.code = 'UNDEFINED');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="upd-enum-codes-requirement.state" objectQuotingStrategy="LEGACY">
+        <validCheckSum>1:any</validCheckSum>
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirement"/>
+                <tableExists tableName="requirement_status"/>
+                <columnExists columnName="state_id" tableName="requirement"/>
+                <columnExists columnName="state" tableName="requirement"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set state = 'CANCELED' where state is null and state_id = any(select e.id from requirement_status e where e.code = 'CANCELED');
+update requirement set state = 'NONEXISTENT' where state is null and state_id = any(select e.id from requirement_status e where e.code = 'NONEXISTENT');
+update requirement set state = 'PAID' where state is null and state_id = any(select e.id from requirement_status e where e.code = 'PAID');
+update requirement set state = 'SUSPENDED' where state is null and state_id = any(select e.id from requirement_status e where e.code = 'SUSPENDED');
+update requirement set state = 'WAIT' where state is null and state_id = any(select e.id from requirement_status e where e.code = 'WAIT');
+update requirement set state = 'WRITTEN_OFF' where state is null and state_id = any(select e.id from requirement_status e where e.code = 'WRITTEN_OFF');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="upd-enum-codes-requirements_group.group_payment_strategy" objectQuotingStrategy="LEGACY">
+        <validCheckSum>1:any</validCheckSum>
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirements_group"/>
+                <tableExists tableName="group_payment_strategy"/>
+                <columnExists columnName="group_payment_strategy_id" tableName="requirements_group"/>
+                <columnExists columnName="group_payment_strategy" tableName="requirements_group"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirements_group set group_payment_strategy = 'CONDITIONAL' where group_payment_strategy is null and group_payment_strategy_id = any(select e.id from group_payment_strategy e where e.code = 'CONDITIONAL');
+update requirements_group set group_payment_strategy = 'FULL' where group_payment_strategy is null and group_payment_strategy_id = any(select e.id from group_payment_strategy e where e.code = 'FULL');
+update requirements_group set group_payment_strategy = 'INAPPLICABLE' where group_payment_strategy is null and group_payment_strategy_id = any(select e.id from group_payment_strategy e where e.code = 'INAPPLICABLE');
+update requirements_group set group_payment_strategy = 'PROPORTIONAL' where group_payment_strategy is null and group_payment_strategy_id = any(select e.id from group_payment_strategy e where e.code = 'PROPORTIONAL');</sql>
+    </changeSet>
+</databaseChangeLog>

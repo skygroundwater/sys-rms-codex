@@ -1,0 +1,102 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2024-11-11" id="cre-payment.withdrawal_type_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="withdrawal_type_id" tableName="payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment">
+            <column name="withdrawal_type_id" remarks="вариант списания денег" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-11" id="cre-payment_refund" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="payment_refund"/>
+                <primaryKeyExists primaryKeyName="payment_refundPK" tableName="payment_refund"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Возврат платежа" tableName="payment_refund">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="payment_refundPK"/>
+            </column>
+            <column name="amount" remarks="сумма платежа" type="DECIMAL"/>
+            <column name="creation_time" remarks="дата и время создания" type="TIMESTAMP"/>
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+            <column name="master_object_000" remarks="обобщенная ссылка на владельца(мастера)" type="VARCHAR(255)"/>
+            <column name="reference" remarks="референс платежа" type="VARCHAR(255)"/>
+            <column name="refund_time" remarks="дата и время возврата" type="TIMESTAMP"/>
+            <column name="payment_of_payment_refunds_id" remarks="возвраты платежа" type="bigint"/>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="payment_refund__bk17" oldTableName="payment_refund"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-11" id="cre-fk-payment_refund.payment_of_payment_refunds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK4vswqhn4mgf66ewigh6c4uxpt" foreignKeyTableName="payment_refund"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="payment_of_payment_refunds_id" baseTableName="payment_refund" constraintName="FK4vswqhn4mgf66ewigh6c4uxpt" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-11" id="cre-idx-payment_refund.payment_of_payment_refunds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FK4vswqhn4mgf66ewigh6c4uxpt"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FK4vswqhn4mgf66ewigh6c4uxpt" tableName="payment_refund">
+            <column descending="false" name="payment_of_payment_refunds_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-11" id="cre-idx-payment_refund_reference" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="payment_refund_reference"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="payment_refund_reference" tableName="payment_refund">
+            <column descending="false" name="reference"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-11" id="cre-idx-payment_withdrawal_type_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="payment_withdrawal_type_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="payment_withdrawal_type_id" tableName="payment">
+            <column descending="false" name="withdrawal_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-11" id="upd-enum-payment.payment_result" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="payment"/>
+                <columnExists columnName="payment_result" tableName="payment"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "payment" set "payment_result" = CASE "payment_result"
+WHEN 'CANCELED' THEN 'CANCELED' 
+WHEN 'NOTPAID' THEN 'NOT_PAID' 
+WHEN 'PAID' THEN 'PAID' 
+ELSE "payment_result" END
+where "payment_result" in ('CANCELED', 'NOTPAID', 'PAID');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-11" id="upd-enum-requirement.payment_strategy_000_account_selection_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirement"/>
+                <columnExists columnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "requirement" set "payment_strategy_000_account_selection_rule" = CASE "payment_strategy_000_account_selection_rule"
+WHEN 'CURRENCY' THEN 'CURRENCY' 
+WHEN 'ORDER' THEN 'ORDER' 
+WHEN 'UNDEFINED' THEN 'UNDEFINED' 
+ELSE "payment_strategy_000_account_selection_rule" END
+where "payment_strategy_000_account_selection_rule" in ('CURRENCY', 'ORDER', 'UNDEFINED');</sql>
+    </changeSet>
+</databaseChangeLog>

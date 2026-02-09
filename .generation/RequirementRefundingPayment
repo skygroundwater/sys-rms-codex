@@ -1,0 +1,15 @@
+Entity{
+  title='RequirementRefundingPayment'
+  fields=
+    Field{fieldName='distributionAmount', fieldType='BigDecimal', primitiveFieldType=BIG_DECIMAL, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='сумма распределения', realTypeName='null', owningEntity=Entity{title='RequirementRefundingPayment', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='RequirementRefundingPayment', ...}, historical=false}
+    Field{fieldName='paymentAmount', fieldType='BigDecimal', primitiveFieldType=BIG_DECIMAL, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='сумма возвратного платежа', realTypeName='null', owningEntity=Entity{title='RequirementRefundingPayment', ...}, historical=false}
+  version=3
+  description='Связанный возвратный платеж'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='RequirementRefundingPayment', fieldName='refundingPayment', relationType=ManyToOne, entityTitleTo='RefundingPayment', fieldNameTo='', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='платеж по возврату средств клиенту', annotations={}, ownerSide=true, simpleList=false, historical=false}
+    Relation{entityTitle='RequirementRefundingPayment', fieldName='requirementOfRefundingPayments', relationType=ManyToOne, entityTitleTo='Requirement', fieldNameTo='refundingPayments', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='null', annotations={}, ownerSide=false, simpleList=false, historical=false}
+  simpleList=false
+}

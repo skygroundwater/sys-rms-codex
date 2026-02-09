@@ -1,0 +1,124 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-monitoring_rule.withdrawal_type_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="withdrawal_type_id" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="monitoring_rule">
+            <column name="withdrawal_type_id" remarks="вариант списания денег" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-requirement_hold" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="requirement_hold"/>
+                <primaryKeyExists primaryKeyName="requirement_holdPK" tableName="requirement_hold"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Холд по требованию" tableName="requirement_hold">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="requirement_holdPK"/>
+            </column>
+            <column name="account_number" remarks="номер счета" type="VARCHAR(255)"/>
+            <column name="amount" remarks="сумма" type="DECIMAL"/>
+            <column name="currency_id" remarks="валюта" type="BIGINT"/>
+            <column name="hold_id" remarks="холд по online счету" type="BIGINT"/>
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+            <column name="master_object_000" remarks="обобщенная ссылка на владельца(мастера)" type="VARCHAR(255)"/>
+            <column name="reference" remarks="рефернс холда во внешней системе" type="VARCHAR(255)"/>
+            <column name="withdrawal_type_id" remarks="вариант списания денег" type="BIGINT"/>
+            <column name="requirement_of_assigned_holds_id" remarks="установленные холды" type="bigint"/>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="requirement_hold__bk19" oldTableName="requirement_hold"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-fk-requirement_hold.requirement_of_assigned_holds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKi5ggwwxrqkt7ir7texy8nnilx" foreignKeyTableName="requirement_hold"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="requirement_of_assigned_holds_id" baseTableName="requirement_hold" constraintName="FKi5ggwwxrqkt7ir7texy8nnilx" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-idx-monitoring_rule_withdrawal_type_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="monitoring_rule_withdrawal_type_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="monitoring_rule_withdrawal_type_id" tableName="monitoring_rule">
+            <column descending="false" name="withdrawal_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-idx-requirement_hold.requirement_of_assigned_holds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKi5ggwwxrqkt7ir7texy8nnilx"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKi5ggwwxrqkt7ir7texy8nnilx" tableName="requirement_hold">
+            <column descending="false" name="requirement_of_assigned_holds_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-idx-requirement_hold_currency_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_hold_currency_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_hold_currency_id" tableName="requirement_hold">
+            <column descending="false" name="currency_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-idx-requirement_hold_hold_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_hold_hold_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_hold_hold_id" tableName="requirement_hold">
+            <column descending="false" name="hold_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="cre-idx-requirement_hold_withdrawal_type_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_hold_withdrawal_type_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_hold_withdrawal_type_id" tableName="requirement_hold">
+            <column descending="false" name="withdrawal_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="upd-enum-payment.payment_result" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="payment"/>
+                <columnExists columnName="payment_result" tableName="payment"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "payment" set "payment_result" = CASE "payment_result"
+WHEN 'CANCELED' THEN 'CANCELED' 
+WHEN 'NOTPAID' THEN 'NOT_PAID' 
+WHEN 'PAID' THEN 'PAID' 
+ELSE "payment_result" END
+where "payment_result" in ('CANCELED', 'NOTPAID', 'PAID');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-12-09" id="upd-enum-requirement.payment_strategy_000_account_selection_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirement"/>
+                <columnExists columnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "requirement" set "payment_strategy_000_account_selection_rule" = CASE "payment_strategy_000_account_selection_rule"
+WHEN 'CURRENCY' THEN 'CURRENCY' 
+WHEN 'ORDER' THEN 'ORDER' 
+WHEN 'UNDEFINED' THEN 'UNDEFINED' 
+ELSE "payment_strategy_000_account_selection_rule" END
+where "payment_strategy_000_account_selection_rule" in ('CURRENCY', 'ORDER', 'UNDEFINED');</sql>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,138 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-sys_acc_000_withdrawal_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="sys_acc_000_withdrawal_rule"/>
+                <primaryKeyExists primaryKeyName="sys_acc_000_withdrawal_rulePK" tableName="sys_acc_000_withdrawal_rule"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Правило списания денег" tableName="sys_acc_000_withdrawal_rule">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sys_acc_000_withdrawal_rulePK"/>
+            </column>
+            <column name="account_selection_type" remarks="способ выбора счетов / карт клиента" type="VARCHAR(255)"/>
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+            <column name="priority" remarks="очередность" type="INTEGER"/>
+            <column name="purpose_template_id" remarks="шаблон назначения платежа" type="BIGINT"/>
+            <column name="search_rule" remarks="правило поиска счетов / карт" type="CLOB"/>
+            <column name="withdrawal_type_id" remarks="вариант списания денег" type="BIGINT"/>
+            <column name="requirement_of_withdrawal_rules_id" remarks="правила списания" type="bigint"/>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="sys_acc_000_withdrawal_rule__bk20" oldTableName="sys_acc_000_withdrawal_rule"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-sys_acc_000_withdrawal_rule_ls_account_numbers" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+                <primaryKeyExists primaryKeyName="sys_acc_000_withdrawal_rule_ls_account_numbersPK" tableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+            </not>
+        </preConditions>
+        <createTable tableName="sys_acc_000_withdrawal_rule_ls_account_numbers">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="sys_acc_000_withdrawal_rule_ls_account_numbersPK"/>
+            </column>
+            <column name="value" remarks="значение" type="VARCHAR(255)"/>
+            <column name="owner_id" type="bigint"/>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="sys_acc_000_withdrawal_rule_ls_account_numbers__bk20" oldTableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-fk-sys_acc_000_withdrawal_rule.requirement_of_withdrawal_rules_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKfvlqfrdjdk0w29qou56d81ne" foreignKeyTableName="sys_acc_000_withdrawal_rule"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="requirement_of_withdrawal_rules_id" baseTableName="sys_acc_000_withdrawal_rule" constraintName="FKfvlqfrdjdk0w29qou56d81ne" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-fk-sys_acc_000_withdrawal_rule_ls_account_numbers.owner_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKwuig7m2w3w3n2073efi9nvhb" foreignKeyTableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="sys_acc_000_withdrawal_rule_ls_account_numbers" constraintName="FKwuig7m2w3w3n2073efi9nvhb" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="sys_acc_000_withdrawal_rule"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-idx-sys_acc_000_withdrawal_rule.requirement_of_withdrawal_rules_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKfvlqfrdjdk0w29qou56d81ne"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKfvlqfrdjdk0w29qou56d81ne" tableName="sys_acc_000_withdrawal_rule">
+            <column descending="false" name="requirement_of_withdrawal_rules_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-idx-sys_acc_000_withdrawal_rule_ls_account_numbers.owner_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKwuig7m2w3w3n2073efi9nvhb"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKwuig7m2w3w3n2073efi9nvhb" tableName="sys_acc_000_withdrawal_rule_ls_account_numbers">
+            <column descending="false" name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-idx-sys_acc_000_withdrawal_rule_purpose_template_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="sys_acc_000_withdrawal_rule_purpose_template_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="sys_acc_000_withdrawal_rule_purpose_template_id" tableName="sys_acc_000_withdrawal_rule">
+            <column descending="false" name="purpose_template_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="cre-idx-sys_acc_000_withdrawal_rule_withdrawal_type_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="sys_acc_000_withdrawal_rule_withdrawal_type_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="sys_acc_000_withdrawal_rule_withdrawal_type_id" tableName="sys_acc_000_withdrawal_rule">
+            <column descending="false" name="withdrawal_type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" failOnError="false" id="upd-SysAcc000WithdrawalRuleLsAccountNumbers.accountNumbers" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+                <tableExists tableName="sys_acc_000_withdrawal_rule"/>
+                <rowCount expectedRows="0" tableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">insert into sys_acc_000_withdrawal_rule_ls_account_numbers (owner_id, value) select id, account_numbers__bk20 from sys_acc_000_withdrawal_rule;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="upd-enum-payment.payment_result" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="payment"/>
+                <columnExists columnName="payment_result" tableName="payment"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "payment" set "payment_result" = CASE "payment_result"
+WHEN 'CANCELED' THEN 'CANCELED' 
+WHEN 'NOTPAID' THEN 'NOT_PAID' 
+WHEN 'PAID' THEN 'PAID' 
+ELSE "payment_result" END
+where "payment_result" in ('CANCELED', 'NOTPAID', 'PAID');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-01-25" id="upd-enum-requirement.payment_strategy_000_account_selection_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirement"/>
+                <columnExists columnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "requirement" set "payment_strategy_000_account_selection_rule" = CASE "payment_strategy_000_account_selection_rule"
+WHEN 'CURRENCY' THEN 'CURRENCY' 
+WHEN 'ORDER' THEN 'ORDER' 
+WHEN 'UNDEFINED' THEN 'UNDEFINED' 
+ELSE "payment_strategy_000_account_selection_rule" END
+where "payment_strategy_000_account_selection_rule" in ('CURRENCY', 'ORDER', 'UNDEFINED');</sql>
+    </changeSet>
+</databaseChangeLog>

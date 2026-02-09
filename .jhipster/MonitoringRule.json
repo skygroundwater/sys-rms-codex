@@ -1,0 +1,60 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150752",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "monitoring_rule",
+  "fields": [
+    {
+      "fieldName": "attrDate",
+      "fieldType": "String",
+      "javadoc": "атрибут даты"
+    },
+    {
+      "fieldName": "attrDep",
+      "fieldType": "String",
+      "javadoc": "атрибут подразделения"
+    },
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean",
+      "javadoc": "является удалённым объектом",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "ruleFind",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text",
+      "javadoc": "правило отбора платежей"
+    },
+    {
+      "fieldName": "ruleMatch",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text",
+      "javadoc": "правило соответствия"
+    },
+    {
+      "fieldName": "version",
+      "fieldType": "Integer",
+      "javadoc": "номер версии"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Правило мониторинга",
+  "jpaMetamodelFiltering": true,
+  "name": "MonitoringRule",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "paymentChannel",
+      "relationshipName": "paymentChannel",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "serviceImpl"
+}

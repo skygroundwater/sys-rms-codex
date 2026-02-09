@@ -1,0 +1,15 @@
+Entity{
+  title='RelatedPayment'
+  fields=
+    Field{fieldName='amount', fieldType='BigDecimal', primitiveFieldType=BIG_DECIMAL, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='сумма исполнения', realTypeName='null', owningEntity=Entity{title='RelatedPayment', ...}, historical=false}
+    Field{fieldName='amountOfPayment', fieldType='BigDecimal', primitiveFieldType=BIG_DECIMAL, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='сумма платежа', realTypeName='null', owningEntity=Entity{title='RelatedPayment', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='RelatedPayment', ...}, historical=false}
+  version=2
+  description='Связанный платеж '
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='RelatedPayment', fieldName='requirementOfRelatedPayments', relationType=ManyToOne, entityTitleTo='Requirement', fieldNameTo='relatedPayments', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='null', annotations={}, ownerSide=false, simpleList=false, historical=false}
+    Relation{entityTitle='RelatedPayment', fieldName='payment', relationType=ManyToOne, entityTitleTo='Payment', fieldNameTo='', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='платеж', annotations={}, ownerSide=true, simpleList=false, historical=false}
+  simpleList=false
+}

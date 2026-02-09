@@ -1,0 +1,171 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-monitoring_rule.attr_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="attr_date" tableName="monitoring_rule"/>
+        </preConditions>
+        <modifyDataType columnName="attr_date" newDataType="VARCHAR(1000)" tableName="monitoring_rule"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-monitoring_rule.attr_dep" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="attr_dep" tableName="monitoring_rule"/>
+        </preConditions>
+        <modifyDataType columnName="attr_dep" newDataType="VARCHAR(1000)" tableName="monitoring_rule"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-payment.payment" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment" tableName="payment"/>
+        </preConditions>
+        <modifyDataType columnName="payment" newDataType="VARCHAR(1000)" tableName="payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-payment.reference" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="reference" tableName="payment"/>
+        </preConditions>
+        <modifyDataType columnName="reference" newDataType="VARCHAR(1000)" tableName="payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-payment_channel.code" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="code" tableName="payment_channel"/>
+        </preConditions>
+        <modifyDataType columnName="code" newDataType="VARCHAR(1000)" tableName="payment_channel"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-payment_channel.name" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="name" tableName="payment_channel"/>
+        </preConditions>
+        <modifyDataType columnName="name" newDataType="VARCHAR(1000)" tableName="payment_channel"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-payment_channel.payment_class" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_class" tableName="payment_channel"/>
+        </preConditions>
+        <modifyDataType columnName="payment_class" newDataType="VARCHAR(1000)" tableName="payment_channel"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-refunding_payment.reference" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="reference" tableName="refunding_payment"/>
+        </preConditions>
+        <modifyDataType columnName="reference" newDataType="VARCHAR(1000)" tableName="refunding_payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.base_document" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="base_document" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="base_document" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.bbp_state_000_journal_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="bbp_state_000_journal_id" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="bbp_state_000_journal_id" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.bbp_state_000_process_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="bbp_state_000_process_id" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="bbp_state_000_process_id" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.bbp_state_000_state_code" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="bbp_state_000_state_code" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="bbp_state_000_state_code" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.bbp_state_000_state_name" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="bbp_state_000_state_name" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="bbp_state_000_state_name" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.descr" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="descr" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="descr" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.external_reference" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="external_reference" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="external_reference" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.payment_details_000_descr" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_details_000_descr" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="payment_details_000_descr" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.payment_details_000_knp" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_details_000_knp" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="payment_details_000_knp" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.payment_details_000_payment_num" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_details_000_payment_num" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="payment_details_000_payment_num" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.recipient_details" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="recipient_details" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="recipient_details" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement.reference" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="reference" tableName="requirement"/>
+        </preConditions>
+        <modifyDataType columnName="reference" newDataType="VARCHAR(1000)" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement_000_payer_details.external_account" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="external_account" tableName="requirement_000_payer_details"/>
+        </preConditions>
+        <modifyDataType columnName="external_account" newDataType="VARCHAR(1000)" tableName="requirement_000_payer_details"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement_hold.account_number" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="account_number" tableName="requirement_hold"/>
+        </preConditions>
+        <modifyDataType columnName="account_number" newDataType="VARCHAR(1000)" tableName="requirement_hold"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement_hold.reference" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="reference" tableName="requirement_hold"/>
+        </preConditions>
+        <modifyDataType columnName="reference" newDataType="VARCHAR(1000)" tableName="requirement_hold"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement_type.code" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="code" tableName="requirement_type"/>
+        </preConditions>
+        <modifyDataType columnName="code" newDataType="VARCHAR(30)" tableName="requirement_type"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement_type.description" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="description" tableName="requirement_type"/>
+        </preConditions>
+        <modifyDataType columnName="description" newDataType="VARCHAR(1000)" tableName="requirement_type"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-requirement_type.name" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="name" tableName="requirement_type"/>
+        </preConditions>
+        <modifyDataType columnName="name" newDataType="VARCHAR(255)" tableName="requirement_type"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-sys_acc_000_withdrawal_rule_ls_account_numbers.value" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="value" tableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+        </preConditions>
+        <modifyDataType columnName="value" newDataType="VARCHAR(1000)" tableName="sys_acc_000_withdrawal_rule_ls_account_numbers"/>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="modify-len-update_requirement_model.requirement_list" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="requirement_list" tableName="update_requirement_model"/>
+        </preConditions>
+        <modifyDataType columnName="requirement_list" newDataType="VARCHAR(1000)" tableName="update_requirement_model"/>
+    </changeSet>
+</databaseChangeLog>

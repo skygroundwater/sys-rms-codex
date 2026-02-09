@@ -1,0 +1,274 @@
+/** Правило выбора счета */
+enum AccountSelectionRule {
+    CURRENCY /** Приоритет для счета в валюте требования */
+    ORDER /** Строго в заданном порядке */
+    UNDEFINED /** Не определено */
+}
+
+/** Стратегия оплаты в группе */
+enum GroupPaymentStrategy {
+    CONDITIONAL /** Условная оплата */
+    DUPLICATE /** Дублирующие требования */
+    FULL /** Полная оплата */
+    INAPPLICABLE /** Не применяется */
+    PROPORTIONAL /** Пропорциональная оплата */
+}
+
+/** Вид связи с платежом */
+enum PaymentLinkType {
+    AUTO /** Cвязан автоматически */
+    MANUAL /** Cвязан вручную */
+    REQUIREMENT /** Cоздан по требованию */
+}
+
+/** Результат оплаты */
+enum PaymentResult {
+    CANCELED /** Аннулирован */
+    NOT_PAID /** Не оплачен */
+    PAID /** Оплачен */
+}
+
+/** Действие с требованием */
+enum RequirementAction {
+    CREATE /** Создать */
+    UPDATE /** Обновить */
+    DELETE /** Удалить */
+}
+
+/** Состояние требования */
+enum RequirementStatus {
+    CANCELED /** Отменено */
+    NONEXISTENT /** Не сформировано */
+    PAID /** Оплачено */
+    SUSPENDED /** Приостановлено (блокировано) */
+    WAIT /** Ожидает оплаты */
+    WRITTEN_OFF /** Списано */
+}
+
+/** Участник группы */
+@identifierType(manual)
+entity GroupMember (group_member) {
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    num Integer /** номер в группе */
+    part BigDecimal /** процент оплаты */
+    version Integer /** номер версии */
+}
+
+/** Служебная сущность для генерации перечислений */
+@service(no)
+@readOnly
+@identifierType(manual)
+@embedded
+@dto(no)
+entity JhipsterEnumFixSysrms (jhipster_enum_fix_sysrms) {
+    accountSelectionRule AccountSelectionRule /** Правило выбора счета */
+    groupPaymentStrategy GroupPaymentStrategy /** Стратегия оплаты в группе */
+    paymentLinkType PaymentLinkType /** Вид связи с платежом */
+    paymentResult PaymentResult /** Результат оплаты */
+    requirementAction RequirementAction /** Действие с требованием */
+    requirementStatus RequirementStatus /** Состояние требования */
+}
+
+/** Правило мониторинга */
+@identifierType(manual)
+entity MonitoringRule (monitoring_rule) {
+    attrDate String /** атрибут даты */
+    attrDep String /** атрибут подразделения */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    ruleFind TextBlob /** правило отбора платежей */
+    ruleMatch TextBlob /** правило соответствия */
+    version Integer /** номер версии */
+}
+
+/** Платеж */
+@identifierType(manual)
+entity Payment (payment) {
+    amount BigDecimal /** сумма */
+    cancelTime Instant /** время отмены */
+    createTime Instant /** время создания */
+    currencyId Long /** валюта */
+    execTime Instant /** время исполнения */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    payment String /** платж */
+    paymentLinkType PaymentLinkType /** вид связи с платежом */
+    paymentResult PaymentResult /** результат оплаты */
+    reference String /** референс платежа */
+    valDate LocalDate /** дата валютирования */
+    version Integer /** номер версии */
+}
+
+/** Канал оплаты */
+@identifierType(manual)
+entity PaymentChannel (payment_channel) {
+    active Boolean @default(false) /** используется */
+    code String required unique /** обозначение */
+    isAutoPayment Boolean @default(false) /** возможна автоматическая оплата */
+    isCreatePayment Boolean @default(false) /** возможно создание платежа */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    isInitHolds Boolean @default(false) /** возможна установка холдов */
+    name String required unique /** наименование */
+    paymentClass String /** класс платежей */
+    version Integer /** номер версии */
+}
+
+/** Связанный платеж  */
+@identifierType(manual)
+entity RelatedPayment (related_payment) {
+    amount BigDecimal /** сумма исполнения */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    version Integer /** номер версии */
+}
+
+/** Требование */
+@identifierType(manual)
+entity Requirement (requirement) {
+    actualPaymentDate LocalDate /** фактическая дата оплаты */
+    amount BigDecimal /** сумма */
+    baseDocument String /** документ-основание */
+    clientId Long /** физическое или юридическое лицо */
+    contractPointId Long /** пункт графика договора */
+    currencyId Long /** валюта */
+    date LocalDate /** дата */
+    descr String /** дополнительная информация */
+    externalReference String /** референс во внешней системе */
+    fixRate BigDecimal /** фиксированный курс */
+    indicatorId Long /** расчетная категория */
+    inside Boolean @default(false) /** является требованием со стороны банка */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    isHolding Boolean @default(false) /** холдировать средства */
+    operationRecordId Long /** запись об операции */
+    paidAmount BigDecimal /** оплаченная сумма */
+    paymentDetails000Descr String /** текст назначения платежа */
+    paymentDetails000Knp String /** код назначения платежа */
+    paymentDetails000PaymentNum String /** номер платежного документа */
+    paymentEndDate LocalDate /** дата окончания оплаты */
+    paymentStrategy000AccountSelectionRule AccountSelectionRule /** правило выбора счета */
+    paymentStrategy000AllowAutoPay Boolean @default(false) /** разрешена автоматическая оплата */
+    paymentStrategy000AllowGroupPay Boolean @default(false) /** разрешена оплата группой */
+    paymentStrategy000AllowOverdraft Boolean @default(false) /** разрешено использование заемных средств */
+    paymentStrategy000AllowPartPay Boolean @default(false) /** разрешена оплата по частям */
+    paymentStrategy000ControlExternalSystem Boolean @default(false) /** передано под управление внешней системы  */
+    paymentStrategy000UseAccOnlyFullPay Boolean @default(false) /** использовать счет только при наличии баланса на полную оплату */
+    personId Long /** получатель */
+    priority BigDecimal /** приоритет */
+    rateTypeId Long /** тип курса */
+    recipientDetails String /** реквизиты получателя */
+    reference String /** референс */
+    serialNumber Long /** порядковый номер */
+    startPaymentDate LocalDate /** дата начала оплаты */
+    status TextBlob /** состояние требования */
+    unpaidAmount BigDecimal /** неоплаченная сумма */
+    version Integer /** номер версии */
+    writeOffAmount BigDecimal /** списанная сумма */
+}
+
+/** Объект-значение */
+@identifierType(manual)
+entity Requirement000Holds (requirement_000_holds) {
+    accountId Long /** online счет клиента */
+    amount BigDecimal /** сумма */
+    currencyId Long /** валюта */
+    externalAccount String /** счет внешней системы */
+    holdId Long /** холд по online счету */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    reference String /** референс */
+}
+
+/** Объект-значение */
+@identifierType(manual)
+entity Requirement000PayerDetails (requirement_000_payer_details) {
+    accountId Long /** online счет клиента */
+    active Boolean @default(false) /** оплата активна */
+    autoPay Boolean @default(false) /** Возможна автоматическая оплата */
+    externalAccount String /** номер счета во внешней системе */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    num Long /** порядковый номер */
+}
+
+/** Объект-значение */
+@identifierType(manual)
+entity Requirement000RelatedTaxes (requirement_000_related_taxes) {
+    amount BigDecimal /** сумма */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    typeOfTaxId Long /** вид налога */
+}
+
+/** Группа требований */
+@identifierType(manual)
+entity RequirementsGroup (requirements_group) {
+    groupPaymentStrategy GroupPaymentStrategy /** стратегия оплаты в группе */
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    version Integer /** номер версии */
+}
+
+/** Журнал транзакций саги */
+@identifierType(manual)
+entity TransactionLog (transaction_log) {
+    correlationId String
+    data TextBlob
+    objectName String
+    operationType String
+    sagaId String /** идентификатор саги */
+    timestamp Instant
+}
+
+/** Модель обновления требований */
+@identifierType(manual)
+entity UpdateRequirementModel (update_requirement_model) {
+    isDeleted Boolean @default(false) /** является удалённым объектом */
+    requirementList String /** список параметров требований */
+    version Integer /** номер версии */
+}
+
+relationship ManyToMany {
+    RequirementsGroup{members} to GroupMember{requirementsGroupOfMembers}
+}
+
+relationship ManyToMany {
+    Requirement{channelAutoPayment} to PaymentChannel{requirementOfChannelAutoPayment}
+}
+
+relationship ManyToMany {
+    Requirement{payments} to Payment{requirementOfPayments}
+}
+
+relationship ManyToOne {
+    GroupMember{requirement} to Requirement
+}
+
+relationship ManyToOne {
+    MonitoringRule{paymentChannel} to PaymentChannel
+}
+
+relationship ManyToOne {
+    Payment{paymentChannel} to PaymentChannel
+}
+
+relationship ManyToOne {
+    RelatedPayment{payment} to Payment
+}
+
+relationship ManyToOne {
+    Requirement000PayerDetails{paymentChannel} to PaymentChannel
+}
+
+relationship ManyToOne {
+    Requirement{paymentDetails000PaymentChannel} to PaymentChannel
+}
+
+relationship OneToMany {
+    Requirement{holds} to Requirement000Holds{requirementOfHolds}
+}
+
+relationship OneToMany {
+    Requirement{payerDetails} to Requirement000PayerDetails{requirementOfPayerDetails}
+}
+
+relationship OneToMany {
+    Requirement{relatedTaxes} to Requirement000RelatedTaxes{requirementOfRelatedTaxes}
+}
+
+paginate * with pagination
+dto * with mapstruct
+service * with serviceImpl
+filter *

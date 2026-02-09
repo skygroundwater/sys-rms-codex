@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-08-15" id="cre-refunding_payment.creation_time" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="creation_time" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="refunding_payment">
+            <column name="creation_time" remarks="дата и время создания" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-15" id="cre-refunding_payment.refund_time" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="refund_time" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="refunding_payment">
+            <column name="refund_time" remarks="дата и время возврата" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

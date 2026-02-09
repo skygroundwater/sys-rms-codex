@@ -1,0 +1,216 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="payment_channel"/>
+                <primaryKeyExists primaryKeyName="payment_channelPK" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Канал оплаты" tableName="payment_channel">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="payment_channelPK"/>
+            </column>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="payment_channel__bk1" oldTableName="payment_channel"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.active" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="active" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="active" remarks="используется" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.code" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:8525f967618dd823a715dcc20645eb78</validCheckSum>
+        <validCheckSum>8:b4b0071d559bb0a2ef1fead1674cbf09</validCheckSum>
+        <validCheckSum>8:e4dabcaec8f403ed9d7153d1389e1741</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="code" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="code" remarks="обозначение" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.is_auto_payment" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="is_auto_payment" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="is_auto_payment" remarks="возможна автоматическая оплата" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.is_create_payment" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="is_create_payment" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="is_create_payment" remarks="возможно создание платежа" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="is_deleted" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.is_init_holds" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="is_init_holds" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="is_init_holds" remarks="возможна установка холдов" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.name" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:4be23710355ef742ba44e26c4e8f7d98</validCheckSum>
+        <validCheckSum>8:598d5a5d1f94417d16a3d766998c29fb</validCheckSum>
+        <validCheckSum>8:f8b824df989c0df73825f14771de79f0</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="name" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="name" remarks="наименование" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.payment_class_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_class_id" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="payment_class_id" remarks="бизнес-объект" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.version" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:418b76c64e81a6fa628a68c33d9899dd</validCheckSum>
+        <validCheckSum>8:e9a1e490a496c1d3745167d2bc79fd19</validCheckSum>
+        <validCheckSum>9:b9a9a21e10724d17bfc3a8800082f374</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="version" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column defaultValueNumeric="0" name="version" remarks="номер версии" type="INTEGER"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-transaction_log" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="transaction_log"/>
+                <primaryKeyExists primaryKeyName="transaction_logPK" tableName="transaction_log"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Журнал транзакций саги" tableName="transaction_log">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="transaction_logPK"/>
+            </column>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="transaction_log__bk1" oldTableName="transaction_log"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-transaction_log.correlation_id" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:005c29f1d2542d9f65b723f39d953c22</validCheckSum>
+        <validCheckSum>8:09e2c04d65817f8ca2cafc5b61b3644a</validCheckSum>
+        <validCheckSum>8:b52aeda6444deea0b8c5e2d4c9a93413</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="correlation_id" tableName="transaction_log"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="transaction_log">
+            <column name="correlation_id" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-transaction_log.data" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="data" tableName="transaction_log"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="transaction_log">
+            <column name="data" type="CLOB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-transaction_log.object_name" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:336b90fd02d998b8111c6df269f5f341</validCheckSum>
+        <validCheckSum>8:7c7faaaf9fa2ae1e348d4e72935a821f</validCheckSum>
+        <validCheckSum>8:bba62c81d19dcbe9e02985b99317f2a6</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="object_name" tableName="transaction_log"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="transaction_log">
+            <column name="object_name" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-transaction_log.operation_type" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:e4048a47fba7a152ad1848e48bed2857</validCheckSum>
+        <validCheckSum>8:fbcb4231622c6f770e744c5e957d3570</validCheckSum>
+        <validCheckSum>8:fe70ec603d425f40c16d091731039b35</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="operation_type" tableName="transaction_log"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="transaction_log">
+            <column name="operation_type" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-transaction_log.saga_id" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:202e6da6e00245dadb507f21a8eef43a</validCheckSum>
+        <validCheckSum>8:5e7dbd2bd3b8bbb13485810325ad970a</validCheckSum>
+        <validCheckSum>8:f6d1ce8f2537f02088995265fede4d9b</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="saga_id" tableName="transaction_log"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="transaction_log">
+            <column name="saga_id" remarks="идентификатор саги" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-transaction_log.timestamp" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="timestamp" tableName="transaction_log"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="transaction_log">
+            <column name="timestamp" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-payment_channel_payment_class_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="payment_channel_payment_class_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="payment_channel_payment_class_id" tableName="payment_channel">
+            <column descending="false" name="payment_class_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

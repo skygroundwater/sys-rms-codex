@@ -1,0 +1,659 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-group_member.num" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="num" tableName="group_member"/>
+            <not>
+                <columnExists columnName="num__bk3" tableName="group_member"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="num__bk3" oldColumnName="num" tableName="group_member"/>
+        <dropNotNullConstraint columnName="num__bk3" tableName="group_member"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-monitoring_rule.rule_find" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="rule_find" tableName="monitoring_rule"/>
+            <not>
+                <columnExists columnName="rule_find__bk3" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="rule_find__bk3" oldColumnName="rule_find" tableName="monitoring_rule"/>
+        <dropNotNullConstraint columnName="rule_find__bk3" tableName="monitoring_rule"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-monitoring_rule.rule_match" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="rule_match" tableName="monitoring_rule"/>
+            <not>
+                <columnExists columnName="rule_match__bk3" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="rule_match__bk3" oldColumnName="rule_match" tableName="monitoring_rule"/>
+        <dropNotNullConstraint columnName="rule_match__bk3" tableName="monitoring_rule"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-payment_channel.payment_class_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_class_id" tableName="payment_channel"/>
+            <not>
+                <columnExists columnName="payment_class_id__bk3" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_class_id__bk3" oldColumnName="payment_class_id" tableName="payment_channel"/>
+        <dropNotNullConstraint columnName="payment_class_id__bk3" tableName="payment_channel"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-requirement.code" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="code" tableName="requirement"/>
+            <not>
+                <columnExists columnName="code__bk3" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="code__bk3" oldColumnName="code" tableName="requirement"/>
+        <dropNotNullConstraint columnName="code__bk3" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-requirement.code_a" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="code_a" tableName="requirement"/>
+            <not>
+                <columnExists columnName="code_a__bk3" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="code_a__bk3" oldColumnName="code_a" tableName="requirement"/>
+        <dropNotNullConstraint columnName="code_a__bk3" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-requirement.requirement_status" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="requirement_status" tableName="requirement"/>
+            <not>
+                <columnExists columnName="requirement_status__bk3" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="requirement_status__bk3" oldColumnName="requirement_status" tableName="requirement"/>
+        <dropNotNullConstraint columnName="requirement_status__bk3" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-requirement.xz" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="xz" tableName="requirement"/>
+            <not>
+                <columnExists columnName="xz__bk3" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="xz__bk3" oldColumnName="xz" tableName="requirement"/>
+        <dropNotNullConstraint columnName="xz__bk3" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-requirement.xz_2" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="xz_2" tableName="requirement"/>
+            <not>
+                <columnExists columnName="xz_2__bk3" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="xz_2__bk3" oldColumnName="xz_2" tableName="requirement"/>
+        <dropNotNullConstraint columnName="xz_2__bk3" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-requirement.xz_3" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="xz_3" tableName="requirement"/>
+            <not>
+                <columnExists columnName="xz_3__bk3" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="xz_3__bk3" oldColumnName="xz_3" tableName="requirement"/>
+        <dropNotNullConstraint columnName="xz_3__bk3" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-group_member.num" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:b49a25a7fe1cd2a3e7fffdc218be9a7f</validCheckSum>
+        <validCheckSum>8:ef26b39747bc93c6c390a9675381eb97</validCheckSum>
+        <validCheckSum>9:ef6e7e7fbca0b1a9822df0ce45168857</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="num" tableName="group_member"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="group_member">
+            <column name="num" remarks="номер в группе" type="INTEGER"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-monitoring_rule.rule_find" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="rule_find" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="monitoring_rule">
+            <column name="rule_find" remarks="правило отбора платежей" type="CLOB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-monitoring_rule.rule_match" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="rule_match" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="monitoring_rule">
+            <column name="rule_match" remarks="правило соответствия" type="CLOB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-payment_channel.payment_class" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:348a8fef62fd658e4e58067ac02b7e53</validCheckSum>
+        <validCheckSum>8:52e03ba9592a9900272a0cdefbcfb047</validCheckSum>
+        <validCheckSum>8:dc01598c3a83a00212ed5f87126ada53</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_class" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="payment_class" remarks="класс платежей" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-rel_requirement__payments" objectQuotingStrategy="LEGACY">
+        <validCheckSum>9:311845409913d82e2c75081cb5b63df7</validCheckSum>
+        <validCheckSum>9:69eab60d1e62c70748852a1157091c44</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="rel_requirement__payments"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Таблица связи между Requirement.payments и Payment" tableName="rel_requirement__payments">
+            <column name="requirement_id" remarks="Requirement" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payments_id" remarks="Payment" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="requirement_id,payments_id" constraintName="rel_requirement__paymentsPK" tableName="rel_requirement__payments"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.base_document" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:3d25d13cc4bf419e00e57a3c6fa90de6</validCheckSum>
+        <validCheckSum>8:96ba9c79929290d91da2740eaca58926</validCheckSum>
+        <validCheckSum>8:a0a35ccb5895764db4219038cbeb6ca7</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="base_document" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="base_document" remarks="документ-основание" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.contract_point_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="contract_point_id" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="contract_point_id" remarks="пункт графика договора" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.payment_details_000_descr" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:303ecf6742b2bc36bb6737da65e99908</validCheckSum>
+        <validCheckSum>8:8d70dd3e54b96893750f4cd5f879d120</validCheckSum>
+        <validCheckSum>8:dda3a2d27dd889dae54d251b96aa4afb</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_details_000_descr" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="payment_details_000_descr" remarks="текст назначения платежа" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.payment_details_000_knp" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:7d7362b40327da5ba0c07b2c61007664</validCheckSum>
+        <validCheckSum>8:e7fd814ee6412b2ee76d0bb1f57c14c4</validCheckSum>
+        <validCheckSum>8:eb1c6a1bfc017e6e24170d99bccc0598</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_details_000_knp" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="payment_details_000_knp" remarks="код назначения платежа" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.payment_details_000_payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_details_000_payment_channel_id" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="payment_details_000_payment_channel_id" remarks="канал оплаты" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.payment_details_000_payment_num" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:212106e1f8a792d3aad5710d998e44c0</validCheckSum>
+        <validCheckSum>8:31ea81a3aea05a6e3605ce416ac177d9</validCheckSum>
+        <validCheckSum>8:5765d15509d97a9e7096700d05893091</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_details_000_payment_num" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="payment_details_000_payment_num" remarks="номер платежного документа" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.recipient_details" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:7e3e9004279e198e52ef6d3cc02f8b32</validCheckSum>
+        <validCheckSum>8:84dcaf56a4bfcfa290a809678cba4946</validCheckSum>
+        <validCheckSum>8:ad2304fab3f1efbb231a109bcacb20ff</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="recipient_details" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="recipient_details" remarks="реквизиты получателя" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement.status" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="status" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="status" remarks="состояние требования" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="requirement_000_holds"/>
+                <primaryKeyExists primaryKeyName="requirement_000_holdsPK" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Объект-значение" tableName="requirement_000_holds">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="requirement_000_holdsPK"/>
+            </column>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="requirement_000_holds__bk3" oldTableName="requirement_000_holds"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.account_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="account_id" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="account_id" remarks="online счет клиента" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.amount" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:2940e09f77dd2fe82eb45dcd3258d40c</validCheckSum>
+        <validCheckSum>8:57263c01c7b931f0d57eb8db1a39e61a</validCheckSum>
+        <validCheckSum>8:60c35dd7c9016b2e7e6f13d074354226</validCheckSum>
+        <validCheckSum>9:da15205fa678f9f4d0bb7be54854c7e8</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="amount" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="amount" remarks="сумма" type="DECIMAL"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.currency_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="currency_id" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="currency_id" remarks="валюта" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.external_account" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:97ebeee347115a06a34e00bc37e14870</validCheckSum>
+        <validCheckSum>8:bbb256e3838b9745214ff4f5c5a0a785</validCheckSum>
+        <validCheckSum>8:e0cb3284515374ac7325d128fd7fbc7c</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="external_account" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="external_account" remarks="счет внешней системы" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.hold_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="hold_id" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="hold_id" remarks="холд по online счету" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="is_deleted" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.master_object_000" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="master_object_000" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="master_object_000" remarks="обобщенная ссылка на владельца(мастера)" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.reference" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:7d200136bd214da463cdcaa8805fcaf2</validCheckSum>
+        <validCheckSum>8:bfd58f5061a55cdab5bbd0cd7bd83b9d</validCheckSum>
+        <validCheckSum>8:f3b06528250650cebad8cc2949773ea0</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="reference" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="reference" remarks="референс" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_holds.requirement_of_holds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="requirement_of_holds_id" tableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_holds">
+            <column name="requirement_of_holds_id" remarks="холды" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="requirement_000_payer_details"/>
+                <primaryKeyExists primaryKeyName="requirement_000_payer_detailsPK" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Объект-значение" tableName="requirement_000_payer_details">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="requirement_000_payer_detailsPK"/>
+            </column>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="requirement_000_payer_details__bk3" oldTableName="requirement_000_payer_details"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.account_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="account_id" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="account_id" remarks="online счет клиента" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.active" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="active" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="active" remarks="оплата активна" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.auto_pay" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="auto_pay" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="auto_pay" remarks="Возможна автоматическая оплата" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.external_account" objectQuotingStrategy="LEGACY">
+        <validCheckSum>8:1b9f2f803ce9ba64cc415171a4419c13</validCheckSum>
+        <validCheckSum>8:340724fc92c46c4ad4d8db2edb787322</validCheckSum>
+        <validCheckSum>8:e06e3e476e79300902dbc56b28b47a90</validCheckSum>
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="external_account" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="external_account" remarks="номер счета во внешней системе" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="is_deleted" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.master_object_000" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="master_object_000" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="master_object_000" remarks="обобщенная ссылка на владельца(мастера)" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.num" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="num" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="num" remarks="порядковый номер" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_channel_id" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="payment_channel_id" remarks="канал оплаты" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-requirement_000_payer_details.requirement_of_payer_details_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="requirement_of_payer_details_id" tableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_000_payer_details">
+            <column name="requirement_of_payer_details_id" remarks="реквизиты плательщика" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-fk-rel_requirement__payments.payments_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKr753im8yauu6gqkvytjgbotaj" foreignKeyTableName="rel_requirement__payments"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="payments_id" baseTableName="rel_requirement__payments" constraintName="FKr753im8yauu6gqkvytjgbotaj" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-fk-rel_requirement__payments.requirement_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKkwt6tsumkwqmpip2j4eq044tw" foreignKeyTableName="rel_requirement__payments"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="requirement_id" baseTableName="rel_requirement__payments" constraintName="FKkwt6tsumkwqmpip2j4eq044tw" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-fk-requirement.payment_details_000_payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKo85t3dpa1uh5lxgc5ospcamox" foreignKeyTableName="requirement"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="payment_details_000_payment_channel_id" baseTableName="requirement" constraintName="FKo85t3dpa1uh5lxgc5ospcamox" referencedColumnNames="id" referencedTableName="payment_channel"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-fk-requirement_000_holds.requirement_of_holds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKr376gc4xmivqyam0hy28ex9x3" foreignKeyTableName="requirement_000_holds"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="requirement_of_holds_id" baseTableName="requirement_000_holds" constraintName="FKr376gc4xmivqyam0hy28ex9x3" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-fk-requirement_000_payer_details.payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKeunk2q6p4ncc30l9fqrjjfrpg" foreignKeyTableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="payment_channel_id" baseTableName="requirement_000_payer_details" constraintName="FKeunk2q6p4ncc30l9fqrjjfrpg" referencedColumnNames="id" referencedTableName="payment_channel"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-fk-requirement_000_payer_details.requirement_of_payer_details_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKh16gf0aueseqa5xdlx4ad1gk" foreignKeyTableName="requirement_000_payer_details"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="requirement_of_payer_details_id" baseTableName="requirement_000_payer_details" constraintName="FKh16gf0aueseqa5xdlx4ad1gk" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-rel_requirement__payments.payments_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKr753im8yauu6gqkvytjgbotaj"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKr753im8yauu6gqkvytjgbotaj" tableName="rel_requirement__payments">
+            <column descending="false" name="payments_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement.payment_details_000_payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKo85t3dpa1uh5lxgc5ospcamox"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKo85t3dpa1uh5lxgc5ospcamox" tableName="requirement">
+            <column descending="false" name="payment_details_000_payment_channel_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_000_holds.requirement_of_holds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKr376gc4xmivqyam0hy28ex9x3"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKr376gc4xmivqyam0hy28ex9x3" tableName="requirement_000_holds">
+            <column descending="false" name="requirement_of_holds_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_000_holds_account_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_000_holds_account_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_000_holds_account_id" tableName="requirement_000_holds">
+            <column descending="false" name="account_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_000_holds_currency_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_000_holds_currency_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_000_holds_currency_id" tableName="requirement_000_holds">
+            <column descending="false" name="currency_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_000_holds_hold_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_000_holds_hold_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_000_holds_hold_id" tableName="requirement_000_holds">
+            <column descending="false" name="hold_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_000_payer_details.payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKeunk2q6p4ncc30l9fqrjjfrpg"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKeunk2q6p4ncc30l9fqrjjfrpg" tableName="requirement_000_payer_details">
+            <column descending="false" name="payment_channel_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_000_payer_details.requirement_of_payer_details_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKh16gf0aueseqa5xdlx4ad1gk"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKh16gf0aueseqa5xdlx4ad1gk" tableName="requirement_000_payer_details">
+            <column descending="false" name="requirement_of_payer_details_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_000_payer_details_account_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_000_payer_details_account_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_000_payer_details_account_id" tableName="requirement_000_payer_details">
+            <column descending="false" name="account_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-idx-requirement_contract_point_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_contract_point_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_contract_point_id" tableName="requirement">
+            <column descending="false" name="contract_point_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" id="del-RequirementLsCodeB" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="requirement_ls_code_b__bk3"/>
+            </not>
+        </preConditions>
+        <renameTable newTableName="requirement_ls_code_b__bk3" oldTableName="requirement_ls_code_b"/>
+        <dropAllForeignKeyConstraints baseTableName="requirement_ls_code_b__bk3"/>
+        <rollback>
+            <renameTable newTableName="requirement_ls_code_b" oldTableName="requirement_ls_code_b__bk3"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" id="del-RequirementLsCodeC" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="requirement_ls_code_c__bk3"/>
+            </not>
+        </preConditions>
+        <renameTable newTableName="requirement_ls_code_c__bk3" oldTableName="requirement_ls_code_c"/>
+        <dropAllForeignKeyConstraints baseTableName="requirement_ls_code_c__bk3"/>
+        <rollback>
+            <renameTable newTableName="requirement_ls_code_c" oldTableName="requirement_ls_code_c__bk3"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

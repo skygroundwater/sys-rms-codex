@@ -1,0 +1,282 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150756",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "requirement",
+  "fields": [
+    {
+      "fieldName": "actualPaymentDate",
+      "fieldType": "LocalDate",
+      "javadoc": "фактическая дата оплаты"
+    },
+    {
+      "fieldName": "amount",
+      "fieldType": "BigDecimal",
+      "javadoc": "сумма"
+    },
+    {
+      "fieldName": "baseDocument",
+      "fieldType": "String",
+      "javadoc": "документ-основание"
+    },
+    {
+      "fieldName": "clientId",
+      "fieldType": "Long",
+      "javadoc": "физическое или юридическое лицо"
+    },
+    {
+      "fieldName": "contractPointId",
+      "fieldType": "Long",
+      "javadoc": "пункт графика договора"
+    },
+    {
+      "fieldName": "currencyId",
+      "fieldType": "Long",
+      "javadoc": "валюта"
+    },
+    {
+      "fieldName": "date",
+      "fieldType": "LocalDate",
+      "javadoc": "дата"
+    },
+    {
+      "fieldName": "descr",
+      "fieldType": "String",
+      "javadoc": "дополнительная информация"
+    },
+    {
+      "fieldName": "externalReference",
+      "fieldType": "String",
+      "javadoc": "референс во внешней системе"
+    },
+    {
+      "fieldName": "fixRate",
+      "fieldType": "BigDecimal",
+      "javadoc": "фиксированный курс"
+    },
+    {
+      "fieldName": "indicatorId",
+      "fieldType": "Long",
+      "javadoc": "расчетная категория"
+    },
+    {
+      "fieldName": "inside",
+      "fieldType": "Boolean",
+      "javadoc": "является требованием со стороны банка",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean",
+      "javadoc": "является удалённым объектом",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "isHolding",
+      "fieldType": "Boolean",
+      "javadoc": "холдировать средства",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "operationRecordId",
+      "fieldType": "Long",
+      "javadoc": "запись об операции"
+    },
+    {
+      "fieldName": "paidAmount",
+      "fieldType": "BigDecimal",
+      "javadoc": "оплаченная сумма"
+    },
+    {
+      "fieldName": "paymentDetails000Descr",
+      "fieldType": "String",
+      "javadoc": "текст назначения платежа"
+    },
+    {
+      "fieldName": "paymentDetails000Knp",
+      "fieldType": "String",
+      "javadoc": "код назначения платежа"
+    },
+    {
+      "fieldName": "paymentDetails000PaymentNum",
+      "fieldType": "String",
+      "javadoc": "номер платежного документа"
+    },
+    {
+      "fieldName": "paymentEndDate",
+      "fieldType": "LocalDate",
+      "javadoc": "дата окончания оплаты"
+    },
+    {
+      "fieldName": "paymentStrategy000AccountSelectionRule",
+      "fieldType": "AccountSelectionRule",
+      "fieldTypeJavadoc": "Правило выбора счета",
+      "fieldValues": "CURRENCY,ORDER,UNDEFINED",
+      "fieldValuesJavadocs": {
+        "CURRENCY": "Приоритет для счета в валюте требования",
+        "ORDER": "Строго в заданном порядке",
+        "UNDEFINED": "Не определено"
+      },
+      "javadoc": "правило выбора счета"
+    },
+    {
+      "fieldName": "paymentStrategy000AllowAutoPay",
+      "fieldType": "Boolean",
+      "javadoc": "разрешена автоматическая оплата",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "paymentStrategy000AllowGroupPay",
+      "fieldType": "Boolean",
+      "javadoc": "разрешена оплата группой",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "paymentStrategy000AllowOverdraft",
+      "fieldType": "Boolean",
+      "javadoc": "разрешено использование заемных средств",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "paymentStrategy000AllowPartPay",
+      "fieldType": "Boolean",
+      "javadoc": "разрешена оплата по частям",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "paymentStrategy000ControlExternalSystem",
+      "fieldType": "Boolean",
+      "javadoc": "передано под управление внешней системы",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "paymentStrategy000UseAccOnlyFullPay",
+      "fieldType": "Boolean",
+      "javadoc": "использовать счет только при наличии баланса на полную оплату",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "personId",
+      "fieldType": "Long",
+      "javadoc": "получатель"
+    },
+    {
+      "fieldName": "priority",
+      "fieldType": "BigDecimal",
+      "javadoc": "приоритет"
+    },
+    {
+      "fieldName": "rateTypeId",
+      "fieldType": "Long",
+      "javadoc": "тип курса"
+    },
+    {
+      "fieldName": "recipientDetails",
+      "fieldType": "String",
+      "javadoc": "реквизиты получателя"
+    },
+    {
+      "fieldName": "reference",
+      "fieldType": "String",
+      "javadoc": "референс"
+    },
+    {
+      "fieldName": "serialNumber",
+      "fieldType": "Long",
+      "javadoc": "порядковый номер"
+    },
+    {
+      "fieldName": "startPaymentDate",
+      "fieldType": "LocalDate",
+      "javadoc": "дата начала оплаты"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text",
+      "javadoc": "состояние требования"
+    },
+    {
+      "fieldName": "unpaidAmount",
+      "fieldType": "BigDecimal",
+      "javadoc": "неоплаченная сумма"
+    },
+    {
+      "fieldName": "version",
+      "fieldType": "Integer",
+      "javadoc": "номер версии"
+    },
+    {
+      "fieldName": "writeOffAmount",
+      "fieldType": "BigDecimal",
+      "javadoc": "списанная сумма"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Требование",
+  "jpaMetamodelFiltering": true,
+  "name": "Requirement",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "requirement000Holds",
+      "otherEntityRelationshipName": "requirementOfHolds",
+      "relationshipName": "holds",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "requirement000PayerDetails",
+      "otherEntityRelationshipName": "requirementOfPayerDetails",
+      "relationshipName": "payerDetails",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "requirement000RelatedTaxes",
+      "otherEntityRelationshipName": "requirementOfRelatedTaxes",
+      "relationshipName": "relatedTaxes",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "paymentChannel",
+      "relationshipName": "paymentDetails000PaymentChannel",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "paymentChannel",
+      "otherEntityRelationshipName": "requirementOfChannelAutoPayment",
+      "ownerSide": true,
+      "relationshipName": "channelAutoPayment",
+      "relationshipType": "many-to-many"
+    },
+    {
+      "otherEntityName": "payment",
+      "otherEntityRelationshipName": "requirementOfPayments",
+      "ownerSide": true,
+      "relationshipName": "payments",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "service": "serviceImpl"
+}

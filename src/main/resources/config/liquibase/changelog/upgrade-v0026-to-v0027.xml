@@ -1,0 +1,77 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-08-14" id="cre-refunding_payment.payment_of_refund_payments_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_of_refund_payments_id" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="refunding_payment">
+            <column name="payment_of_refund_payments_id" remarks="возвратный платеж" type="bigint"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="cre-requirement_refunding_payment.payment_amount" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="payment_amount" tableName="requirement_refunding_payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_refunding_payment">
+            <column name="payment_amount" remarks="сумма возвратного платежа" type="DECIMAL"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="cre-fk-refunding_payment.payment_of_refund_payments_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKb19u5mj5scwvc3bdfefcxb4ua" foreignKeyTableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="payment_of_refund_payments_id" baseTableName="refunding_payment" constraintName="FKb19u5mj5scwvc3bdfefcxb4ua" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="cre-idx-refunding_payment.payment_of_refund_payments_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKb19u5mj5scwvc3bdfefcxb4ua"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKb19u5mj5scwvc3bdfefcxb4ua" tableName="refunding_payment">
+            <column descending="false" name="payment_of_refund_payments_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="del-PaymentRefund" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="payment_refund__bk27"/>
+            </not>
+        </preConditions>
+        <renameTable newTableName="payment_refund__bk27" oldTableName="payment_refund"/>
+        <dropAllForeignKeyConstraints baseTableName="payment_refund__bk27"/>
+        <rollback>
+            <renameTable newTableName="payment_refund" oldTableName="payment_refund__bk27"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="del-fk-FK4vswqhn4mgf66ewigh6c4uxpt" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <foreignKeyConstraintExists foreignKeyName="FK4vswqhn4mgf66ewigh6c4uxpt"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="payment_refund__bk27" constraintName="FK4vswqhn4mgf66ewigh6c4uxpt"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="del-pk-payment_refund" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <tableExists tableName="payment_refund__bk27"/>
+        </preConditions>
+        <dropPrimaryKey dropIndex="true" tableName="payment_refund__bk27"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="del-idx-FK4vswqhn4mgf66ewigh6c4uxpt" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <indexExists indexName="FK4vswqhn4mgf66ewigh6c4uxpt"/>
+        </preConditions>
+        <dropIndex indexName="FK4vswqhn4mgf66ewigh6c4uxpt" tableName="payment_refund__bk27"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-14" id="del-idx-payment_refund_reference_payment_of_payment_refunds_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <indexExists indexName="payment_refund_reference_payment_of_payment_refunds_id"/>
+        </preConditions>
+        <dropIndex indexName="payment_refund_reference_payment_of_payment_refunds_id" tableName="payment_refund__bk27"/>
+    </changeSet>
+</databaseChangeLog>

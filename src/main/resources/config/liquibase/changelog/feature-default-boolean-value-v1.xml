@@ -1,0 +1,183 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-monitoring_rule.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="monitoring_rule"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update monitoring_rule set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirements_group.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirements_group"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirements_group set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment_channel.active" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="active" tableName="payment_channel"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_channel set active = false where active is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment_channel.is_auto_payment" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_auto_payment" tableName="payment_channel"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_channel set is_auto_payment = false where is_auto_payment is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment_channel.is_create_payment" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_create_payment" tableName="payment_channel"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_channel set is_create_payment = false where is_create_payment is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment_channel.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="payment_channel"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_channel set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment_channel.is_init_holds" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_init_holds" tableName="payment_channel"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_channel set is_init_holds = false where is_init_holds is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="payment"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-group_member.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="group_member"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update group_member set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-related_payment.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="related_payment"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update related_payment set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-update_requirement_model.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="update_requirement_model"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update update_requirement_model set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-indicator_requirement_type_map.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="indicator_requirement_type_map"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update indicator_requirement_type_map set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_type.is_bank_issued" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_bank_issued" tableName="requirement_type"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_type set is_bank_issued = false where is_bank_issued is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_type.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_type"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_type set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_type.is_partial_payable" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_partial_payable" tableName="requirement_type"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_type set is_partial_payable = false where is_partial_payable is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_type.use_loan_funds" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="use_loan_funds" tableName="requirement_type"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_type set use_loan_funds = false where use_loan_funds is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_holds.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_000_holds"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_holds set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_payer_details.active" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="active" tableName="requirement_000_payer_details"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_payer_details set active = false where active is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_payer_details.auto_pay" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="auto_pay" tableName="requirement_000_payer_details"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_payer_details set auto_pay = false where auto_pay is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_payer_details.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_000_payer_details"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_payer_details set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_related_taxes.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_000_related_taxes"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_related_taxes set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.is_contract_bound" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_contract_bound" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set is_contract_bound = false where is_contract_bound is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.is_holding" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_holding" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set is_holding = false where is_holding is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.payment_strategy_000_allow_auto_pay" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_allow_auto_pay" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set payment_strategy_000_allow_auto_pay = false where payment_strategy_000_allow_auto_pay is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.payment_strategy_000_allow_group_pay" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_allow_group_pay" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set payment_strategy_000_allow_group_pay = false where payment_strategy_000_allow_group_pay is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.payment_strategy_000_allow_overdraft" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_allow_overdraft" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set payment_strategy_000_allow_overdraft = false where payment_strategy_000_allow_overdraft is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.payment_strategy_000_allow_part_pay" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_allow_part_pay" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set payment_strategy_000_allow_part_pay = false where payment_strategy_000_allow_part_pay is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.payment_strategy_000_control_external_system" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_control_external_system" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set payment_strategy_000_control_external_system = false where payment_strategy_000_control_external_system is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.payment_strategy_000_use_acc_only_full_pay" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_use_acc_only_full_pay" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set payment_strategy_000_use_acc_only_full_pay = false where payment_strategy_000_use_acc_only_full_pay is null;</sql>
+    </changeSet>
+</databaseChangeLog>

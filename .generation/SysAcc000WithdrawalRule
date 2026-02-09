@@ -1,0 +1,18 @@
+Entity{
+  title='SysAcc000WithdrawalRule'
+  fields=
+    Field{fieldName='accountSelectionType', fieldType='ClientAccountSelectionType', primitiveFieldType=null, fieldTypeEnumId=Id[title=ClientAccountSelectionType, namespacePath=/SYS/ACC], validationType='required', defaultValue='"SPECIFIED"', comment='способ выбора счетов / карт клиента', realTypeName='null', owningEntity=Entity{title='SysAcc000WithdrawalRule', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='SysAcc000WithdrawalRule', ...}, historical=false}
+    Field{fieldName='priority', fieldType='Integer', primitiveFieldType=INTEGER, fieldTypeEnumId=null, validationType='required', defaultValue='1', comment='очередность', realTypeName='null', owningEntity=Entity{title='SysAcc000WithdrawalRule', ...}, historical=false}
+    Field{fieldName='purposeTemplateId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='шаблон назначения платежа', realTypeName='REFERENCE', owningEntity=Entity{title='SysAcc000WithdrawalRule', ...}, historical=false}
+    Field{fieldName='searchRule', fieldType='TextBlob', primitiveFieldType=TEXT_BLOB, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='правило поиска счетов / карт', realTypeName='null', owningEntity=Entity{title='SysAcc000WithdrawalRule', ...}, historical=false}
+    Field{fieldName='withdrawalTypeId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='вариант списания денег', realTypeName='REFERENCE', owningEntity=Entity{title='SysAcc000WithdrawalRule', ...}, historical=false}
+  version=1
+  description='Правило списания денег'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='SysAcc000WithdrawalRule', fieldName='requirementOfWithdrawalRules', relationType=ManyToOne, entityTitleTo='Requirement', fieldNameTo='withdrawalRules', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='null', annotations={}, ownerSide=false, simpleList=false, historical=false}
+    Relation{entityTitle='SysAcc000WithdrawalRule', fieldName='accountNumbers', relationType=OneToMany, entityTitleTo='SysAcc000WithdrawalRuleLsAccountNumbers', fieldNameTo='owner', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='null', annotations={}, ownerSide=false, simpleList=true, historical=false}
+  simpleList=false
+}

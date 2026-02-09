@@ -1,0 +1,12 @@
+Entity{
+  title='RequirementType000WithdrawalTypes'
+  fields=
+    Field{fieldName='referenceId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='required', defaultValue='null', comment='варианты списания', realTypeName='null', owningEntity=Entity{title='RequirementType000WithdrawalTypes', ...}, historical=false}
+  version=1
+  description='Вид требования: варианты списания'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='RequirementType000WithdrawalTypes', fieldName='requirementType', relationType=ManyToOne, entityTitleTo='RequirementType', fieldNameTo='withdrawalTypes', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='null', annotations={}, ownerSide=false, simpleList=false, historical=false}
+  simpleList=false
+}

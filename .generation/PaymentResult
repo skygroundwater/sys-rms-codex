@@ -1,0 +1,10 @@
+Enum{
+  title='PaymentResult'
+  values=
+    Value{key='null', value='CANCELED', data='null', description='Аннулирован', enumName='PaymentResult', predecessorValue='canceled'}
+    Value{key='null', value='NOT_PAID', data='null', description='Не оплачен', enumName='PaymentResult', predecessorValue='notpaid'}
+    Value{key='null', value='PAID', data='null', description='Оплачен', enumName='PaymentResult', predecessorValue='paid'}
+  description='Результат оплаты'
+  namespacePath='/SYS/RMS'
+  fromForeignNamespace='false'
+}

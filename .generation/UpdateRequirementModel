@@ -1,0 +1,16 @@
+Entity{
+  title='UpdateRequirementModel'
+  fields=
+    Field{fieldName='editDate', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='дата редактирования', realTypeName='null', owningEntity=Entity{title='UpdateRequirementModel', ...}, historical=false}
+    Field{fieldName='editorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='редактор', realTypeName='REFERENCE', owningEntity=Entity{title='UpdateRequirementModel', ...}, historical=false}
+    Field{fieldName='executorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='исполнитель', realTypeName='REFERENCE', owningEntity=Entity{title='UpdateRequirementModel', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='UpdateRequirementModel', ...}, historical=false}
+    Field{fieldName='requirementList', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='список параметров требований', realTypeName='null', owningEntity=Entity{title='UpdateRequirementModel', ...}, historical=false}
+    Field{fieldName='version', fieldType='Integer', primitiveFieldType=INTEGER, fieldTypeEnumId=null, validationType='null', defaultValue='null', comment='номер версии', realTypeName='null', owningEntity=Entity{title='UpdateRequirementModel', ...}, historical=false}
+  version=2
+  description='Модель обновления требований'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+  simpleList=false
+}

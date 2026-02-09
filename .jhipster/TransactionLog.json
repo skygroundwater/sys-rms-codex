@@ -1,0 +1,45 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150801",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "transaction_log",
+  "fields": [
+    {
+      "fieldName": "correlationId",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "data",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text"
+    },
+    {
+      "fieldName": "objectName",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "operationType",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "sagaId",
+      "fieldType": "String",
+      "javadoc": "идентификатор саги"
+    },
+    {
+      "fieldName": "timestamp",
+      "fieldType": "Instant"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Журнал транзакций саги",
+  "jpaMetamodelFiltering": true,
+  "name": "TransactionLog",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [],
+  "service": "serviceImpl"
+}

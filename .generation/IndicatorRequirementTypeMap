@@ -1,0 +1,17 @@
+Entity{
+  title='IndicatorRequirementTypeMap'
+  fields=
+    Field{fieldName='editDate', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='дата редактирования', realTypeName='null', owningEntity=Entity{title='IndicatorRequirementTypeMap', ...}, historical=false}
+    Field{fieldName='editorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='редактор', realTypeName='REFERENCE', owningEntity=Entity{title='IndicatorRequirementTypeMap', ...}, historical=false}
+    Field{fieldName='executorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='исполнитель', realTypeName='REFERENCE', owningEntity=Entity{title='IndicatorRequirementTypeMap', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='IndicatorRequirementTypeMap', ...}, historical=false}
+    Field{fieldName='localeId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='локализация', realTypeName='REFERENCE', owningEntity=Entity{title='IndicatorRequirementTypeMap', ...}, historical=false}
+    Field{fieldName='requirementTypeRule', fieldType='TextBlob', primitiveFieldType=TEXT_BLOB, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='правило определения вида требования', realTypeName='null', owningEntity=Entity{title='IndicatorRequirementTypeMap', ...}, historical=false}
+    Field{fieldName='version', fieldType='Integer', primitiveFieldType=INTEGER, fieldTypeEnumId=null, validationType='null', defaultValue='null', comment='номер версии', realTypeName='null', owningEntity=Entity{title='IndicatorRequirementTypeMap', ...}, historical=false}
+  version=2
+  description='Связь вида требования с расчетной категорией'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+  simpleList=false
+}

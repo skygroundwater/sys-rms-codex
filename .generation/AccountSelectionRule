@@ -1,0 +1,10 @@
+Enum{
+  title='AccountSelectionRule'
+  values=
+    Value{key='null', value='CURRENCY', data='null', description='Приоритет для счета в валюте требования', enumName='AccountSelectionRule', predecessorValue='currency'}
+    Value{key='null', value='ORDER', data='null', description='Строго в заданном порядке', enumName='AccountSelectionRule', predecessorValue='order'}
+    Value{key='null', value='UNDEFINED', data='null', description='Не определено', enumName='AccountSelectionRule', predecessorValue='undefined'}
+  description='Правило выбора счета'
+  namespacePath='/SYS/RMS'
+  fromForeignNamespace='false'
+}

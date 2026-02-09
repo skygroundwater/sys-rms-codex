@@ -1,0 +1,12 @@
+Entity{
+  title='SysAcc000WithdrawalRuleLsAccountNumbers'
+  fields=
+    Field{fieldName='value', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='required', defaultValue='null', comment='значение', realTypeName='String', owningEntity=Entity{title='SysAcc000WithdrawalRuleLsAccountNumbers', ...}, historical=false}
+  version=1
+  description='null'
+  mission=PRIMITIVE_LIST
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='SysAcc000WithdrawalRuleLsAccountNumbers', fieldName='owner', relationType=ManyToOne, entityTitleTo='SysAcc000WithdrawalRule', fieldNameTo='accountNumbers', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=true, fieldDescription='null', annotations={}, ownerSide=true, simpleList=true, historical=false}
+  simpleList=true
+}

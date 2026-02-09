@@ -1,0 +1,22 @@
+Entity{
+  title='PaymentChannel'
+  fields=
+    Field{fieldName='active', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='используется', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='code', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='required unique', defaultValue='', comment='обозначение', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='editDate', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='дата редактирования', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='editorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='редактор', realTypeName='REFERENCE', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='executorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='исполнитель', realTypeName='REFERENCE', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='isAutoPayment', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='возможна автоматическая оплата', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='isCreatePayment', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='возможно создание платежа', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='isInitHolds', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='возможна установка холдов', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='name', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='required unique', defaultValue='', comment='наименование', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='paymentClass', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='класс платежей', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+    Field{fieldName='version', fieldType='Integer', primitiveFieldType=INTEGER, fieldTypeEnumId=null, validationType='null', defaultValue='null', comment='номер версии', realTypeName='null', owningEntity=Entity{title='PaymentChannel', ...}, historical=false}
+  version=3
+  description='Канал оплаты'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+  simpleList=false
+}

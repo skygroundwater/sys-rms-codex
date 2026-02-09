@@ -1,0 +1,43 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150755",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "related_payment",
+  "fields": [
+    {
+      "fieldName": "amount",
+      "fieldType": "BigDecimal",
+      "javadoc": "сумма исполнения"
+    },
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean",
+      "javadoc": "является удалённым объектом",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "version",
+      "fieldType": "Integer",
+      "javadoc": "номер версии"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Связанный платеж",
+  "jpaMetamodelFiltering": true,
+  "name": "RelatedPayment",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "payment",
+      "relationshipName": "payment",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "serviceImpl"
+}

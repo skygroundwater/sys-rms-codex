@@ -1,0 +1,31 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2024-11-14" id="upd-enum-payment.payment_result" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="payment"/>
+                <columnExists columnName="payment_result" tableName="payment"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "payment" set "payment_result" = CASE "payment_result"
+WHEN 'CANCELED' THEN 'CANCELED' 
+WHEN 'NOTPAID' THEN 'NOT_PAID' 
+WHEN 'PAID' THEN 'PAID' 
+ELSE "payment_result" END
+where "payment_result" in ('CANCELED', 'NOTPAID', 'PAID');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-11-14" id="upd-enum-requirement.payment_strategy_000_account_selection_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirement"/>
+                <columnExists columnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "requirement" set "payment_strategy_000_account_selection_rule" = CASE "payment_strategy_000_account_selection_rule"
+WHEN 'CURRENCY' THEN 'CURRENCY' 
+WHEN 'ORDER' THEN 'ORDER' 
+WHEN 'UNDEFINED' THEN 'UNDEFINED' 
+ELSE "payment_strategy_000_account_selection_rule" END
+where "payment_strategy_000_account_selection_rule" in ('CURRENCY', 'ORDER', 'UNDEFINED');</sql>
+    </changeSet>
+</databaseChangeLog>

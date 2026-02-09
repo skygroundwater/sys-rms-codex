@@ -1,0 +1,403 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-group_member.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="group_member"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="group_member">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-group_member.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="group_member"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="group_member">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-group_member.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="group_member"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="group_member">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-indicator_requirement_type_map.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="indicator_requirement_type_map">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-indicator_requirement_type_map.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="indicator_requirement_type_map">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-indicator_requirement_type_map.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="indicator_requirement_type_map">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-monitoring_rule.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="monitoring_rule">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-monitoring_rule.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="monitoring_rule">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-monitoring_rule.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="monitoring_rule">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-payment.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-payment.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-payment.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="payment"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-payment_channel.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-payment_channel.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-payment_channel.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="payment_channel"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment_channel">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-requirement_type.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="requirement_type"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_type">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-requirement_type.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="requirement_type"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_type">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-requirement_type.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="requirement_type"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement_type">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-requirements_group.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="requirements_group"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirements_group">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-requirements_group.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="requirements_group"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirements_group">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-requirements_group.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="requirements_group"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirements_group">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-update_requirement_model.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="update_requirement_model"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="update_requirement_model">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-update_requirement_model.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="update_requirement_model"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="update_requirement_model">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-update_requirement_model.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="update_requirement_model"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="update_requirement_model">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-group_member_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="group_member_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="group_member_editor_id" tableName="group_member">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-group_member_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="group_member_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="group_member_executor_id" tableName="group_member">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-indicator_requirement_type_map_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="indicator_requirement_type_map_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="indicator_requirement_type_map_editor_id" tableName="indicator_requirement_type_map">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-indicator_requirement_type_map_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="indicator_requirement_type_map_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="indicator_requirement_type_map_executor_id" tableName="indicator_requirement_type_map">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-monitoring_rule_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="monitoring_rule_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="monitoring_rule_editor_id" tableName="monitoring_rule">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-monitoring_rule_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="monitoring_rule_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="monitoring_rule_executor_id" tableName="monitoring_rule">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-payment_channel_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="payment_channel_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="payment_channel_editor_id" tableName="payment_channel">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-payment_channel_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="payment_channel_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="payment_channel_executor_id" tableName="payment_channel">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-payment_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="payment_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="payment_editor_id" tableName="payment">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-payment_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="payment_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="payment_executor_id" tableName="payment">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-requirement_type_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_type_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_type_editor_id" tableName="requirement_type">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-requirement_type_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_type_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_type_executor_id" tableName="requirement_type">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-requirements_group_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirements_group_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirements_group_editor_id" tableName="requirements_group">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-requirements_group_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirements_group_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirements_group_executor_id" tableName="requirements_group">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-update_requirement_model_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="update_requirement_model_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="update_requirement_model_editor_id" tableName="update_requirement_model">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-08-13" id="cre-idx-update_requirement_model_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="update_requirement_model_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="update_requirement_model_executor_id" tableName="update_requirement_model">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

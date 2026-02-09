@@ -1,0 +1,135 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-group_member.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="group_member"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update group_member set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-indicator_requirement_type_map.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="indicator_requirement_type_map"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update indicator_requirement_type_map set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-monitoring_rule.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="monitoring_rule"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update monitoring_rule set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="payment"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment_channel.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="payment_channel"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_channel set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_type.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="requirement_type"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_type set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirements_group.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="requirements_group"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirements_group set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-update_requirement_model.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="version" tableName="update_requirement_model"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update update_requirement_model set version = 0 where version is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-group_member.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="group_member"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update group_member set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-indicator_requirement_type_map.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="indicator_requirement_type_map"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update indicator_requirement_type_map set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-monitoring_rule.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="monitoring_rule"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update monitoring_rule set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="payment"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-payment_channel.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="payment_channel"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update payment_channel set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-related_payment.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="related_payment"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update related_payment set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_holds.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_000_holds"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_holds set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_payer_details.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_000_payer_details"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_payer_details set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_000_related_taxes.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_000_related_taxes"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_000_related_taxes set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirement_type.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirement_type"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirement_type set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-requirements_group.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="requirements_group"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update requirements_group set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" failOnError="false" id="init-update_requirement_model.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="is_deleted" tableName="update_requirement_model"/>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update update_requirement_model set is_deleted = false where is_deleted is null;</sql>
+    </changeSet>
+</databaseChangeLog>

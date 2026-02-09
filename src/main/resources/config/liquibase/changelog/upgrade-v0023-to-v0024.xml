@@ -1,0 +1,187 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-refunding_payment" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="refunding_payment"/>
+                <primaryKeyExists primaryKeyName="refunding_paymentPK" tableName="refunding_payment"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Платеж по возврату средств клиенту" tableName="refunding_payment">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="refunding_paymentPK"/>
+            </column>
+            <column name="amount" remarks="сумма" type="DECIMAL"/>
+            <column name="currency_id" remarks="валюта" type="BIGINT"/>
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+            <column name="payment_link_type" remarks="вид связи с платежом" type="VARCHAR(255)"/>
+            <column name="payment_result" remarks="результат оплаты" type="VARCHAR(255)"/>
+            <column name="provision_method_id" remarks="вариант выплаты" type="BIGINT"/>
+            <column name="reference" remarks="референс платежа" type="VARCHAR(1000)"/>
+            <column name="value_date" remarks="дата валютирования" type="DATE"/>
+            <column defaultValueNumeric="0" name="version" remarks="номер версии" type="INTEGER"/>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="refunding_payment__bk24" oldTableName="refunding_payment"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-requirement.edit_date" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="edit_date" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="edit_date" remarks="дата редактирования" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-requirement.editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="editor_id" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="editor_id" remarks="редактор" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-requirement.executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="executor_id" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="requirement">
+            <column name="executor_id" remarks="исполнитель" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-requirement_refunding_payment" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="requirement_refunding_payment"/>
+                <primaryKeyExists primaryKeyName="requirement_refunding_paymentPK" tableName="requirement_refunding_payment"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Связь требования и платежа по возврату средств клиенту" tableName="requirement_refunding_payment">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="requirement_refunding_paymentPK"/>
+            </column>
+            <column name="distribution_amount" remarks="сумма распределения" type="DECIMAL"/>
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+            <column name="refunding_payment_id" remarks="платеж по возврату средств клиенту" type="bigint"/>
+            <column name="requirement_of_refunding_payments_id" remarks="платежи по возврату" type="bigint"/>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="requirement_refunding_payment__bk24" oldTableName="requirement_refunding_payment"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-fk-requirement_refunding_payment.refunding_payment_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK2uf88jddtkghgf4xq0652h2vb" foreignKeyTableName="requirement_refunding_payment"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="refunding_payment_id" baseTableName="requirement_refunding_payment" constraintName="FK2uf88jddtkghgf4xq0652h2vb" referencedColumnNames="id" referencedTableName="refunding_payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-fk-requirement_refunding_payment.requirement_of_refunding_payments_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FKlqftxrymtl564t60bndnkukym" foreignKeyTableName="requirement_refunding_payment"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="requirement_of_refunding_payments_id" baseTableName="requirement_refunding_payment" constraintName="FKlqftxrymtl564t60bndnkukym" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-refunding_payment_currency_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="refunding_payment_currency_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="refunding_payment_currency_id" tableName="refunding_payment">
+            <column descending="false" name="currency_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-refunding_payment_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="refunding_payment_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="refunding_payment_editor_id" tableName="refunding_payment">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-refunding_payment_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="refunding_payment_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="refunding_payment_executor_id" tableName="refunding_payment">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-refunding_payment_provision_method_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="refunding_payment_provision_method_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="refunding_payment_provision_method_id" tableName="refunding_payment">
+            <column descending="false" name="provision_method_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-requirement_editor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_editor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_editor_id" tableName="requirement">
+            <column descending="false" name="editor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-requirement_executor_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_executor_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_executor_id" tableName="requirement">
+            <column descending="false" name="executor_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-requirement_refunding_payment.refunding_payment_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FK2uf88jddtkghgf4xq0652h2vb"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FK2uf88jddtkghgf4xq0652h2vb" tableName="requirement_refunding_payment">
+            <column descending="false" name="refunding_payment_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-requirement_refunding_payment.requirement_of_refunding_payments_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="FKlqftxrymtl564t60bndnkukym"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="FKlqftxrymtl564t60bndnkukym" tableName="requirement_refunding_payment">
+            <column descending="false" name="requirement_of_refunding_payments_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-07-24" id="cre-idx-requirement_refunding_payment_refunding_payment_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <indexExists indexName="requirement_refunding_payment_refunding_payment_id"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="requirement_refunding_payment_refunding_payment_id" tableName="requirement_refunding_payment">
+            <column descending="false" name="refunding_payment_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

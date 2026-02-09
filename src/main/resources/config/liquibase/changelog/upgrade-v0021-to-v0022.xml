@@ -1,0 +1,95 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-monitoring_rule.payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_channel_id" tableName="monitoring_rule"/>
+            <not>
+                <columnExists columnName="payment_channel_id__bk22" tableName="monitoring_rule"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_channel_id__bk22" oldColumnName="payment_channel_id" tableName="monitoring_rule"/>
+        <dropNotNullConstraint columnName="payment_channel_id__bk22" tableName="monitoring_rule"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-payment.payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_channel_id" tableName="payment"/>
+            <not>
+                <columnExists columnName="payment_channel_id__bk22" tableName="payment"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_channel_id__bk22" oldColumnName="payment_channel_id" tableName="payment"/>
+        <dropNotNullConstraint columnName="payment_channel_id__bk22" tableName="payment"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-requirement.contract_point" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="contract_point" tableName="requirement"/>
+            <not>
+                <columnExists columnName="contract_point__bk22" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="contract_point__bk22" oldColumnName="contract_point" tableName="requirement"/>
+        <dropNotNullConstraint columnName="contract_point__bk22" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-requirement.payment_details_000_payment_channel_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_details_000_payment_channel_id" tableName="requirement"/>
+            <not>
+                <columnExists columnName="payment_details_000_payment_channel_id__bk22" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_details_000_payment_channel_id__bk22" oldColumnName="payment_details_000_payment_channel_id" tableName="requirement"/>
+        <dropNotNullConstraint columnName="payment_details_000_payment_channel_id__bk22" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-requirement.payment_strategy_000_account_selection_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+            <not>
+                <columnExists columnName="payment_strategy_000_account_selection_rule__bk22" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_strategy_000_account_selection_rule__bk22" oldColumnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+        <dropNotNullConstraint columnName="payment_strategy_000_account_selection_rule__bk22" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-requirement.payment_strategy_000_allow_overdraft" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_allow_overdraft" tableName="requirement"/>
+            <not>
+                <columnExists columnName="payment_strategy_000_allow_overdraft__bk22" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_strategy_000_allow_overdraft__bk22" oldColumnName="payment_strategy_000_allow_overdraft" tableName="requirement"/>
+        <dropNotNullConstraint columnName="payment_strategy_000_allow_overdraft__bk22" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-requirement.payment_strategy_000_allow_part_pay" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_allow_part_pay" tableName="requirement"/>
+            <not>
+                <columnExists columnName="payment_strategy_000_allow_part_pay__bk22" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_strategy_000_allow_part_pay__bk22" oldColumnName="payment_strategy_000_allow_part_pay" tableName="requirement"/>
+        <dropNotNullConstraint columnName="payment_strategy_000_allow_part_pay__bk22" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="rem-requirement.payment_strategy_000_control_external_system" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="payment_strategy_000_control_external_system" tableName="requirement"/>
+            <not>
+                <columnExists columnName="payment_strategy_000_control_external_system__bk22" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="payment_strategy_000_control_external_system__bk22" oldColumnName="payment_strategy_000_control_external_system" tableName="requirement"/>
+        <dropNotNullConstraint columnName="payment_strategy_000_control_external_system__bk22" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2025-03-27" id="del-Requirement000Holds" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="requirement_000_holds__bk22"/>
+            </not>
+        </preConditions>
+        <renameTable newTableName="requirement_000_holds__bk22" oldTableName="requirement_000_holds"/>
+        <dropAllForeignKeyConstraints baseTableName="requirement_000_holds__bk22"/>
+        <rollback>
+            <renameTable newTableName="requirement_000_holds" oldTableName="requirement_000_holds__bk22"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,97 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" created="2024-09-25" id="rem-requirement.inside" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <columnExists columnName="inside" tableName="requirement"/>
+            <not>
+                <columnExists columnName="inside__bk16" tableName="requirement"/>
+            </not>
+        </preConditions>
+        <renameColumn newColumnName="inside__bk16" oldColumnName="inside" tableName="requirement"/>
+        <dropNotNullConstraint columnName="inside__bk16" tableName="requirement"/>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-indicator_requirement_type_map" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <tableExists tableName="indicator_requirement_type_map"/>
+                <primaryKeyExists primaryKeyName="indicator_requirement_type_mapPK" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <createTable remarks="Связь вида требования с расчетной категорией" tableName="indicator_requirement_type_map">
+            <column autoIncrement="true" name="id" remarks="идентификатор (первичный ключ)" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="indicator_requirement_type_mapPK"/>
+            </column>
+        </createTable>
+        <rollback>
+            <renameTable newTableName="indicator_requirement_type_map__bk16" oldTableName="indicator_requirement_type_map"/>
+        </rollback>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-indicator_requirement_type_map.is_deleted" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="is_deleted" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="indicator_requirement_type_map">
+            <column defaultValueBoolean="false" name="is_deleted" remarks="является удалённым объектом" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-indicator_requirement_type_map.locale_id" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="locale_id" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="indicator_requirement_type_map">
+            <column name="locale_id" remarks="локализация" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-indicator_requirement_type_map.requirement_type_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="requirement_type_rule" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="indicator_requirement_type_map">
+            <column name="requirement_type_rule" remarks="правило определения вида требования" type="CLOB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="cre-indicator_requirement_type_map.version" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <not>
+                <columnExists columnName="version" tableName="indicator_requirement_type_map"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="indicator_requirement_type_map">
+            <column defaultValueNumeric="0" name="version" remarks="номер версии" type="INTEGER"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="upd-enum-payment.payment_result" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="payment"/>
+                <columnExists columnName="payment_result" tableName="payment"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "payment" set "payment_result" = CASE "payment_result"
+WHEN 'CANCELED' THEN 'CANCELED' 
+WHEN 'NOTPAID' THEN 'NOT_PAID' 
+WHEN 'PAID' THEN 'PAID' 
+ELSE "payment_result" END
+where "payment_result" in ('CANCELED', 'NOTPAID', 'PAID');</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" created="2024-09-25" id="upd-enum-requirement.payment_strategy_000_account_selection_rule" objectQuotingStrategy="LEGACY">
+        <preConditions onError="CONTINUE" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <tableExists tableName="requirement"/>
+                <columnExists columnName="payment_strategy_000_account_selection_rule" tableName="requirement"/>
+            </and>
+        </preConditions>
+        <sql splitStatements="true" stripComments="false">update "requirement" set "payment_strategy_000_account_selection_rule" = CASE "payment_strategy_000_account_selection_rule"
+WHEN 'CURRENCY' THEN 'CURRENCY' 
+WHEN 'ORDER' THEN 'ORDER' 
+WHEN 'UNDEFINED' THEN 'UNDEFINED' 
+ELSE "payment_strategy_000_account_selection_rule" END
+where "payment_strategy_000_account_selection_rule" in ('CURRENCY', 'ORDER', 'UNDEFINED');</sql>
+    </changeSet>
+</databaseChangeLog>

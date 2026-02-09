@@ -1,0 +1,11 @@
+Enum{
+  title='GroupPaymentStrategy'
+  values=
+    Value{key='null', value='CONDITIONAL', data='null', description='Условная оплата', enumName='GroupPaymentStrategy', predecessorValue='null'}
+    Value{key='null', value='FULL', data='null', description='Полная оплата', enumName='GroupPaymentStrategy', predecessorValue='null'}
+    Value{key='null', value='INAPPLICABLE', data='null', description='Не применяется', enumName='GroupPaymentStrategy', predecessorValue='null'}
+    Value{key='null', value='PROPORTIONAL', data='null', description='Пропорциональная оплата', enumName='GroupPaymentStrategy', predecessorValue='null'}
+  description='Правило оплаты в группе'
+  namespacePath='/SYS/RMS'
+  fromForeignNamespace='false'
+}

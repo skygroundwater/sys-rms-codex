@@ -1,0 +1,36 @@
+variables:
+  DFCN: sysrms
+  BRANCH: $CI_COMMIT_REF_NAME
+  COMTAG: SHA${CI_COMMIT_SHORT_SHA}
+  COMMITID: $CI_COMMIT_SHA
+  # SONARQUBE
+  SONAR_PROJECT_KEY: "$CI_PROJECT_NAME-$CI_COMMIT_REF_NAME"
+  TOKEN: "$SONAR_ADMIN_TOKEN"
+  SONAR_ADMIN_TOKEN: "$SONAR_ADMIN_TOKEN"
+  # REPLICAS
+  REPLICAS_DEV: 1
+  REPLICAS_DEV2: 1
+  REPLICAS_STAGE: 1
+  REPLICAS_PROD: 1
+  REPLICAS_TT: 1
+  REPLICAS_DEMO: 1
+  REPLICAS_TEST: 1
+  REPLICAS_HALYKBANK1: 1
+  REPLICAS_HALYKBANK2: 1
+  REPLICAS_TOCHKA1: 1
+  REPLICAS_CLOUD: 1
+
+include:
+  - project: "v4web/v4manifests"
+    file: "pipelines/sonarqube.yaml"
+    ref: "main"
+  - project: "v4web/v4manifests"
+    file: "pipelines/colvir-ms/build-ms.yaml"
+    ref: "main"
+  - project: "v4web/v4manifests"
+    file: "pipelines/colvir-ms/push-ms.yaml"
+    ref: "main"
+  - project: "v4web/v4manifests"
+    file: "pipelines/colvir-ms/stands.yaml"
+    ref: "main"
+

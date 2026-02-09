@@ -1,0 +1,14 @@
+Entity{
+  title='Requirement000RelatedTaxes'
+  fields=
+    Field{fieldName='amount', fieldType='BigDecimal', primitiveFieldType=BIG_DECIMAL, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='сумма', realTypeName='null', owningEntity=Entity{title='Requirement000RelatedTaxes', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='Requirement000RelatedTaxes', ...}, historical=false}
+    Field{fieldName='typeOfTaxId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='вид налога', realTypeName='REFERENCE', owningEntity=Entity{title='Requirement000RelatedTaxes', ...}, historical=false}
+  version=17
+  description='Объект-значение'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='Requirement000RelatedTaxes', fieldName='requirementOfRelatedTaxes', relationType=ManyToOne, entityTitleTo='Requirement', fieldNameTo='relatedTaxes', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='null', annotations={}, ownerSide=false, simpleList=false, historical=false}
+  simpleList=false
+}

@@ -1,0 +1,37 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150802",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "update_requirement_model",
+  "fields": [
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean",
+      "javadoc": "является удалённым объектом",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "requirementList",
+      "fieldType": "String",
+      "javadoc": "список параметров требований"
+    },
+    {
+      "fieldName": "version",
+      "fieldType": "Integer",
+      "javadoc": "номер версии"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Модель обновления требований",
+  "jpaMetamodelFiltering": true,
+  "name": "UpdateRequirementModel",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [],
+  "service": "serviceImpl"
+}

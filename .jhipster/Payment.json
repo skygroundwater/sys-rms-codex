@@ -1,0 +1,109 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150753",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "payment",
+  "fields": [
+    {
+      "fieldName": "amount",
+      "fieldType": "BigDecimal",
+      "javadoc": "сумма"
+    },
+    {
+      "fieldName": "cancelTime",
+      "fieldType": "Instant",
+      "javadoc": "время отмены"
+    },
+    {
+      "fieldName": "createTime",
+      "fieldType": "Instant",
+      "javadoc": "время создания"
+    },
+    {
+      "fieldName": "currencyId",
+      "fieldType": "Long",
+      "javadoc": "валюта"
+    },
+    {
+      "fieldName": "execTime",
+      "fieldType": "Instant",
+      "javadoc": "время исполнения"
+    },
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean",
+      "javadoc": "является удалённым объектом",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "payment",
+      "fieldType": "String",
+      "javadoc": "платж"
+    },
+    {
+      "fieldName": "paymentLinkType",
+      "fieldType": "PaymentLinkType",
+      "fieldTypeJavadoc": "Вид связи с платежом",
+      "fieldValues": "AUTO,MANUAL,REQUIREMENT",
+      "fieldValuesJavadocs": {
+        "AUTO": "Cвязан автоматически",
+        "MANUAL": "Cвязан вручную",
+        "REQUIREMENT": "Cоздан по требованию"
+      },
+      "javadoc": "вид связи с платежом"
+    },
+    {
+      "fieldName": "paymentResult",
+      "fieldType": "PaymentResult",
+      "fieldTypeJavadoc": "Результат оплаты",
+      "fieldValues": "CANCELED,NOT_PAID,PAID",
+      "fieldValuesJavadocs": {
+        "CANCELED": "Аннулирован",
+        "NOT_PAID": "Не оплачен",
+        "PAID": "Оплачен"
+      },
+      "javadoc": "результат оплаты"
+    },
+    {
+      "fieldName": "reference",
+      "fieldType": "String",
+      "javadoc": "референс платежа"
+    },
+    {
+      "fieldName": "valDate",
+      "fieldType": "LocalDate",
+      "javadoc": "дата валютирования"
+    },
+    {
+      "fieldName": "version",
+      "fieldType": "Integer",
+      "javadoc": "номер версии"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Платеж",
+  "jpaMetamodelFiltering": true,
+  "name": "Payment",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "paymentChannel",
+      "relationshipName": "paymentChannel",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "requirement",
+      "otherEntityRelationshipName": "payments",
+      "ownerSide": false,
+      "relationshipName": "requirementOfPayments",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "service": "serviceImpl"
+}

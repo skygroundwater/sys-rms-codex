@@ -1,0 +1,50 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property dbms="h2" name="now" value="now()"/>
+    <property dbms="postgresql" name="floatType" value="current_timestamp"/>
+    <property dbms="postgresql, h2" name="now" value="float4"/>
+    <property dbms="mysql, oracle, mssql, mariadb" name="floatType" value="float"/>
+    <property dbms="h2" name="clobType" value="longvarchar"/>
+    <property dbms="mysql, oracle, mssql, mariadb, postgresql" name="clobType" value="clob"/>
+    <property dbms="h2, postgresql" name="uuidType" value="uuid"/>
+    <property dbms="mysql, mariadb" name="datetimeType" value="datetime(6)"/>
+    <property dbms="oracle, mssql, postgresql, h2" name="datetimeType" value="datetime"/>
+    <include file="config/liquibase/changelog/00000000000000_initial_schema.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0000-to-v0001.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0001-to-v0002.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0002-to-v0003.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0003-to-v0004.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0004-to-v0005.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0005-to-v0006.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0006-to-v0007.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0007-to-v0008.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0008-to-v0009.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0009-to-v0010.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0010-to-v0011.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0011-to-v0012.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0012-to-v0013.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0013-to-v0014.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0014-to-v0015.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0015-to-v0016.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0016-to-v0017.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0017-to-v0018.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0018-to-v0019.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0019-to-v0020.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0020-to-v0021.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0021-to-v0022.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0022-to-v0023.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0023-to-v0024.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0024-to-v0025.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0025-to-v0026.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0026-to-v0027.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0027-to-v0028.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0028-to-v0029.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0029-to-v0030.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/upgrade-v0030-to-v0031.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/feature-default-boolean-value-v1.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/feature-fix-max-length-v1.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/feature-primitive-lists-v1.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/feature-static-enums-v1.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/feature-version-deleted-v1.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/feature-string-length-v1.xml" relativeToChangelogFile="false"/>
+</databaseChangeLog>

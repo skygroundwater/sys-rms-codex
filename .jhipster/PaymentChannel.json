@@ -1,0 +1,89 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150754",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "payment_channel",
+  "fields": [
+    {
+      "fieldName": "active",
+      "fieldType": "Boolean",
+      "javadoc": "используется",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "code",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique"],
+      "javadoc": "обозначение"
+    },
+    {
+      "fieldName": "isAutoPayment",
+      "fieldType": "Boolean",
+      "javadoc": "возможна автоматическая оплата",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "isCreatePayment",
+      "fieldType": "Boolean",
+      "javadoc": "возможно создание платежа",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean",
+      "javadoc": "является удалённым объектом",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "isInitHolds",
+      "fieldType": "Boolean",
+      "javadoc": "возможна установка холдов",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique"],
+      "javadoc": "наименование"
+    },
+    {
+      "fieldName": "paymentClass",
+      "fieldType": "String",
+      "javadoc": "класс платежей"
+    },
+    {
+      "fieldName": "version",
+      "fieldType": "Integer",
+      "javadoc": "номер версии"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Канал оплаты",
+  "jpaMetamodelFiltering": true,
+  "name": "PaymentChannel",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "requirement",
+      "otherEntityRelationshipName": "channelAutoPayment",
+      "ownerSide": false,
+      "relationshipName": "requirementOfChannelAutoPayment",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "service": "serviceImpl"
+}

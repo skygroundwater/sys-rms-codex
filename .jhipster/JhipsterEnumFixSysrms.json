@@ -1,0 +1,96 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150751",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": true,
+  "entityTableName": "jhipster_enum_fix_sysrms",
+  "fields": [
+    {
+      "fieldName": "accountSelectionRule",
+      "fieldType": "AccountSelectionRule",
+      "fieldTypeJavadoc": "Правило выбора счета",
+      "fieldValues": "CURRENCY,ORDER,UNDEFINED",
+      "fieldValuesJavadocs": {
+        "CURRENCY": "Приоритет для счета в валюте требования",
+        "ORDER": "Строго в заданном порядке",
+        "UNDEFINED": "Не определено"
+      },
+      "javadoc": "Правило выбора счета"
+    },
+    {
+      "fieldName": "groupPaymentStrategy",
+      "fieldType": "GroupPaymentStrategy",
+      "fieldTypeJavadoc": "Стратегия оплаты в группе",
+      "fieldValues": "CONDITIONAL,DUPLICATE,FULL,INAPPLICABLE,PROPORTIONAL",
+      "fieldValuesJavadocs": {
+        "CONDITIONAL": "Условная оплата",
+        "DUPLICATE": "Дублирующие требования",
+        "FULL": "Полная оплата",
+        "INAPPLICABLE": "Не применяется",
+        "PROPORTIONAL": "Пропорциональная оплата"
+      },
+      "javadoc": "Стратегия оплаты в группе"
+    },
+    {
+      "fieldName": "paymentLinkType",
+      "fieldType": "PaymentLinkType",
+      "fieldTypeJavadoc": "Вид связи с платежом",
+      "fieldValues": "AUTO,MANUAL,REQUIREMENT",
+      "fieldValuesJavadocs": {
+        "AUTO": "Cвязан автоматически",
+        "MANUAL": "Cвязан вручную",
+        "REQUIREMENT": "Cоздан по требованию"
+      },
+      "javadoc": "Вид связи с платежом"
+    },
+    {
+      "fieldName": "paymentResult",
+      "fieldType": "PaymentResult",
+      "fieldTypeJavadoc": "Результат оплаты",
+      "fieldValues": "CANCELED,NOT_PAID,PAID",
+      "fieldValuesJavadocs": {
+        "CANCELED": "Аннулирован",
+        "NOT_PAID": "Не оплачен",
+        "PAID": "Оплачен"
+      },
+      "javadoc": "Результат оплаты"
+    },
+    {
+      "fieldName": "requirementAction",
+      "fieldType": "RequirementAction",
+      "fieldTypeJavadoc": "Действие с требованием",
+      "fieldValues": "CREATE,UPDATE,DELETE",
+      "fieldValuesJavadocs": {
+        "CREATE": "Создать",
+        "DELETE": "Удалить",
+        "UPDATE": "Обновить"
+      },
+      "javadoc": "Действие с требованием"
+    },
+    {
+      "fieldName": "requirementStatus",
+      "fieldType": "RequirementStatus",
+      "fieldTypeJavadoc": "Состояние требования",
+      "fieldValues": "CANCELED,NONEXISTENT,PAID,SUSPENDED,WAIT,WRITTEN_OFF",
+      "fieldValuesJavadocs": {
+        "CANCELED": "Отменено",
+        "NONEXISTENT": "Не сформировано",
+        "PAID": "Оплачено",
+        "SUSPENDED": "Приостановлено (блокировано)",
+        "WAIT": "Ожидает оплаты",
+        "WRITTEN_OFF": "Списано"
+      },
+      "javadoc": "Состояние требования"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Служебная сущность для генерации перечислений",
+  "jpaMetamodelFiltering": true,
+  "name": "JhipsterEnumFixSysrms",
+  "pagination": "pagination",
+  "readOnly": true,
+  "relationships": [],
+  "service": "serviceImpl"
+}

@@ -1,0 +1,70 @@
+{
+  "applications": "*",
+  "changelogDate": "20240916150758",
+  "dataAccess": "activeRecord",
+  "dto": "mapstruct",
+  "embedded": false,
+  "entityTableName": "requirement_000_payer_details",
+  "fields": [
+    {
+      "fieldName": "accountId",
+      "fieldType": "Long",
+      "javadoc": "online счет клиента"
+    },
+    {
+      "fieldName": "active",
+      "fieldType": "Boolean",
+      "javadoc": "оплата активна",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "autoPay",
+      "fieldType": "Boolean",
+      "javadoc": "Возможна автоматическая оплата",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "externalAccount",
+      "fieldType": "String",
+      "javadoc": "номер счета во внешней системе"
+    },
+    {
+      "fieldName": "isDeleted",
+      "fieldType": "Boolean",
+      "javadoc": "является удалённым объектом",
+      "options": {
+        "default": "false"
+      }
+    },
+    {
+      "fieldName": "num",
+      "fieldType": "Long",
+      "javadoc": "порядковый номер"
+    }
+  ],
+  "fluentMethods": true,
+  "identifierType": "manual",
+  "javadoc": "Объект-значение",
+  "jpaMetamodelFiltering": true,
+  "name": "Requirement000PayerDetails",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "paymentChannel",
+      "relationshipName": "paymentChannel",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "requirement",
+      "otherEntityRelationshipName": "payerDetails",
+      "relationshipName": "requirementOfPayerDetails",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "serviceImpl"
+}

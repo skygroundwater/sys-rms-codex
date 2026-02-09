@@ -1,0 +1,18 @@
+Entity{
+  title='Requirement000PayerDetails'
+  fields=
+    Field{fieldName='accountId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='online счет клиента', realTypeName='REFERENCE', owningEntity=Entity{title='Requirement000PayerDetails', ...}, historical=false}
+    Field{fieldName='active', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='оплата активна', realTypeName='null', owningEntity=Entity{title='Requirement000PayerDetails', ...}, historical=false}
+    Field{fieldName='autoPay', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='Возможна автоматическая оплата', realTypeName='null', owningEntity=Entity{title='Requirement000PayerDetails', ...}, historical=false}
+    Field{fieldName='externalAccount', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='номер счета во внешней системе', realTypeName='null', owningEntity=Entity{title='Requirement000PayerDetails', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='Requirement000PayerDetails', ...}, historical=false}
+    Field{fieldName='num', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='порядковый номер', realTypeName='null', owningEntity=Entity{title='Requirement000PayerDetails', ...}, historical=false}
+  version=16
+  description='Объект-значение'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='Requirement000PayerDetails', fieldName='paymentChannel', relationType=ManyToOne, entityTitleTo='PaymentChannel', fieldNameTo='', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='канал оплаты', annotations={}, ownerSide=true, simpleList=false, historical=false}
+    Relation{entityTitle='Requirement000PayerDetails', fieldName='requirementOfPayerDetails', relationType=ManyToOne, entityTitleTo='Requirement', fieldNameTo='payerDetails', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='null', annotations={}, ownerSide=false, simpleList=false, historical=false}
+  simpleList=false
+}

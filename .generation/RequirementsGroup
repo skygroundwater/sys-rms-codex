@@ -1,0 +1,17 @@
+Entity{
+  title='RequirementsGroup'
+  fields=
+    Field{fieldName='editDate', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='дата редактирования', realTypeName='null', owningEntity=Entity{title='RequirementsGroup', ...}, historical=false}
+    Field{fieldName='editorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='редактор', realTypeName='REFERENCE', owningEntity=Entity{title='RequirementsGroup', ...}, historical=false}
+    Field{fieldName='executorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='исполнитель', realTypeName='REFERENCE', owningEntity=Entity{title='RequirementsGroup', ...}, historical=false}
+    Field{fieldName='groupPaymentStrategy', fieldType='GroupPaymentStrategy', primitiveFieldType=null, fieldTypeEnumId=Id[title=GroupPaymentStrategy, namespacePath=/SYS/RMS], validationType='null', defaultValue='', comment='стратегия оплаты в группе', realTypeName='null', owningEntity=Entity{title='RequirementsGroup', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='RequirementsGroup', ...}, historical=false}
+    Field{fieldName='version', fieldType='Integer', primitiveFieldType=INTEGER, fieldTypeEnumId=null, validationType='null', defaultValue='null', comment='номер версии', realTypeName='null', owningEntity=Entity{title='RequirementsGroup', ...}, historical=false}
+  version=2
+  description='Группа требований'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='RequirementsGroup', fieldName='members', relationType=ManyToMany, entityTitleTo='GroupMember', fieldNameTo='requirementsGroupOfMembers', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=false, fieldDescription='участник группы', annotations={}, ownerSide=true, simpleList=false, historical=false}
+  simpleList=false
+}

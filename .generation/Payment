@@ -1,0 +1,27 @@
+Entity{
+  title='Payment'
+  fields=
+    Field{fieldName='amount', fieldType='BigDecimal', primitiveFieldType=BIG_DECIMAL, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='сумма', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='cancelTime', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='время отмены', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='createTime', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='время создания', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='currencyId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='валюта', realTypeName='REFERENCE', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='editDate', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='дата редактирования', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='editorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='редактор', realTypeName='REFERENCE', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='execTime', fieldType='Instant', primitiveFieldType=INSTANT, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='время исполнения', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='executorId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='исполнитель', realTypeName='REFERENCE', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='isDeleted', fieldType='Boolean', primitiveFieldType=BOOLEAN, fieldTypeEnumId=null, validationType='null', defaultValue='false', comment='является удалённым объектом', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='payment', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='null', defaultValue='null', comment='платеж', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='paymentLinkType', fieldType='PaymentLinkType', primitiveFieldType=null, fieldTypeEnumId=Id[title=PaymentLinkType, namespacePath=/SYS/RMS], validationType='null', defaultValue='', comment='вид связи с платежом', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='paymentResult', fieldType='PaymentResult', primitiveFieldType=null, fieldTypeEnumId=Id[title=PaymentResult, namespacePath=/SYS/RMS], validationType='null', defaultValue='', comment='результат оплаты', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='reference', fieldType='String', primitiveFieldType=STRING, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='референс платежа', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='valDate', fieldType='LocalDate', primitiveFieldType=LOCAL_DATE, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='дата валютирования', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='version', fieldType='Integer', primitiveFieldType=INTEGER, fieldTypeEnumId=null, validationType='null', defaultValue='null', comment='номер версии', realTypeName='null', owningEntity=Entity{title='Payment', ...}, historical=false}
+    Field{fieldName='withdrawalTypeId', fieldType='Long', primitiveFieldType=LONG, fieldTypeEnumId=null, validationType='null', defaultValue='', comment='вариант списания денег', realTypeName='REFERENCE', owningEntity=Entity{title='Payment', ...}, historical=false}
+  version=8
+  description='Платеж'
+  mission=DEFAULT
+  namespacePath='/SYS/RMS'
+  relations=
+    Relation{entityTitle='Payment', fieldName='refundPayments', relationType=OneToMany, entityTitleTo='RefundingPayment', fieldNameTo='paymentOfRefundPayments', sourceRelationIsRequired=null, omitDestinationRelationshipName=false, isDetail=true, fieldDescription='возвратный платеж', annotations={}, ownerSide=true, simpleList=false, historical=false}
+  simpleList=false
+}

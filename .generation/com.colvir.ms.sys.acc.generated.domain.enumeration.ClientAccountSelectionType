@@ -1,0 +1,11 @@
+Enum{
+  title='ClientAccountSelectionType'
+  values=
+    Value{key='null', value='SPECIFIED', data='null', description='С указанных счетов / карт', enumName='ClientAccountSelectionType', predecessorValue='null'}
+    Value{key='null', value='ANY', data='null', description='С любых счетов / карт', enumName='ClientAccountSelectionType', predecessorValue='null'}
+    Value{key='null', value='EXCLUDING', data='null', description='С любых счетов / карт, кроме указанных', enumName='ClientAccountSelectionType', predecessorValue='null'}
+    Value{key='null', value='BY_RULE', data='null', description='Согласно правилу', enumName='ClientAccountSelectionType', predecessorValue='null'}
+  description='Способ выбора счетов / карт клиента'
+  namespacePath='/SYS/ACC'
+  fromForeignNamespace='true'
+}
