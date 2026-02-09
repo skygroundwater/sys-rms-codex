@@ -1,6 +1,5 @@
 package com.colvir.ms.sys.rms.manual.service.impl;
 
-import com.colvir.ms.common.Constants;
 import com.colvir.ms.sys.rms.dto.AdjustByPastDateJournalDto;
 import com.colvir.ms.sys.rms.dto.AdjustByPastDateResultDto;
 import com.colvir.ms.sys.rms.dto.AdjustRefundPaymentResultDto;
@@ -38,6 +37,7 @@ import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
+import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.service.RouterService;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
@@ -45,7 +45,6 @@ import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.colvir.ms.sys.rms.manual.util.SessionContext;
 import com.colvir.ms.sys.rms.manual.util.SystemParameterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Functions;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -58,7 +57,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,6 +82,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
     @Inject
     RouterService routerService;
+
+    @Inject
+    RequirementRouterService requirementRouterService;
 
     @Inject
     Logger log;
@@ -821,43 +822,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 if (requirement != null && !Boolean.TRUE.equals(requirement.isDeleted)) {
 
                     // восстановление атрибутов требований
-                    ObjectNode body = objectMapper.createObjectNode();
-                    body.put("id", journal.id);
-                    body.put("version", requirement.version);
-                    body.put("bbpState000StateCode", journal.bbpStateCode);
-                    body.put("bbpState000JournalId", journal.bbpJournalId);
-                    body.put("state", journal.state.toString());
-                    body.put("unpaidAmount", journal.unpaidAmount);
-                    body.put("paidAmount", journal.paidAmount);
-                    body.put("writeOffAmount", journal.writeOffAmount);
-                    body.put("amount", journal.amount);
-                    body.put("priority", journal.priority);
-                    if (journal.actualPaymentDate != null) {
-                        body.put("actualPaymentDate", journal.actualPaymentDate.format(DateTimeFormatter.ofPattern(Constants.LOCAL_DATE_FORMAT)));
-                    } else {
-                        body.putNull("actualPaymentDate");
-                    }
-
-                    // восстановление атрибутов связей с платежами
-                    if (request.relatedPaymentsJournal != null && !request.relatedPaymentsJournal.isEmpty()) {
-                        if (requirement.relatedPayments != null && !requirement.relatedPayments.isEmpty()) {
-                            final ArrayNode relatedPayments = objectMapper.createArrayNode();
-                            body.set("relatedPayments", relatedPayments);
-                            requirement.relatedPayments.stream()
-                                .filter(p -> relatedToUpdate.containsKey(p.id))
-                                .forEach(
-                                    p -> {
-                                        RelatedPaymentsJournalDto paymentJournal = relatedToUpdate.get(p.id);
-                                        ObjectNode related = objectMapper.createObjectNode();
-                                        related.put("id", p.id);
-                                        related.put("amount", paymentJournal.amount);
-                                        related.put("amountOfPayment", paymentJournal.amountOfPayment);
-                                        relatedPayments.add(related);
-                                    }
-                                );
-                        }
-                    }
-                    routerService.modify(SYS_RMS_NAMESPACE, "Requirement", body);
+                    requirementRouterService.restoreRequirementForRefundUndo(requirement, journal, relatedToUpdate);
                 }
             }
         }
@@ -867,17 +832,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             for (Long refundId : request.createdPaymentRefunds) {
                 RefundingPayment paymentRefund = refundingPaymentDao.findById(refundId);
                 if (paymentRefund != null && !Boolean.TRUE.equals(paymentRefund.isDeleted)) {
-                    final ObjectNode paymentBody = objectMapper.createObjectNode();
-                    paymentBody.put("id", paymentRefund.paymentOfRefundPayments.id);
-                    paymentBody.put("version", paymentRefund.paymentOfRefundPayments.version);
-                    final ArrayNode paymentRefunds = objectMapper.createArrayNode();
-                    ObjectNode refund = objectMapper.createObjectNode();
-                    refund.put("id", refundId);
-                    refund.put("__state", "D");
-                    paymentRefunds.add(refund);
-                    paymentBody.set("paymentRefunds", paymentRefunds);
-
-                    routerService.modify(SYS_RMS_NAMESPACE, "Payment", paymentBody);
+                    requirementRouterService.deletePaymentRefundLink(paymentRefund, refundId);
                 }
             }
         }

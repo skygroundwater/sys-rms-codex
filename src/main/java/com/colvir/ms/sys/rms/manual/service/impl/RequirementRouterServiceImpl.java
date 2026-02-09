@@ -4,8 +4,13 @@ import com.colvir.ms.common.router.DDCRouterUtil;
 import com.colvir.ms.common.router.dto.DDCModifyRequest;
 import com.colvir.ms.common.router.dto.DDCReadRequest;
 import com.colvir.ms.sys.rms.dto.CreateRequirementDto;
+import com.colvir.ms.sys.rms.dto.RelatedPaymentsJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementIndicatorDto;
+import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
+import com.colvir.ms.sys.rms.generated.domain.Payment;
+import com.colvir.ms.sys.rms.generated.domain.RefundingPayment;
+import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
@@ -20,6 +25,7 @@ import com.colvir.ms.sys.rms.manual.web.dto.BaseProcessResultDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,13 +35,24 @@ import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 import static com.colvir.ms.sys.rms.manual.service.impl.RequirementServiceImpl.LOCAL_DATE_FORMATTER;
 
 @ApplicationScoped
 public class RequirementRouterServiceImpl implements RequirementRouterService {
+
     private static final String REQUIREMENT = "Requirement";
+    private static final String PAYMENT = "Payment";
+    private static final String REFUNDING_PAYMENT = "RefundingPayment";
+
     @ConfigProperty(name = "application.domain", defaultValue = "/SYS/RMS")
     String applicationDomain;
 
@@ -59,7 +76,7 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
 
     @Override
     public Long createRequirement(CreateRequirementDto createRequirementDto) {
-        return this.createRequirements(List.of(createRequirementDto))
+        return createRequirements(List.of(createRequirementDto))
             .stream()
             .findFirst()
             .orElseThrow(() -> new RuntimeException("The router response does not contain correct result"));
@@ -117,13 +134,157 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
             .filter(Objects::nonNull)
             .filter(requirement -> BooleanUtils.isNotTrue(requirement.isDeleted))
             .map(requirement -> {
-                final ObjectNode attributes = objectMapper.createObjectNode();
+                ObjectNode attributes = objectMapper.createObjectNode();
                 attributes.put("id", requirement.id);
                 attributes.put("version", requirement.version);
                 return DDCRouterUtil.createDDCDeleteRequest(applicationDomain, REQUIREMENT, attributes);
             }).toList();
         log.debugf("deleteRequirements request: %s", requests);
         return routerService.modify(requests);
+    }
+
+    @Override
+    public void restoreRequirementWithoutBbpCancel(Requirement requirement,
+                                                   RequirementJournalDto journal,
+                                                   List<Long> createdRelatedPayments,
+                                                   List<Long> createdReqRefundingPayments) {
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("id", journal.id);
+        body.put("version", requirement.version);
+        body.put("unpaidAmount", journal.unpaidAmount);
+        body.put("paidAmount", journal.paidAmount);
+        body.put("writeOffAmount", journal.writeOffAmount);
+        body.put("amount", journal.amount);
+        body.put("priority", journal.priority);
+        body.put("bbpState000StateCode", journal.bbpStateCode);
+        body.put("bbpState000ProcessId", journal.bbpProcessId);
+        body.put("bbpState000JournalId", journal.bbpJournalId);
+        if (journal.indicator != null) {
+            body.set("indicator", objectMapper.createObjectNode().put("id", journal.indicator.id));
+        }
+        if (journal.actualPaymentDate != null) {
+            body.put("actualPaymentDate", journal.actualPaymentDate.format(LOCAL_DATE_FORMATTER));
+        } else {
+            body.putNull("actualPaymentDate");
+        }
+        if (journal.paymentEndDate != null) {
+            body.put("paymentEndDate", journal.paymentEndDate.format(LOCAL_DATE_FORMATTER));
+        } else {
+            body.putNull("paymentEndDate");
+        }
+        appendRelatedDeletes(body, requirement, createdRelatedPayments);
+        appendRefundingDeletes(body, requirement, createdReqRefundingPayments);
+        routerService.modify(RmsConstants.SYS_RMS_NAMESPACE, REQUIREMENT, body);
+    }
+
+    @Override
+    public void restoreRequirementForRefundUndo(Requirement requirement,
+                                                RequirementJournalDto journal,
+                                                Map<Long, RelatedPaymentsJournalDto> relatedToUpdate) {
+        ObjectNode body = objectMapper.createObjectNode();
+        body.put("id", journal.id);
+        body.put("version", requirement.version);
+        body.put("bbpState000StateCode", journal.bbpStateCode);
+        body.put("bbpState000JournalId", journal.bbpJournalId);
+        body.put("state", journal.state.toString());
+        body.put("unpaidAmount", journal.unpaidAmount);
+        body.put("paidAmount", journal.paidAmount);
+        body.put("writeOffAmount", journal.writeOffAmount);
+        body.put("amount", journal.amount);
+        body.put("priority", journal.priority);
+        if (journal.actualPaymentDate != null) {
+            body.put("actualPaymentDate", journal.actualPaymentDate.format(LOCAL_DATE_FORMATTER));
+        } else {
+            body.putNull("actualPaymentDate");
+        }
+        if (relatedToUpdate != null && !relatedToUpdate.isEmpty() && requirement.relatedPayments != null && !requirement.relatedPayments.isEmpty()) {
+            ArrayNode relatedPayments = objectMapper.createArrayNode();
+            body.set("relatedPayments", relatedPayments);
+            requirement.relatedPayments.stream()
+                .filter(p -> relatedToUpdate.containsKey(p.id))
+                .forEach(p -> {
+                    RelatedPaymentsJournalDto paymentJournal = relatedToUpdate.get(p.id);
+                    ObjectNode related = objectMapper.createObjectNode();
+                    related.put("id", p.id);
+                    related.put("amount", paymentJournal.amount);
+                    related.put("amountOfPayment", paymentJournal.amountOfPayment);
+                    relatedPayments.add(related);
+                });
+        }
+        routerService.modify(RmsConstants.SYS_RMS_NAMESPACE, REQUIREMENT, body);
+    }
+
+    @Override
+    public void deletePayment(Payment payment) {
+        ObjectNode paymentBody = objectMapper.createObjectNode();
+        paymentBody.put("id", payment.id);
+        paymentBody.put("version", payment.version);
+        DDCModifyRequest deleteRequest = DDCRouterUtil.createDDCDeleteRequest(RmsConstants.SYS_RMS_NAMESPACE, PAYMENT, paymentBody);
+        log.infof("deleteRequest: \r\n %s", objectMapper.convertValue(deleteRequest, ObjectNode.class));
+        ObjectNode response = routerService.modify(deleteRequest).getFirst();
+        log.infof("deleteResponse: \r\n%s", response);
+    }
+
+    @Override
+    public void deleteRefundingPayment(RefundingPayment refundingPayment) {
+        ObjectNode paymentBody = objectMapper.createObjectNode();
+        paymentBody.put("id", refundingPayment.id);
+        DDCModifyRequest deleteRequest = DDCRouterUtil.createDDCDeleteRequest(RmsConstants.SYS_RMS_NAMESPACE, REFUNDING_PAYMENT, paymentBody);
+        log.infof("deleteRequest: \r\n %s", objectMapper.convertValue(deleteRequest, ObjectNode.class));
+        ObjectNode response = routerService.modify(deleteRequest).getFirst();
+        log.infof("deleteResponse: \r\n%s", response);
+    }
+
+    @Override
+    public void deletePaymentRefundLink(RefundingPayment paymentRefund, Long refundId) {
+        ObjectNode paymentBody = objectMapper.createObjectNode();
+        paymentBody.put("id", paymentRefund.paymentOfRefundPayments.id);
+        paymentBody.put("version", paymentRefund.paymentOfRefundPayments.version);
+        ArrayNode paymentRefunds = objectMapper.createArrayNode();
+        ObjectNode refund = objectMapper.createObjectNode();
+        refund.put("id", refundId);
+        refund.put("__state", "D");
+        paymentRefunds.add(refund);
+        paymentBody.set("paymentRefunds", paymentRefunds);
+        routerService.modify(RmsConstants.SYS_RMS_NAMESPACE, PAYMENT, paymentBody);
+    }
+
+    private void appendRelatedDeletes(ObjectNode body, Requirement requirement, List<Long> createdRelatedPayments) {
+        if (createdRelatedPayments == null || createdRelatedPayments.isEmpty() || requirement.relatedPayments == null || requirement.relatedPayments.isEmpty()) {
+            return;
+        }
+        Set<Long> relatedToDelete = Set.copyOf(createdRelatedPayments);
+        ArrayNode relatedPayments = objectMapper.createArrayNode();
+        requirement.relatedPayments.stream()
+            .filter(p -> relatedToDelete.contains(p.id))
+            .forEach(p -> {
+                ObjectNode related = objectMapper.createObjectNode();
+                related.put("id", p.id);
+                related.put("__state", "D");
+                relatedPayments.add(related);
+            });
+        if (!relatedPayments.isEmpty()) {
+            body.set("relatedPayments", relatedPayments);
+        }
+    }
+
+    private void appendRefundingDeletes(ObjectNode body, Requirement requirement, List<Long> createdReqRefundingPayments) {
+        if (createdReqRefundingPayments == null || createdReqRefundingPayments.isEmpty() || requirement.refundingPayments == null || requirement.refundingPayments.isEmpty()) {
+            return;
+        }
+        Set<Long> refundingToDelete = Set.copyOf(createdReqRefundingPayments);
+        ArrayNode refundingPayments = objectMapper.createArrayNode();
+        requirement.refundingPayments.stream()
+            .filter(p -> refundingToDelete.contains(p.id))
+            .forEach(p -> {
+                ObjectNode related = objectMapper.createObjectNode();
+                related.put("id", p.id);
+                related.put("__state", "D");
+                refundingPayments.add(related);
+            });
+        if (!refundingPayments.isEmpty()) {
+            body.set("refundingPayments", refundingPayments);
+        }
     }
 
     private ObjectNode createRequestBody(CreateRequirementDto createRequirementDto) {
@@ -134,20 +295,15 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
         }
 
         String initialBbpState = createRequirementDto.getInitialBbpState();
+        log.infof("initialBbpState : %s", initialBbpState);
 
-        log.infof("initialBbpState : " + initialBbpState);
-        // вид требования вычисляется с помощью настроенного алгоритма
-        // который определяет его в зависимости от "расчетной категории" из записи массива
         RequirementTypeDTO requirementType = requirementTypeService.getRequirementType(paymentData.indicator.indicatorDescr, systemLocale);
 
-        // приоритет - целая часть = приоритету из вида требования, дробная часть = "приоритет оплаты" из записи массива
         BigDecimal integerPriority = new BigDecimal(requirementType.priority);
         BigDecimal decimalPriority = new BigDecimal(paymentData.priority).divide(new BigDecimal("100"), 2, RoundingMode.UP);
         BigDecimal priority = integerPriority.add(decimalPriority);
 
-
         ObjectNode body = objectMapper.createObjectNode();
-        // идентификатор требования сформировали заранее и передали как готовый, но это не обязательно
         if (paymentData.requirementId != null) {
             body.put("id", paymentData.requirementId);
         }
@@ -155,11 +311,9 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
         BaseProcessResultDto bbpState;
         try {
             bbpState = ContextObjectMapper.get().readValue(initialBbpState, BaseProcessResultDto.class);
-
             if (bbpState.stateCode == null || bbpState.stateCode.isBlank()) {
                 JsonNode root = ContextObjectMapper.get().readTree(initialBbpState);
-                String state = root.path("state").asText("wait_pay");
-                body.put("bbpState000StateCode", state);
+                body.put("bbpState000StateCode", root.path("state").asText("wait_pay"));
             } else {
                 body.put("bbpState000StateCode", bbpState.stateCode);
             }
@@ -169,49 +323,24 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
             throw new RuntimeException(String.format("Не удалось прочесть состояние бизнес процесса. bbState=%s для класса ", initialBbpState));
         }
 
-        // состояние = "ожидает оплаты"
         body.put("state", RequirementStatus.WAIT.toString());
-        // неоплаченная сумма = сумма
         body.put("unpaidAmount", paymentData.amount);
-        // оплаченная сумма = 0
         body.put("paidAmount", BigDecimal.ZERO);
-        // списанная сумма = 0
         body.put("writeOffAmount", BigDecimal.ZERO);
-        // сумма = "сумма к оплате" из записи массива
         body.put("amount", paymentData.amount);
-        // валюта = валюта договора
-        body.set("currency", objectMapper.createObjectNode()
-            .put("id", createRequirementDto.getCurrency().id)
-            .put("__objectType", "/SYS/CUR/Currency"));
-        // расчетная категория = "расчетная категория" из записи массива
+        body.set("currency", objectMapper.createObjectNode().put("id", createRequirementDto.getCurrency().id).put("__objectType", "/SYS/CUR/Currency"));
         body.set("indicator", objectMapper.createObjectNode().put("id", paymentData.indicator.id));
-        // дата = параметр "дата операционного дня"
         body.put("date", createRequirementDto.getBusinessDate().format(LOCAL_DATE_FORMATTER));
-        // дата начала оплаты= параметр "дата операционного дня"
         body.put("startPaymentDate", createRequirementDto.getBusinessDate().format(LOCAL_DATE_FORMATTER));
-        // дата окончания оплаты= параметр "дата операционного дня"
         body.put("paymentEndDate", createRequirementDto.getBusinessDate().format(LOCAL_DATE_FORMATTER));
-        // связано с договором = true
         body.put("isContractBound", true);
-        // документ-основание = параметр "ссылка на договор"
-        body.set("baseDocument", objectMapper.createObjectNode()
-            .put("id", createRequirementDto.getContract().id)
-            .put("__objectType", createRequirementDto.getContract().__objectType));
-        // плательщик = клиент
-        body.set("client", objectMapper.createObjectNode()
-            .put("id", createRequirementDto.getClient().id)
-            .put("__objectType", createRequirementDto.getClient().__objectType));
-        // вид требования
+        body.set("baseDocument", objectMapper.createObjectNode().put("id", createRequirementDto.getContract().id).put("__objectType", createRequirementDto.getContract().__objectType));
+        body.set("client", objectMapper.createObjectNode().put("id", createRequirementDto.getClient().id).put("__objectType", createRequirementDto.getClient().__objectType));
         body.set("requirementType", objectMapper.createObjectNode().put("id", requirementType.id));
-        // приоритет
         body.put("priority", priority);
 
         ObjectNode paymentStrategy = objectMapper.createObjectNode();
-        // разрешена оплата по частям
         paymentStrategy.put("allowAutoPay", requirementType.isPartialPayable);
-        // TODO ! у вида требования нет атрибута: разрешена оплата группой
-        // paymentStrategy.put("allowGroupPay", );
-        // разрешено использование заемных средств
         paymentStrategy.put("allowOverdraft", requirementType.useLoanFunds);
         body.set("paymentStrategy", paymentStrategy);
         return body;
