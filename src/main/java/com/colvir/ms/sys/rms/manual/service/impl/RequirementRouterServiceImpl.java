@@ -21,7 +21,7 @@ import com.colvir.ms.sys.rms.manual.util.CacheInvalidateServiceImpl;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
 import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.colvir.ms.sys.rms.manual.util.SystemParameterService;
-import com.colvir.ms.sys.rms.manual.web.dto.BaseProcessResultDto;
+import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
