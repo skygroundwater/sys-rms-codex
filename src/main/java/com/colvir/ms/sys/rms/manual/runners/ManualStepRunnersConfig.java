@@ -80,172 +80,236 @@ public final class ManualStepRunnersConfig {
 
 abstract class DelegatingStepRunner<P, J extends JournalDto, R> implements StepRunner<P, J, R> {
 
-    private final AbstractStepRunnerHandler<P, J, R> handler;
-
-    protected DelegatingStepRunner(AbstractStepRunnerHandler<P, J, R> handler) {
-        this.handler = handler;
-    }
+    protected abstract AbstractStepRunnerHandler<P, J, R> handler();
 
     @Override
     public ProcessStageResponse<J, R> process(StepMethod.RequestItem.Request<P, J> request) {
-        return handler.handle(request);
+        return handler().handle(request);
     }
 
     @Override
     public CompensateStageResponse<J> compensate(StepMethod.RequestItem.Request<P, J> request) {
-        return handler.undoHandle(request);
+        return handler().undoHandle(request);
     }
 }
 
 @Step(StepsNames.SYS_RMS_ADJUST_BY_PAST_DATE)
 @ApplicationScoped
 class AdjustByPastDateRunner extends DelegatingStepRunner<AdjustByPastDateDto, AdjustByPastDateJournalDto, AdjustByPastDateResultDto> {
+
     @Inject
-    AdjustByPastDateRunner(AdjustByPastDateHandler handler) {
-        super(handler);
+    AdjustByPastDateHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<AdjustByPastDateDto, AdjustByPastDateJournalDto, AdjustByPastDateResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_BUILD_REQUIREMENTS)
 @ApplicationScoped
 class BuildRequirementsRunner extends DelegatingStepRunner<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> {
+
     @Inject
-    BuildRequirementsRunner(BuildRequirementsHandler handler) {
-        super(handler);
+    BuildRequirementsHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_CREATE_GROUP)
 @ApplicationScoped
 class CreateGroupRunner extends DelegatingStepRunner<CreateRequirementsGroupDto, CreateRequirementsGroupJournalDto, CreateRequirementsGroupResultDto> {
+
     @Inject
-    CreateGroupRunner(CreateGroupHandler handler) {
-        super(handler);
+    CreateGroupHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<CreateRequirementsGroupDto, CreateRequirementsGroupJournalDto, CreateRequirementsGroupResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_DISTRIBUTE_PAID_AMOUNTS)
 @ApplicationScoped
 class DistributePaidAmountsRunner extends DelegatingStepRunner<DistributePaidAmountsDto, DistributePaidAmountsJournalDto, DistributePaidAmountsResultDto> {
+
     @Inject
-    DistributePaidAmountsRunner(DistributePaidAmountsHandler handler) {
-        super(handler);
+    DistributePaidAmountsHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<DistributePaidAmountsDto, DistributePaidAmountsJournalDto, DistributePaidAmountsResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_GROUP_MEMBER_ADD)
 @ApplicationScoped
 class GroupMemberAddRunner extends DelegatingStepRunner<GroupMemberAddDto, GroupMemberAddJournalDto, Object> {
+
     @Inject
-    GroupMemberAddRunner(GroupMemberAddHandler handler) {
-        super(handler);
+    GroupMemberAddHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<GroupMemberAddDto, GroupMemberAddJournalDto, Object> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_GROUP_MEMBER_DELETE)
 @ApplicationScoped
 class GroupMemberDeleteRunner extends DelegatingStepRunner<GroupMemberDeleteDto, GroupMemberDeleteJournalDto, Object> {
+
     @Inject
-    GroupMemberDeleteRunner(GroupMemberDeleteHandler handler) {
-        super(handler);
+    GroupMemberDeleteHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<GroupMemberDeleteDto, GroupMemberDeleteJournalDto, Object> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_GET_NON_PAID)
 @ApplicationScoped
 class NonPaidRequirementsRunner extends DelegatingStepRunner<NonPaidRequirementsDto, JournalDto, NonPaidRequirementsResultDto> {
+
     @Inject
-    NonPaidRequirementsRunner(NonPaidRequirementsHandler handler) {
-        super(handler);
+    NonPaidRequirementsHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<NonPaidRequirementsDto, JournalDto, NonPaidRequirementsResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_PAYMENT_REGISTRATION)
 @ApplicationScoped
 class PaymentRegistrationRunner extends DelegatingStepRunner<PaymentRegistrationDto, PaymentRegistrationJournalDto, PaymentRegistrationResultDto> {
+
     @Inject
-    PaymentRegistrationRunner(PaymentRegistrationHandler handler) {
-        super(handler);
+    PaymentRegistrationHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<PaymentRegistrationDto, PaymentRegistrationJournalDto, PaymentRegistrationResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_QUEUE_CHECK)
 @ApplicationScoped
 class QueueCheckRunner extends DelegatingStepRunner<QueueCheckDto, JournalDto, QueueCheckResultDto> {
+
     @Inject
-    QueueCheckRunner(QueueCheckHandler handler) {
-        super(handler);
+    QueueCheckHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<QueueCheckDto, JournalDto, QueueCheckResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_REFUND_PAYMENT)
 @ApplicationScoped
 class RefundOfPaymentRunner extends DelegatingStepRunner<RefundOfPaymentRunnerDto, RefundJournalDto, RefundOfPaymentResultDto> {
+
     @Inject
-    RefundOfPaymentRunner(RefundOfPaymentHandler handler) {
-        super(handler);
+    RefundOfPaymentHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<RefundOfPaymentRunnerDto, RefundJournalDto, RefundOfPaymentResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_REFUND_REQUIREMENTS)
 @ApplicationScoped
 class RefundOfRequirementsRunner extends DelegatingStepRunner<RefundOfRequirementsRunnerDto, RefundJournalDto, RefundOfRequirementsResultDto> {
+
     @Inject
-    RefundOfRequirementsRunner(RefundOfRequirementsHandler handler) {
-        super(handler);
+    RefundOfRequirementsHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<RefundOfRequirementsRunnerDto, RefundJournalDto, RefundOfRequirementsResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_REVIEW)
 @ApplicationScoped
 class RequirementReviewRunner extends DelegatingStepRunner<RequirementReviewDto, RequirementReviewJournalDto, RequirementReviewResultDto> {
+
     @Inject
-    RequirementReviewRunner(RequirementReviewHandler handler) {
-        super(handler);
+    RequirementReviewHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<RequirementReviewDto, RequirementReviewJournalDto, RequirementReviewResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_SET_HOLD)
 @ApplicationScoped
 class SetHoldRunner extends DelegatingStepRunner<SetHoldDto, SetHoldJournalDto, SetHoldResultDto> {
+
     @Inject
-    SetHoldRunner(SetHoldHandler handler) {
-        super(handler);
+    SetHoldHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<SetHoldDto, SetHoldJournalDto, SetHoldResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_UPDATE_HOLD)
 @ApplicationScoped
 class UpdateHoldRunner extends DelegatingStepRunner<UpdateHoldDto, UpdateHoldJournalDto, UpdateHoldResultDto> {
+
     @Inject
-    UpdateHoldRunner(UpdateHoldHandler handler) {
-        super(handler);
+    UpdateHoldHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<UpdateHoldDto, UpdateHoldJournalDto, UpdateHoldResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_UPDATE_REQUIREMENTS)
 @ApplicationScoped
 class UpdateRequirementsRunner extends DelegatingStepRunner<UpdateRequirementsDto, JournalDto, UpdateRequirementsResultDto> {
+
     @Inject
-    UpdateRequirementsRunner(UpdateRequirementsHandler handler) {
-        super(handler);
+    UpdateRequirementsHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<UpdateRequirementsDto, JournalDto, UpdateRequirementsResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_UPDATE_SINGLE_REQUIREMENT)
 @ApplicationScoped
 class UpdateSingleRequirementRunner extends DelegatingStepRunner<UpdateSingleRequirementDto, UpdateSingleRequirementJournalDto, UpdateSingleRequirementResultDto> {
+
     @Inject
-    UpdateSingleRequirementRunner(UpdateSingleRequirementHandler handler) {
-        super(handler);
+    UpdateSingleRequirementHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<UpdateSingleRequirementDto, UpdateSingleRequirementJournalDto, UpdateSingleRequirementResultDto> handler() {
+        return handler;
     }
 }
 
 @Step(StepsNames.SYS_RMS_WRITE_OFF)
 @ApplicationScoped
 class WriteOffRunner extends DelegatingStepRunner<WriteOffDto, WriteOffJournalDto, WriteOffResultDto> {
+
     @Inject
-    WriteOffRunner(WriteOffHandler handler) {
-        super(handler);
+    WriteOffHandler handler;
+
+    @Override
+    protected AbstractStepRunnerHandler<WriteOffDto, WriteOffJournalDto, WriteOffResultDto> handler() {
+        return handler;
     }
 }
