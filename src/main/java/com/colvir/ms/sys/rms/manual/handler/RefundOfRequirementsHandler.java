@@ -11,6 +11,7 @@ import com.colvir.ms.sys.rms.dto.RefundOfRequirementsResultDto;
 import com.colvir.ms.sys.rms.dto.RefundOfRequirementsRunnerDto;
 import com.colvir.ms.sys.rms.dto.RefundResponse;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
@@ -42,14 +43,18 @@ public class RefundOfRequirementsHandler extends AbstractStepRunnerHandler<Refun
 
     RequirementService requirementService;
 
+    RequirementDao requirementDao;
+
     @Inject
     public RefundOfRequirementsHandler(RequirementPaymentService paymentService,
                                        StepCreatorService stepCreatorService,
                                        RequirementService requirementService,
+                                       RequirementDao requirementDao,
                                        Logger log) {
         super(StepsNames.SYS_RMS_REFUND_REQUIREMENTS, log);
         this.paymentService = paymentService;
         this.requirementService = requirementService;
+        this.requirementDao = requirementDao;
         this.stepCreatorService = stepCreatorService;
     }
 
@@ -158,7 +163,7 @@ public class RefundOfRequirementsHandler extends AbstractStepRunnerHandler<Refun
     private ObjectNode fillChangedNode(JsonNode originalNode, Long requirementId) {
         ObjectNode changed = ContextObjectMapper.get().createObjectNode();
         changed.setAll((ObjectNode) originalNode);
-        Requirement requirement = Requirement.findById(requirementId);
+        Requirement requirement = requirementDao.findById(requirementId);
         changed.put("version", requirement.version);
         changed.put("unpaidAmount", requirement.unpaidAmount);
         changed.put("paidAmount", requirement.paidAmount);

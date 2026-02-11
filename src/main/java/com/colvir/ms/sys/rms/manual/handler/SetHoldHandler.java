@@ -10,6 +10,7 @@ import com.colvir.ms.sys.rms.dto.SetHoldDto;
 import com.colvir.ms.sys.rms.dto.SetHoldJournalDto;
 import com.colvir.ms.sys.rms.dto.SetHoldResultDto;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.generated.domain.RequirementHold;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
@@ -41,15 +42,21 @@ public class SetHoldHandler extends AbstractStepRunnerHandler<SetHoldDto, SetHol
 
     RequirementService requirementService;
 
+    RequirementDao requirementDao;
+
     StepCreatorService stepCreatorService;
 
     @Inject
     public SetHoldHandler(SystemParameterService systemParameterService,
                           RequirementService requirementService,
+                          RequirementDao requirementDao,
+                          StepCreatorService stepCreatorService,
                           Logger log) {
         super(StepsNames.SYS_RMS_GROUP_MEMBER_ADD, log);
         this.systemParameterService = systemParameterService;
         this.requirementService = requirementService;
+        this.requirementDao = requirementDao;
+        this.stepCreatorService = stepCreatorService;
     }
 
     @Override
@@ -167,7 +174,7 @@ public class SetHoldHandler extends AbstractStepRunnerHandler<SetHoldDto, SetHol
     private Set<Long> createRequirementHolds (Long requirementId, List<RequirementHoldInfoDto> holdInfoList) {
         Set<Long> createdHolds = new HashSet<>();
         if (holdInfoList != null && !holdInfoList.isEmpty()) {
-            Requirement requirement = Requirement.findById(requirementId);
+            Requirement requirement = requirementDao.findById(requirementId);
             if (requirement != null && !Boolean.TRUE.equals(requirement.isDeleted)) {
                 for (var holdInfo : holdInfoList) {
                     RequirementHold requirementHold = new RequirementHold();
@@ -183,7 +190,7 @@ public class SetHoldHandler extends AbstractStepRunnerHandler<SetHoldDto, SetHol
                         requirementHold.holdId = holdInfo.hold.id;
                     }
                     requirementHold.reference = holdInfo.reference;
-                    requirementHold.requirementOfAssignedHolds = Requirement.getEntityManager().getReference(Requirement.class, requirementId);
+                    requirementHold.requirementOfAssignedHolds = requirementDao.getReference(requirementId);
                     requirementHold.persist();
                     requirement.assignedHolds.add(requirementHold);
                     createdHolds.add(requirementHold.id);
@@ -196,7 +203,7 @@ public class SetHoldHandler extends AbstractStepRunnerHandler<SetHoldDto, SetHol
 
     private void deleteRequirementHolds (Long requirementId, Set<Long> holdIdList) {
         if (holdIdList != null && !holdIdList.isEmpty()) {
-            Requirement requirement = Requirement.findById(requirementId);
+            Requirement requirement = requirementDao.findById(requirementId);
             if (requirement != null && !Boolean.TRUE.equals(requirement.isDeleted)) {
                 Map<Long, RequirementHold> holdMap = requirement.assignedHolds.stream()
                     .filter(h -> !Boolean.TRUE.equals(h.isDeleted))

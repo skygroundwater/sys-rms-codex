@@ -1,6 +1,5 @@
 package com.colvir.ms.sys.rms.manual.service.impl;
 
-import com.colvir.ms.common.Constants;
 import com.colvir.ms.sys.rms.dto.AdjustByPastDateJournalDto;
 import com.colvir.ms.sys.rms.dto.AdjustByPastDateResultDto;
 import com.colvir.ms.sys.rms.dto.AdjustRefundPaymentResultDto;
@@ -33,7 +32,12 @@ import com.colvir.ms.sys.rms.generated.service.dto.PaymentDTO;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
 import com.colvir.ms.sys.rms.generated.service.mapper.PaymentMapper;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
+import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
+import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.service.RouterService;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
@@ -41,7 +45,6 @@ import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.colvir.ms.sys.rms.manual.util.SessionContext;
 import com.colvir.ms.sys.rms.manual.util.SystemParameterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Functions;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -54,7 +57,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -82,6 +84,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     RouterService routerService;
 
     @Inject
+    RequirementRouterService requirementRouterService;
+
+    @Inject
     Logger log;
 
     @Inject
@@ -89,6 +94,18 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
     @Inject
     RequirementTypeService requirementTypeService;
+
+    @Inject
+    RequirementDao requirementDao;
+
+    @Inject
+    PaymentDao paymentDao;
+
+    @Inject
+    RefundingPaymentDao refundingPaymentDao;
+
+    @Inject
+    RelatedPaymentDao relatedPaymentDao;
 
     @Override
     @Transactional
@@ -109,10 +126,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         Map<Long, Requirement> requirementMap = new HashMap<>();
         for (var requirementRef : request.requirements) {
-            Requirement requirement = Requirement.findById(requirementRef.id);
-            if (requirement == null) {
-                throw new RuntimeException(String.format("Requirement with id=%s is not found", requirementRef.id));
-            }
+            Requirement requirement = requirementDao.findByIdOrThrow(requirementRef.id);
             requirementMap.put(requirementRef.id, requirement);
             // сохраняем первоначальные значения для отката
             RequirementJournalDto requirementJournal = RequirementMapperUtils.fillRequirementJournal(requirement);
@@ -130,29 +144,18 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             paymentInfo.amount = withdrawal.amount;
             Payment payment;
             // ищем платеж
-            Map<String, Object> paymentParams = new HashMap<>();
-            paymentParams.put("reference", withdrawal.reference);
-            paymentParams.put("currencyId", withdrawal.currency.id);
-            paymentParams.put("amount", withdrawal.amountPaid);
-            paymentParams.put("withdrawalTypeId", withdrawal.withdrawalType.id);
-            payment = Payment.find("select p from Payment p where" +
-                    " (p.reference = :reference or p.payment = :reference) " +
-                    " and (p.isDeleted is null or p.isDeleted = false) " +
-                    " and p.withdrawalTypeId = :withdrawalTypeId" +
-                    " and p.currencyId = :currencyId" +
-                    " and p.amount = :amount ", paymentParams)
-                .firstResult();
+            payment = paymentDao.findActiveByReferenceCurrencyAmountAndWithdrawalType(
+                withdrawal.reference,
+                withdrawal.currency.id,
+                withdrawal.amountPaid,
+                withdrawal.withdrawalType.id
+            );
 
             if (payment != null) {
                 paymentInfo.payment = paymentMapper.toDto(payment);
                 paymentInfo.isNewPayment = false;
                 // ищем использованные суммы по таблице связей
-                Map<String, Object> params = new HashMap<>();
-                params.put("paymentId", payment.id);
-                List<RelatedPayment> relatedPayments = RelatedPayment.list("select p from RelatedPayment p where " +
-                    " p.payment.id = :paymentId " +
-                    " and (p.isDeleted is null or p.isDeleted = false) ", params
-                );
+                List<RelatedPayment> relatedPayments = relatedPaymentDao.findNonDeletedByPaymentId(payment.id);
                 // использованная сумма в валюте требования
                 paymentInfo.usedAmount = relatedPayments.stream()
                     .map(p -> p.amount)
@@ -370,13 +373,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             .map(r -> r.id)
             .collect(Collectors.toSet());
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("ids", idSet);
-
-        List<Requirement> requirements = Requirement.list(
-            " id in (:ids) " +
-                " and (isDeleted is null or isDeleted = false) ", params
-        );
+        List<Requirement> requirements = requirementDao.findActiveByIds(idSet);
 
         if (requirements.isEmpty()) {
             return response;
@@ -409,12 +406,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         log.infof("--- remainingAmount = %s", remainingAmount);
 
         // получаем все связанные платежи
-        List<RelatedPayment> relatedPayments = RelatedPayment.list("select r from RelatedPayment r where " +
-            " r.requirementOfRelatedPayments.id in (:ids) " +
-            " and r.payment.paymentResult = 'PAID' " +
-            " and (r.isDeleted is null or r.isDeleted = false) " +
-            " order by r.payment.createTime desc ", params
-        );
+        List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(idSet);
         log.infof("--- relatedPayments \r\n %s", relatedPayments);
 
         if (relatedPayments.isEmpty()) {
@@ -550,7 +542,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         // создаем записи по суммам возврата
         for (var paymentId : paymentRefundMap.keySet()) {
-            Payment payment = Payment.findById(paymentId);
+            Payment payment = paymentDao.findById(paymentId);
             RefundingPayment paymentRefund = createRefundingPayment(paymentId, paymentRefundMap.get(paymentId));
             paymentRefund.persist();
             payment.refundPayments.add(paymentRefund);
@@ -579,7 +571,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         if (request.payment == null || request.payment.id == null) {
             return response;
         }
-        Payment payment = Payment.findById(request.payment.id);
+        Payment payment = paymentDao.findById(request.payment.id);
         if (payment == null || Boolean.TRUE.equals(payment.isDeleted)) {
             return response;
         }
@@ -611,14 +603,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         log.infof("--- refundAmount = %s", refundAmount);
 
         // получаем все связанные платежи
-        Map<String, Object> relatedPaymentsParams = new HashMap<>();
-        relatedPaymentsParams.put("id", payment.id);
-        List<RelatedPayment> relatedPayments = RelatedPayment.list("select r from RelatedPayment r where " +
-            " r.payment.id = :id " +
-            " and (r.amount > 0 or r.amountOfPayment > 0) " +
-            " and (r.isDeleted is null or r.isDeleted = false) " +
-            " order by r.payment.createTime desc ", relatedPaymentsParams
-        );
+        List<RelatedPayment> relatedPayments = relatedPaymentDao.findRefundableByPaymentId(payment.id);
         log.infof("--- relatedPayments \r\n %s", relatedPayments);
 
         if (relatedPayments.isEmpty()) {
@@ -629,12 +614,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             .map(rp -> rp.requirementOfRelatedPayments.id)
             .collect(Collectors.toSet());
 
-        Map<String, Object> requirementParams = new HashMap<>();
-        requirementParams.put("ids", requirementIdSet);
-        List<Requirement> requirements = Requirement.list(
-            " id in (:ids) " +
-                " and (isDeleted is null or isDeleted = false) ", requirementParams
-        );
+        List<Requirement> requirements = requirementDao.findActiveByIds(requirementIdSet);
 
         // проверяем состояние требований
         List<Long> incorrectData = requirements.stream()
@@ -838,47 +818,11 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         if (request.requirementJournal != null) {
             for (RequirementJournalDto journal : request.requirementJournal.values()) {
-                Requirement requirement = Requirement.findById(journal.id);
+                Requirement requirement = requirementDao.findById(journal.id);
                 if (requirement != null && !Boolean.TRUE.equals(requirement.isDeleted)) {
 
                     // восстановление атрибутов требований
-                    ObjectNode body = objectMapper.createObjectNode();
-                    body.put("id", journal.id);
-                    body.put("version", requirement.version);
-                    body.put("bbpState000StateCode", journal.bbpStateCode);
-                    body.put("bbpState000JournalId", journal.bbpJournalId);
-                    body.put("state", journal.state.toString());
-                    body.put("unpaidAmount", journal.unpaidAmount);
-                    body.put("paidAmount", journal.paidAmount);
-                    body.put("writeOffAmount", journal.writeOffAmount);
-                    body.put("amount", journal.amount);
-                    body.put("priority", journal.priority);
-                    if (journal.actualPaymentDate != null) {
-                        body.put("actualPaymentDate", journal.actualPaymentDate.format(DateTimeFormatter.ofPattern(Constants.LOCAL_DATE_FORMAT)));
-                    } else {
-                        body.putNull("actualPaymentDate");
-                    }
-
-                    // восстановление атрибутов связей с платежами
-                    if (request.relatedPaymentsJournal != null && !request.relatedPaymentsJournal.isEmpty()) {
-                        if (requirement.relatedPayments != null && !requirement.relatedPayments.isEmpty()) {
-                            final ArrayNode relatedPayments = objectMapper.createArrayNode();
-                            body.set("relatedPayments", relatedPayments);
-                            requirement.relatedPayments.stream()
-                                .filter(p -> relatedToUpdate.containsKey(p.id))
-                                .forEach(
-                                    p -> {
-                                        RelatedPaymentsJournalDto paymentJournal = relatedToUpdate.get(p.id);
-                                        ObjectNode related = objectMapper.createObjectNode();
-                                        related.put("id", p.id);
-                                        related.put("amount", paymentJournal.amount);
-                                        related.put("amountOfPayment", paymentJournal.amountOfPayment);
-                                        relatedPayments.add(related);
-                                    }
-                                );
-                        }
-                    }
-                    routerService.modify(SYS_RMS_NAMESPACE, "Requirement", body);
+                    requirementRouterService.restoreRequirementForRefundUndo(requirement, journal, relatedToUpdate);
                 }
             }
         }
@@ -886,19 +830,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         // удаление созданных записей по возврату платежей
         if (request.createdPaymentRefunds != null && !request.createdPaymentRefunds.isEmpty()) {
             for (Long refundId : request.createdPaymentRefunds) {
-                RefundingPayment paymentRefund = RefundingPayment.findById(refundId);
+                RefundingPayment paymentRefund = refundingPaymentDao.findById(refundId);
                 if (paymentRefund != null && !Boolean.TRUE.equals(paymentRefund.isDeleted)) {
-                    final ObjectNode paymentBody = objectMapper.createObjectNode();
-                    paymentBody.put("id", paymentRefund.paymentOfRefundPayments.id);
-                    paymentBody.put("version", paymentRefund.paymentOfRefundPayments.version);
-                    final ArrayNode paymentRefunds = objectMapper.createArrayNode();
-                    ObjectNode refund = objectMapper.createObjectNode();
-                    refund.put("id", refundId);
-                    refund.put("__state", "D");
-                    paymentRefunds.add(refund);
-                    paymentBody.set("paymentRefunds", paymentRefunds);
-
-                    routerService.modify(SYS_RMS_NAMESPACE, "Payment", paymentBody);
+                    requirementRouterService.deletePaymentRefundLink(paymentRefund, refundId);
                 }
             }
         }
@@ -917,7 +851,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementMapByPpc = new HashMap<>();
 
         decreasingRequirements.forEach(pair -> {
-            Requirement requirement = Requirement.findById(pair.b.id);
+            Requirement requirement = requirementDao.findById(pair.b.id);
             if (requirement == null) {
                 log.errorf("adjustByPastDate: requirement id=%d not found", pair.b.id);
                 throw new RuntimeException(String.format("Requirement id=%s does not exist", pair.b.id));

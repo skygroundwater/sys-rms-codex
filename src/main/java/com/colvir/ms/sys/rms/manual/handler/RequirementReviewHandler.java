@@ -12,6 +12,7 @@ import com.colvir.ms.sys.rms.dto.ReviewRequirementDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementResponse;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
+import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
@@ -39,16 +40,19 @@ public class RequirementReviewHandler extends AbstractStepRunnerHandler<Requirem
     RequirementService requirementService;
     RequirementPaymentService paymentService;
     StepCreatorService stepCreatorService;
+    RequirementDao requirementDao;
 
     @Inject
     public RequirementReviewHandler(RequirementService requirementService,
                                     RequirementPaymentService paymentService,
                                     StepCreatorService stepCreatorService,
+                                    RequirementDao requirementDao,
                                     Logger log) {
         super(StepsNames.SYS_RMS_REVIEW, log);
         this.requirementService = requirementService;
         this.paymentService = paymentService;
         this.stepCreatorService = stepCreatorService;
+        this.requirementDao = requirementDao;
     }
 
     @Override
@@ -85,7 +89,7 @@ public class RequirementReviewHandler extends AbstractStepRunnerHandler<Requirem
             if (reviewResponse.reviewResult != null && reviewResponse.reviewResult.requirementInfo != null) {
                 Long requirementId = reviewResponse.reviewResult.requirementInfo.requirementId;
                 if (requirementId != null) {
-                    Requirement requirement = Requirement.findById(requirementId);
+                    Requirement requirement = requirementDao.findByIdOrThrow(requirementId);
                     changed.put("version", requirement.version);
                     changed.put("amount", requirement.amount);
                     changed.put("unpaidAmount", requirement.unpaidAmount);
