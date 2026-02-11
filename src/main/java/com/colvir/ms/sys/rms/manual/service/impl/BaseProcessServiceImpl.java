@@ -1,16 +1,12 @@
 package com.colvir.ms.sys.rms.manual.service.impl;
 
 import com.colvir.ms.common.router.DDCRouterClient;
-import com.colvir.ms.sys.rms.dto.BbpObjectProperties;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
-import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
-import com.colvir.ms.sys.rms.generated.service.dto.RequirementDTO;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
-import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
 import com.colvir.ms.sys.rms.manual.util.RmsConstants;
-import com.colvir.ms.sys.rms.manual.web.dto.BaseProcessResultDto;
+import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,15 +14,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.quarkus.runtime.util.StringUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.antlr.v4.runtime.misc.Pair;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 
-import static com.colvir.ms.common.router.dto.DDCCallRequest.get;
 import static com.colvir.ms.common.router.dto.DDCCallRequest.post;
 
 @ApplicationScoped

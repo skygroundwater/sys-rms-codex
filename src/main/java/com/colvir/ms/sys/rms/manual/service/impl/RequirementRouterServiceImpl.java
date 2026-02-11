@@ -21,7 +21,7 @@ import com.colvir.ms.sys.rms.manual.util.CacheInvalidateServiceImpl;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
 import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.colvir.ms.sys.rms.manual.util.SystemParameterService;
-import com.colvir.ms.sys.rms.manual.web.dto.BaseProcessResultDto;
+import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -143,11 +143,7 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
         return routerService.modify(requests);
     }
 
-    @Override
-    public void restoreRequirementWithoutBbpCancel(Requirement requirement,
-                                                   RequirementJournalDto journal,
-                                                   List<Long> createdRelatedPayments,
-                                                   List<Long> createdReqRefundingPayments) {
+    private ObjectNode fillRequestBody(Requirement requirement, RequirementJournalDto journal) {
         ObjectNode body = objectMapper.createObjectNode();
         body.put("id", journal.id);
         body.put("version", requirement.version);
@@ -160,6 +156,7 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
         body.put("bbpState000ProcessId", journal.bbpProcessId);
         body.put("bbpState000JournalId", journal.bbpJournalId);
         body.put("state", journal.state.toString());
+
         if (journal.indicator != null) {
             body.set("indicator", objectMapper.createObjectNode().put("id", journal.indicator.id));
         }
@@ -173,6 +170,16 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
         } else {
             body.putNull("paymentEndDate");
         }
+
+        return body;
+    }
+    @Override
+    public void restoreRequirementWithoutBbpCancel(Requirement requirement,
+                                                   RequirementJournalDto journal,
+                                                   List<Long> createdRelatedPayments,
+                                                   List<Long> createdReqRefundingPayments) {
+        ObjectNode body = fillRequestBody(requirement, journal);
+
         appendRelatedDeletes(body, requirement, createdRelatedPayments);
         appendRefundingDeletes(body, requirement, createdReqRefundingPayments);
         routerService.modify(RmsConstants.SYS_RMS_NAMESPACE, REQUIREMENT, body);
@@ -182,22 +189,8 @@ public class RequirementRouterServiceImpl implements RequirementRouterService {
     public void restoreRequirementForRefundUndo(Requirement requirement,
                                                 RequirementJournalDto journal,
                                                 Map<Long, RelatedPaymentsJournalDto> relatedToUpdate) {
-        ObjectNode body = objectMapper.createObjectNode();
-        body.put("id", journal.id);
-        body.put("version", requirement.version);
-        body.put("bbpState000StateCode", journal.bbpStateCode);
-        body.put("bbpState000JournalId", journal.bbpJournalId);
-        body.put("state", journal.state.toString());
-        body.put("unpaidAmount", journal.unpaidAmount);
-        body.put("paidAmount", journal.paidAmount);
-        body.put("writeOffAmount", journal.writeOffAmount);
-        body.put("amount", journal.amount);
-        body.put("priority", journal.priority);
-        if (journal.actualPaymentDate != null) {
-            body.put("actualPaymentDate", journal.actualPaymentDate.format(LOCAL_DATE_FORMATTER));
-        } else {
-            body.putNull("actualPaymentDate");
-        }
+        ObjectNode body = fillRequestBody(requirement,journal);
+
         if (relatedToUpdate != null && !relatedToUpdate.isEmpty() && requirement.relatedPayments != null && !requirement.relatedPayments.isEmpty()) {
             ArrayNode relatedPayments = objectMapper.createArrayNode();
             body.set("relatedPayments", relatedPayments);

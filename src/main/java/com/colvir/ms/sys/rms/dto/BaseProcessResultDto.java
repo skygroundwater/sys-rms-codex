@@ -1,4 +1,4 @@
-package com.colvir.ms.sys.rms.manual.web.dto;
+package com.colvir.ms.sys.rms.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

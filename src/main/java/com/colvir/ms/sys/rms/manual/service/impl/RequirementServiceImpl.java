@@ -20,7 +20,6 @@ import com.colvir.ms.sys.rms.generated.domain.RefundingPayment;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
-import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
 import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
@@ -60,9 +59,6 @@ public class RequirementServiceImpl implements RequirementService {
 
     @Inject
     BaseProcessService baseProcessService;
-
-    @Inject
-    RequirementMapper requirementMapper;
 
     @Inject
     RequirementPaymentService paymentService;

@@ -1,4 +1,4 @@
-package com.colvir.ms.sys.rms.manual.web.rest;
+package com.colvir.ms.sys.rms.manual.controller;
 
 import com.colvir.ms.sys.rms.dto.RequirementAmountRequest;
 import com.colvir.ms.sys.rms.dto.RequirementAmountResponse;

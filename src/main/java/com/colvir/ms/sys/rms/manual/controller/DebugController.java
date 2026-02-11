@@ -1,4 +1,4 @@
-package com.colvir.ms.sys.rms.manual.web.rest;
+package com.colvir.ms.sys.rms.manual.controller;
 
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
 import com.colvir.ms.sys.rms.dto.CheckQueueDto;
