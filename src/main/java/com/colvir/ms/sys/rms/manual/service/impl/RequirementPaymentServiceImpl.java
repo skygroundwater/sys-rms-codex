@@ -39,12 +39,10 @@ import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
-import com.colvir.ms.sys.rms.manual.service.RouterService;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
 import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.colvir.ms.sys.rms.manual.util.SessionContext;
 import com.colvir.ms.sys.rms.manual.util.SystemParameterService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Functions;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -76,12 +74,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
     @Inject
     RequirementMapper requirementMapper;
-
-    @Inject
-    ObjectMapper objectMapper;
-
-    @Inject
-    RouterService routerService;
 
     @Inject
     RequirementRouterService requirementRouterService;
