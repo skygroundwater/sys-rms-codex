@@ -29,7 +29,6 @@ import com.colvir.ms.sys.rms.generated.domain.enumeration.PaymentResult;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.generated.service.dto.PaymentDTO;
-import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
 import com.colvir.ms.sys.rms.generated.service.mapper.PaymentMapper;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
 import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
@@ -39,7 +38,6 @@ import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
-import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
 import com.colvir.ms.sys.rms.manual.util.SessionContext;
 import com.google.common.base.Functions;
@@ -54,6 +52,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -77,11 +76,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Inject
     Logger log;
 
-    @Inject
-    SystemParameterService systemParameterService;
-
-    @Inject
-    RequirementTypeService requirementTypeService;
 
     @Inject
     RequirementDao requirementDao;
@@ -864,6 +858,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 log.infof("processRefundingPayment: creating refunding payment entity");
 
                 List<Pair<RequirementStateInfoDto, Requirement>> requirementsForUpdate = requirementMapByPpc.get(ppc);
+                requirementsForUpdate.sort(Comparator.comparingInt(r -> Objects.requireNonNullElse(r.a.priority, Integer.MAX_VALUE)));
 
                 RefundingPayment refundingPayment = new RefundingPayment();
                 refundingPayment.reference = outgoingPayment.reference;
@@ -883,42 +878,40 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 for (Pair<RequirementStateInfoDto, Requirement> pair : requirementsForUpdate) {
                     RequirementStateInfoDto reqDto = pair.a;
                     Requirement requirement = pair.b;
-                    BigDecimal diff = requirement.paidAmount.subtract(reqDto.amount);
-
-                    if (paymentBalance.compareTo(diff) >= 0) {
-                        log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, diff);
-
-                        // вид требования вычисляется с помощью настроенного алгоритма
-                        // который определяет его в зависимости от "расчетной категории" из записи массива
-                        Long systemLocale = systemParameterService.getSystemLocale(RmsConstants.SYSTEM_LOCALE_PARAM);
-                        RequirementTypeDTO requirementType = requirementTypeService.getRequirementType(reqDto.indicator.indicatorDescr, systemLocale);
-
-                        // приоритет - целая часть = приоритету из вида требования, дробная часть = "приоритет оплаты" из записи массива
-                        BigDecimal integerPriority = new BigDecimal(requirementType.priority);
-                        BigDecimal decimalPriority = new BigDecimal(reqDto.priority).divide(new BigDecimal("100"), 2, RoundingMode.UP);
-                        requirement.priority = integerPriority.add(decimalPriority);
-                        requirement.indicatorId = reqDto.indicator.id;
-
-                        requirement.amount = reqDto.amount;
-                        requirement.paidAmount = reqDto.amount;
-                        requirement.unpaidAmount = BigDecimal.ZERO;
-                        requirement.state = RequirementStatus.PAID;
-
-                        RequirementRefundingPayment rrp = new RequirementRefundingPayment();
-                        rrp.distributionAmount = diff;
-                        rrp.requirementOfRefundingPayments = requirement;
-                        rrp.refundingPayment = refundingPayment;
-                        refundingPayments.add(rrp);
-
-                        log.infof("processRefundingPayment: linked refunding payment to requirement=%s, amount=%s", requirement, diff);
-
-                        requirement.update();
-                        paymentBalance = paymentBalance.subtract(diff);
-
-                        reqDto.payedAmount = requirement.paidAmount;
-                        reqDto.status = requirement.state;
-                        result.requirements.add(reqDto);
+                    BigDecimal refundable = requirement.paidAmount.max(BigDecimal.ZERO);
+                    if (paymentBalance.signum() <= 0) {
+                        break;
                     }
+                    if (refundable.signum() <= 0) {
+                        continue;
+                    }
+
+                    BigDecimal refundAmount = paymentBalance.min(refundable);
+                    log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, refundAmount);
+
+                    requirement.paidAmount = requirement.paidAmount.subtract(refundAmount);
+                    requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                    if (requirement.amount.compareTo(BigDecimal.ZERO) == 0 && requirement.unpaidAmount.compareTo(BigDecimal.ZERO) == 0) {
+                        requirement.state = RequirementStatus.CANCELED;
+                    } else {
+                        requirement.state = requirement.unpaidAmount.compareTo(BigDecimal.ZERO) > 0 ? RequirementStatus.WAIT : RequirementStatus.PAID;
+                    }
+
+                    RequirementRefundingPayment rrp = new RequirementRefundingPayment();
+                    rrp.distributionAmount = refundAmount;
+                    rrp.requirementOfRefundingPayments = requirement;
+                    rrp.refundingPayment = refundingPayment;
+                    refundingPayments.add(rrp);
+
+                    requirement.update();
+                    paymentBalance = paymentBalance.subtract(refundAmount);
+
+                    reqDto.payedAmount = requirement.paidAmount;
+                    reqDto.status = requirement.state;
+                }
+
+                if (paymentBalance.signum() > 0) {
+                    throw new RuntimeException(String.format("The refund cannot be made due to the lack of funds in requirements by paymentPurposeCode=%s, remaining=%s", ppc, paymentBalance));
                 }
 
                 RequirementRefundingPayment.persist(refundingPayments);
