@@ -830,6 +830,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             throw new RuntimeException("outgoingPayments cannot be null or empty for decreasing requirements");
         }
 
+        // Группируем требования по КНП, потому что возврат всегда должен идти в рамках одного paymentPurposeCode.
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementMapByPpc = new HashMap<>();
 
         decreasingRequirements.forEach(pair -> {
@@ -858,6 +859,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 log.infof("processRefundingPayment: creating refunding payment entity");
 
                 List<Pair<RequirementStateInfoDto, Requirement>> requirementsForUpdate = requirementMapByPpc.get(ppc);
+                // Идем по приоритетам, чтобы порядок распределения был предсказуем и повторяем.
                 requirementsForUpdate.sort(Comparator.comparingInt(r -> Objects.requireNonNullElse(r.a.priority, Integer.MAX_VALUE)));
 
                 RefundingPayment refundingPayment = new RefundingPayment();
@@ -886,6 +888,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         continue;
                     }
 
+                    // Возвращаем только то, что реально можно вернуть по требованию на текущем шаге.
                     BigDecimal refundAmount = paymentBalance.min(refundable);
                     log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, refundAmount);
 
@@ -910,6 +913,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                     reqDto.status = requirement.state;
                 }
 
+                // Если после обхода требований по КНП остаток не нулевой — входной возврат больше, чем оплачено.
                 if (paymentBalance.signum() > 0) {
                     throw new RuntimeException(String.format("The refund cannot be made due to the lack of funds in requirements by paymentPurposeCode=%s, remaining=%s", ppc, paymentBalance));
                 }

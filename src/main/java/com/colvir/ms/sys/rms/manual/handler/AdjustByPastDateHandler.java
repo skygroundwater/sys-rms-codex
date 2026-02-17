@@ -78,6 +78,8 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             }
 
 
+            // Делим требования по фактическому состоянию в БД (а не по входному payedAmount).
+            // Это важно, т.к. до этого шага в БД уже могли быть изменения/оплаты.
             List<Pair<RequirementStateInfoDto, ReferenceDto>> overpaidRequirements = new ArrayList<>();
             List<Pair<RequirementStateInfoDto, ReferenceDto>> underpaidRequirements = new ArrayList<>();
             List<Pair<RequirementStateInfoDto, ReferenceDto>> equalRequirements = new ArrayList<>();
@@ -98,6 +100,8 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 }
             }
 
+            // Возврат пытаемся "съесть" последовательно: сначала переплаты,
+            // затем недоплаты, потом равные — чтобы покрыть сценарии аналитика с переносом оплаты между требованиями.
             List<Pair<RequirementStateInfoDto, ReferenceDto>> refundCandidates = new ArrayList<>(overpaidRequirements);
             refundCandidates.addAll(underpaidRequirements);
             refundCandidates.addAll(equalRequirements);
@@ -107,6 +111,8 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 paymentService.processRefundingPayment(properties.outgoingPayments, refundCandidates, journal, result);
             }
 
+            // После возвратов перечитываем фактическое состояние из БД и только потом
+            // определяем, куда распределять incoming-платежи.
             Map<Long, Pair<RequirementStateInfoDto, ReferenceDto>> increasingRequirements = new HashMap<>();
             for (RequirementStateInfoDto req : properties.requirements) {
                 Requirement dbRequirement = requirementService.getRequirementById(req.requirementId);
@@ -144,6 +150,8 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 );
             }
 
+            // Важно вернуть в результат все требования, даже если платежей не было:
+            // так раннер не "проглотит" изменение суммы без следа.
             for (RequirementStateInfoDto req : properties.requirements) {
                 if (result.requirements.stream().noneMatch(r -> Objects.equals(r.requirementId, req.requirementId))) {
                     Requirement dbRequirement = requirementService.getRequirementById(req.requirementId);
