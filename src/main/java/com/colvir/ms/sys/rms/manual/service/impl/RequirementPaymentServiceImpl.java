@@ -823,7 +823,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Override
     @Transactional
     public void processRefundingPayment(List<AdjustRefundPaymentResultDto> outgoingPayments,
-                                        List<Pair<RequirementStateInfoDto, ReferenceDto>> decreasingRequirements,
+                                        List<Pair<RequirementStateInfoDto, Requirement>> decreasingRequirements,
                                         AdjustByPastDateJournalDto journal, AdjustByPastDateResultDto result) {
 
         if (outgoingPayments == null || outgoingPayments.isEmpty()) {
@@ -834,7 +834,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementMapByPpc = new HashMap<>();
 
         decreasingRequirements.forEach(pair -> {
-            Requirement requirement = requirementDao.findByIdOrThrow(pair.b.id);
+            Requirement requirement = pair.b;
             String requirementPpc = pair.a.paymentPurposeCode;
             log.infof("adjustByPastDate: decreasing requirement=%s, requirementPpc=%s", requirement, requirementPpc);
             if (requirementMapByPpc.containsKey(requirementPpc)) {

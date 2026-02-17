@@ -80,17 +80,23 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             // Делим требования по фактическому состоянию в БД (а не по входному payedAmount).
             // Это важно, т.к. до этого шага в БД уже могли быть изменения/оплаты.
-            List<Pair<RequirementStateInfoDto, ReferenceDto>> overpaidRequirements = new ArrayList<>();
-            List<Pair<RequirementStateInfoDto, ReferenceDto>> underpaidRequirements = new ArrayList<>();
-            List<Pair<RequirementStateInfoDto, ReferenceDto>> equalRequirements = new ArrayList<>();
+            List<Pair<RequirementStateInfoDto, Requirement>> overpaidRequirements = new ArrayList<>();
+            List<Pair<RequirementStateInfoDto, Requirement>> underpaidRequirements = new ArrayList<>();
+            List<Pair<RequirementStateInfoDto, Requirement>> equalRequirements = new ArrayList<>();
 
+            Map<Long, Requirement> dbRequirementsById = new HashMap<>();
             for (RequirementStateInfoDto req : properties.requirements) {
                 Requirement dbRequirement = requirementService.getRequirementById(req.requirementId);
+                dbRequirementsById.put(req.requirementId, dbRequirement);
                 journal.requirementJournalMap.putIfAbsent(dbRequirement.id, RequirementMapperUtils.fillRequirementJournal(dbRequirement));
+            }
+
+            for (RequirementStateInfoDto req : properties.requirements) {
+                Requirement dbRequirement = dbRequirementsById.get(req.requirementId);
                 BigDecimal dbPaidAmount = Objects.requireNonNullElse(dbRequirement.paidAmount, BigDecimal.ZERO);
                 BigDecimal newAmount = Objects.requireNonNullElse(req.amount, BigDecimal.ZERO);
 
-                Pair<RequirementStateInfoDto, ReferenceDto> reqRef = new Pair<>(req, new ReferenceDto(req.requirementId, SYS_RMS_REQUIREMENT_NAMESPACE));
+                Pair<RequirementStateInfoDto, Requirement> reqRef = new Pair<>(req, dbRequirement);
                 if (dbPaidAmount.compareTo(newAmount) > 0) {
                     overpaidRequirements.add(reqRef);
                 } else if (dbPaidAmount.compareTo(newAmount) < 0) {
@@ -102,7 +108,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             // Возврат пытаемся "съесть" последовательно: сначала переплаты,
             // затем недоплаты, потом равные — чтобы покрыть сценарии аналитика с переносом оплаты между требованиями.
-            List<Pair<RequirementStateInfoDto, ReferenceDto>> refundCandidates = new ArrayList<>(overpaidRequirements);
+            List<Pair<RequirementStateInfoDto, Requirement>> refundCandidates = new ArrayList<>(overpaidRequirements);
             refundCandidates.addAll(underpaidRequirements);
             refundCandidates.addAll(equalRequirements);
 
@@ -111,15 +117,16 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 paymentService.processRefundingPayment(properties.outgoingPayments, refundCandidates, journal, result);
             }
 
-            // После возвратов перечитываем фактическое состояние из БД и только потом
+            // После возвратов смотрим уже обновленное состояние требований
+            // (объекты те же, их изменили в processRefundingPayment) и только потом
             // определяем, куда распределять incoming-платежи.
             Map<Long, Pair<RequirementStateInfoDto, ReferenceDto>> increasingRequirements = new HashMap<>();
             for (RequirementStateInfoDto req : properties.requirements) {
-                Requirement dbRequirement = requirementService.getRequirementById(req.requirementId);
+                Requirement dbRequirement = dbRequirementsById.get(req.requirementId);
                 BigDecimal dbPaidAmount = Objects.requireNonNullElse(dbRequirement.paidAmount, BigDecimal.ZERO);
                 BigDecimal newAmount = Objects.requireNonNullElse(req.amount, BigDecimal.ZERO);
                 if (dbPaidAmount.compareTo(newAmount) < 0) {
-                    increasingRequirements.put(req.requirementId, new Pair<>(req, new ReferenceDto(req.requirementId, SYS_RMS_REQUIREMENT_NAMESPACE)));
+                    increasingRequirements.put(req.requirementId, new Pair<>(req, new ReferenceDto(dbRequirement.id, SYS_RMS_REQUIREMENT_NAMESPACE)));
                 }
             }
 
@@ -154,7 +161,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             // так раннер не "проглотит" изменение суммы без следа.
             for (RequirementStateInfoDto req : properties.requirements) {
                 if (result.requirements.stream().noneMatch(r -> Objects.equals(r.requirementId, req.requirementId))) {
-                    Requirement dbRequirement = requirementService.getRequirementById(req.requirementId);
+                    Requirement dbRequirement = dbRequirementsById.get(req.requirementId);
                     req.payedAmount = Objects.requireNonNullElse(dbRequirement.paidAmount, BigDecimal.ZERO);
                     req.status = dbRequirement.state == null ? RequirementStatus.WAIT : dbRequirement.state;
                     req.paymentEndDate = dbRequirement.paymentEndDate;
