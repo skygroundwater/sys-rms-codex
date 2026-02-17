@@ -32,6 +32,7 @@ import com.colvir.ms.sys.rms.generated.service.dto.PaymentDTO;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
 import com.colvir.ms.sys.rms.generated.service.mapper.PaymentMapper;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
@@ -40,10 +41,7 @@ import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.colvir.ms.sys.rms.manual.util.SessionContext;
-import com.colvir.ms.sys.rms.manual.util.SystemParameterService;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Functions;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -63,8 +61,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.SYS_RMS_NAMESPACE;
 
 @ApplicationScoped
 public class RequirementPaymentServiceImpl implements RequirementPaymentService {
@@ -843,11 +839,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementMapByPpc = new HashMap<>();
 
         decreasingRequirements.forEach(pair -> {
-            Requirement requirement = requirementDao.findById(pair.b.id);
-            if (requirement == null) {
-                log.errorf("adjustByPastDate: requirement id=%d not found", pair.b.id);
-                throw new RuntimeException(String.format("Requirement id=%s does not exist", pair.b.id));
-            }
+            Requirement requirement = requirementDao.findByIdOrThrow(pair.b.id);
             String requirementPpc = pair.a.paymentPurposeCode;
             log.infof("adjustByPastDate: decreasing requirement=%s, requirementPpc=%s", requirement, requirementPpc);
             if (requirementMapByPpc.containsKey(requirementPpc)) {

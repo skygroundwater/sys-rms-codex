@@ -12,7 +12,7 @@ import jakarta.inject.Inject;
 import java.util.Map;
 
 @ApplicationScoped
-public class AlgorithmHelpers {
+public class AlgorithmHelper {
 
     @Inject
     CalculationProcessorInternal processor;

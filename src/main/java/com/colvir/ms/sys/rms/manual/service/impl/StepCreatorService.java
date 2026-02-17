@@ -5,16 +5,16 @@ import com.colvir.ms.sys.opr.api.step.runner.method.response.SubstepParameter;
 import com.colvir.ms.sys.rms.dto.BbpObjectProperties;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.inject.Inject;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import jakarta.inject.Inject;
 import org.antlr.v4.runtime.misc.Pair;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.util.List;
@@ -64,6 +64,12 @@ public class StepCreatorService {
     private BbpObjectProperties buildObjectProperties(Pair<RequirementJournalDto, RequirementStateInfoDto> pair) {
         RequirementJournalDto journal = pair.a;
         RequirementStateInfoDto state = pair.b;
+
+        log.infof("links states of requirement prevReqState=%s and newReqState=%s", journal, state);
+
+        if (journal == null || state == null) {
+            return null;
+        }
 
         String event = baseProcessService.getBbpUpdateEvent(state, journal);
         if (event == null || event.isEmpty()) {

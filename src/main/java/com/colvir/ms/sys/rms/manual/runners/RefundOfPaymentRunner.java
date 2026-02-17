@@ -7,8 +7,8 @@ import com.colvir.ms.sys.opr.api.step.runner.method.response.ProcessStageRespons
 import com.colvir.ms.sys.rms.dto.RefundJournalDto;
 import com.colvir.ms.sys.rms.dto.RefundOfPaymentResultDto;
 import com.colvir.ms.sys.rms.dto.RefundOfPaymentRunnerDto;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.handler.RefundOfPaymentHandler;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

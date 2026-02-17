@@ -1,7 +1,6 @@
 package com.colvir.ms.sys.rms.dto;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class UpdateHoldDto {
 

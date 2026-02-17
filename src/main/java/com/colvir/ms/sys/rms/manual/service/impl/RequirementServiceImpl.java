@@ -20,6 +20,7 @@ import com.colvir.ms.sys.rms.generated.domain.RefundingPayment;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
@@ -28,7 +29,6 @@ import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -48,8 +48,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.SYS_RMS_NAMESPACE;
 
 @ApplicationScoped
 public class RequirementServiceImpl implements RequirementService {

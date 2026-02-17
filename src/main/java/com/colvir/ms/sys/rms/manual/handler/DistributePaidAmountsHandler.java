@@ -15,11 +15,11 @@ import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementDTO;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Functions;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.SYS_RMS_REQUIREMENT_NAMESPACE;
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
+import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.SYS_RMS_REQUIREMENT_NAMESPACE;
+import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
 
 @ApplicationScoped
 public class DistributePaidAmountsHandler extends AbstractStepRunnerHandler<DistributePaidAmountsDto, DistributePaidAmountsJournalDto, DistributePaidAmountsResultDto> {

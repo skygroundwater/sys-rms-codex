@@ -1,6 +1,7 @@
 package com.colvir.ms.sys.rms.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.math.BigDecimal;
 
 @JsonIgnoreProperties(ignoreUnknown = true)

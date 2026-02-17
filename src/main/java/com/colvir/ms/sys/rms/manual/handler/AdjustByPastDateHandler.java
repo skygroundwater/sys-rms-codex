@@ -11,11 +11,11 @@ import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,8 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.SYS_RMS_REQUIREMENT_NAMESPACE;
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
+import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.SYS_RMS_REQUIREMENT_NAMESPACE;
+import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
 
 @ApplicationScoped
 public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByPastDateDto, AdjustByPastDateJournalDto, AdjustByPastDateResultDto> {
@@ -148,6 +148,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             result.requirements.addAll(zeroChangeRequirements);
 
             log.infof("adjustByPastDate: final state of requirements =%s", result.requirements);
+            log.infof("adjustByPastDate: state of requirements journal =%s", journal.requirementJournalMap.values());
 
             journal.intermediateResult = result;
 

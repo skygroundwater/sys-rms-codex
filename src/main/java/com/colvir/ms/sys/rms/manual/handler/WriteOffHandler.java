@@ -1,7 +1,5 @@
 package com.colvir.ms.sys.rms.manual.handler;
 
-import com.colvir.ms.common.router.DDCRouterUtil;
-import com.colvir.ms.common.router.dto.DDCModifyRequest;
 import com.colvir.ms.sys.opr.api.step.runner.method.StepMethod;
 import com.colvir.ms.sys.rms.dto.AggregationResult;
 import com.colvir.ms.sys.rms.dto.BbpStateResult;
@@ -15,15 +13,14 @@ import com.colvir.ms.sys.rms.generated.domain.enumeration.PaymentResult;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementMapper;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
-import com.colvir.ms.sys.rms.manual.service.RouterService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
+import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
 
 @ApplicationScoped
 public class WriteOffHandler extends AbstractStepRunnerHandler<WriteOffDto, WriteOffJournalDto, WriteOffResultDto>{

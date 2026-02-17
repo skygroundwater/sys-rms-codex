@@ -1,8 +1,6 @@
 package com.colvir.ms.sys.rms.dto;
 
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

@@ -1,12 +1,12 @@
 package com.colvir.ms.sys.rms.manual.service.impl;
 
 import com.colvir.ms.common.router.DDCRouterClient;
+import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
-import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

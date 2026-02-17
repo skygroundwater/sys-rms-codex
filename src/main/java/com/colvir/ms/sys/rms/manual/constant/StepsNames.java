@@ -1,4 +1,4 @@
-package com.colvir.ms.sys.rms.manual.util;
+package com.colvir.ms.sys.rms.manual.constant;
 
 /**
  * Именования раннеров-шагов операции в контексте работы службы sys-rms
