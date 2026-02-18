@@ -37,6 +37,7 @@ import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
+import com.colvir.ms.sys.rms.manual.dao.RequirementRefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
@@ -95,6 +96,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
     @Inject
     RelatedPaymentDao relatedPaymentDao;
+
+    @Inject
+    RequirementRefundingPaymentDao requirementRefundingPaymentDao;
 
     @Override
     @Transactional
@@ -905,13 +909,8 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 continue;
             }
 
-            @SuppressWarnings("unchecked")
-            List<RequirementRefundingPayment> refundLinks = RequirementRefundingPayment.list(
-                "select rrp from RequirementRefundingPayment rrp where rrp.requirementOfRefundingPayments.id = :requirementId " +
-                    "and rrp.distributionAmount > 0 and (rrp.refundingPayment.isDeleted is null or rrp.refundingPayment.isDeleted = false) " +
-                    "order by rrp.refundingPayment.valueDate desc",
-                Map.of("requirementId", requirement.id)
-            );
+            List<RequirementRefundingPayment> refundLinks =
+                requirementRefundingPaymentDao.findActiveByRequirementIdOrderByValueDateDesc(requirement.id);
 
             for (RequirementRefundingPayment refundLink : refundLinks) {
                 if (deficit.signum() <= 0) {

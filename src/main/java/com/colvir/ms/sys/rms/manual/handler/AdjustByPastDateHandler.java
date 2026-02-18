@@ -6,6 +6,7 @@ import com.colvir.ms.sys.rms.dto.AdjustByPastDateJournalDto;
 import com.colvir.ms.sys.rms.dto.AdjustByPastDateResultDto;
 import com.colvir.ms.sys.rms.dto.AggregationResult;
 import com.colvir.ms.sys.rms.dto.BbpStateResult;
+import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Map;
 
+import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.SYS_RMS_REQUIREMENT_NAMESPACE;
 import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
 
 @ApplicationScoped
@@ -121,7 +123,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 registrationRequest.payments = properties.incomingPayments;
                 registrationRequest.requirements = increasingRequirements.values().stream()
                     .sorted(Comparator.comparingInt(pair -> pair.a.priority))
-                    .map(pair -> pair.b)
+                    .map(pair -> new ReferenceDto(pair.b.id, SYS_RMS_REQUIREMENT_NAMESPACE))
                     .toList();
 
                 log.infof("adjustByPastDate: registering incoming payments, requirements count=%d, payments count=%d",
