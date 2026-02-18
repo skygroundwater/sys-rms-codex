@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface RequirementService {
 
@@ -44,6 +45,8 @@ public interface RequirementService {
     void updateRequirementBbpStates(List<RequirementJournalDto> values, Map<String, BbpStateResult> processIdStateMap);
 
     Requirement getRequirementById(Long id);
+
+    List<Requirement> getRequirementsByIds(Set<Long> ids);
 
     // получение оплаченной суммы
     // предполагается что все требования в валюте договора

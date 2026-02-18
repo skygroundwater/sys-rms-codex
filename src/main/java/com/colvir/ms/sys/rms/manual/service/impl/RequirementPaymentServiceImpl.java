@@ -54,6 +54,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -826,28 +827,145 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         }
     }
 
+    private void applyRequirementAttributesFromDto(RequirementStateInfoDto reqDto, Requirement requirement) {
+        // Здесь мы сразу приводим карточку требования к новому состоянию из входного списка.
+        // Делаем это в одном месте, чтобы не размазывать логику по разным веткам перерасчета.
+        Long systemLocale = systemParameterService.getSystemLocale(RmsConstants.SYSTEM_LOCALE_PARAM);
+        RequirementTypeDTO requirementType = requirementTypeService.getRequirementType(reqDto.indicator.indicatorDescr, systemLocale);
+
+        BigDecimal integerPriority = new BigDecimal(requirementType.priority);
+        BigDecimal decimalPriority = new BigDecimal(reqDto.priority).divide(new BigDecimal("100"), 2, RoundingMode.UP);
+
+        requirement.priority = integerPriority.add(decimalPriority);
+        requirement.indicatorId = reqDto.indicator.id;
+        requirement.amount = reqDto.amount;
+        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+    }
+
+    @Override
+    @Transactional
+    public void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
+                                                        AdjustByPastDateJournalDto journal,
+                                                        AdjustByPastDateResultDto result) {
+        if (requirements == null || requirements.isEmpty()) {
+            return;
+        }
+
+        Set<Long> changedRequirementIds = requirements.stream()
+            .filter(pair -> pair.b.amount.compareTo(pair.a.amount) != 0 || pair.b.paidAmount.compareTo(pair.a.payedAmount) != 0)
+            .map(pair -> pair.b.id)
+            .collect(Collectors.toSet());
+
+        for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
+            journal.requirementJournalMap.putIfAbsent(pair.b.id, RequirementMapperUtils.fillRequirementJournal(pair.b));
+            applyRequirementAttributesFromDto(pair.a, pair.b);
+        }
+
+        if (!changedRequirementIds.isEmpty()) {
+            List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(changedRequirementIds);
+            Map<Long, List<RelatedPayment>> relatedByPayment = relatedPayments.stream()
+                .collect(Collectors.groupingBy(rp -> rp.payment.id));
+
+            for (Map.Entry<Long, List<RelatedPayment>> entry : relatedByPayment.entrySet()) {
+                Payment payment = entry.getValue().get(0).payment;
+                List<RelatedPayment> allPaymentLinks = relatedPaymentDao.findNonDeletedByPaymentId(payment.id);
+                allPaymentLinks.sort(Comparator.comparing(rp -> rp.requirementOfRelatedPayments.priority));
+
+                BigDecimal availableAmount = payment.amount;
+
+                for (RelatedPayment link : allPaymentLinks) {
+                    Requirement req = link.requirementOfRelatedPayments;
+                    BigDecimal newLinkAmount = req.amount.min(availableAmount).max(BigDecimal.ZERO);
+                    BigDecimal oldLinkAmount = link.amount == null ? BigDecimal.ZERO : link.amount;
+
+                    if (oldLinkAmount.compareTo(newLinkAmount) != 0) {
+                        // Сохраняем только дельту по связке, чтобы не плодить новые записи.
+                        // Так проще откатывать и анализировать, что поменялось в перерасчете.
+                        link.amount = newLinkAmount;
+                        link.amountOfPayment = newLinkAmount;
+                        link.update();
+                        journal.relatedPaymentIds.add(link.id);
+
+                        req.paidAmount = req.paidAmount.subtract(oldLinkAmount).add(newLinkAmount);
+                    }
+
+                    req.unpaidAmount = req.amount.subtract(req.paidAmount);
+                    processRequirementUpdateWithoutBbpUpdate(req, false, true);
+                    availableAmount = availableAmount.subtract(newLinkAmount);
+                }
+            }
+        }
+
+        // Если после изменения сумм требования выросли и оплаченная сумма стала меньше новой,
+        // то подтягиваем назад ранее оформленные возвраты (в обратном порядке).
+        for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
+            Requirement requirement = pair.b;
+            BigDecimal deficit = requirement.amount.subtract(requirement.paidAmount);
+            if (deficit.signum() <= 0) {
+                continue;
+            }
+
+            @SuppressWarnings("unchecked")
+            List<RequirementRefundingPayment> refundLinks = RequirementRefundingPayment.list(
+                "select rrp from RequirementRefundingPayment rrp where rrp.requirementOfRefundingPayments.id = :requirementId " +
+                    "and rrp.distributionAmount > 0 and (rrp.refundingPayment.isDeleted is null or rrp.refundingPayment.isDeleted = false) " +
+                    "order by rrp.refundingPayment.valueDate desc",
+                Map.of("requirementId", requirement.id)
+            );
+
+            for (RequirementRefundingPayment refundLink : refundLinks) {
+                if (deficit.signum() <= 0) {
+                    break;
+                }
+                BigDecimal compensation = refundLink.distributionAmount.min(deficit);
+                refundLink.distributionAmount = refundLink.distributionAmount.subtract(compensation);
+                refundLink.update();
+                journal.requirementRefundingPaymentIds.add(refundLink.id);
+
+                RefundingPayment refundingPayment = refundLink.refundingPayment;
+                refundingPayment.amount = refundingPayment.amount.subtract(compensation);
+                refundingPayment.update();
+                journal.refundingPaymentIds.add(refundingPayment.id);
+
+                requirement.paidAmount = requirement.paidAmount.add(compensation);
+                requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+
+                deficit = deficit.subtract(compensation);
+            }
+        }
+
+        for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
+            RequirementStateInfoDto reqDto = pair.a;
+            Requirement requirement = pair.b;
+            reqDto.payedAmount = requirement.paidAmount;
+            reqDto.amount = requirement.amount;
+            reqDto.status = requirement.state;
+            reqDto.paymentEndDate = requirement.paymentEndDate;
+            result.requirements.add(reqDto);
+        }
+    }
+
     @Override
     @Transactional
     public void processRefundingPayment(List<AdjustRefundPaymentResultDto> outgoingPayments,
-                                        List<Pair<RequirementStateInfoDto, ReferenceDto>> decreasingRequirements,
+                                        List<Pair<RequirementStateInfoDto, Requirement>> requirements,
                                         AdjustByPastDateJournalDto journal, AdjustByPastDateResultDto result) {
 
         if (outgoingPayments == null || outgoingPayments.isEmpty()) {
-            throw new RuntimeException("outgoingPayments cannot be null or empty for decreasing requirements");
+            return;
         }
 
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementMapByPpc = new HashMap<>();
 
-        decreasingRequirements.forEach(pair -> {
-            Requirement requirement = requirementDao.findByIdOrThrow(pair.b.id);
+        requirements.forEach(pair -> {
+            Requirement requirement = pair.b;
             String requirementPpc = pair.a.paymentPurposeCode;
-            log.infof("adjustByPastDate: decreasing requirement=%s, requirementPpc=%s", requirement, requirementPpc);
-            if (requirementMapByPpc.containsKey(requirementPpc)) {
-                requirementMapByPpc.get(requirementPpc).add(new Pair<>(pair.a, requirement));
-            } else {
-                requirementMapByPpc.put(requirementPpc, new ArrayList<>(List.of(new Pair<>(pair.a, requirement))));
+            if (requirementPpc == null || requirementPpc.isEmpty()) {
+                return;
             }
-            journal.requirementJournalMap.put(requirement.id, RequirementMapperUtils.fillRequirementJournal(requirement));
+            requirementMapByPpc.computeIfAbsent(requirementPpc, key -> new ArrayList<>()).add(pair);
+            journal.requirementJournalMap.putIfAbsent(requirement.id, RequirementMapperUtils.fillRequirementJournal(requirement));
         });
 
         log.infof("adjustByPastDate: requirementMapByPpc=%s", requirementMapByPpc);
@@ -861,8 +979,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
             log.infof("processRefundingPayment: start processing refund payment amount=%s", paymentBalance);
             if (paymentBalance.signum() > 0) {
-                log.infof("processRefundingPayment: creating refunding payment entity");
-
                 List<Pair<RequirementStateInfoDto, Requirement>> requirementsForUpdate = requirementMapByPpc.get(ppc);
 
                 RefundingPayment refundingPayment = new RefundingPayment();
@@ -876,33 +992,24 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
                 RefundingPayment.persistOrUpdate(refundingPayment);
 
-                log.infof("processRefundingPayment: refunding payment persisted, %s", refundingPayment);
-
                 List<RequirementRefundingPayment> refundingPayments = new ArrayList<>();
 
                 for (Pair<RequirementStateInfoDto, Requirement> pair : requirementsForUpdate) {
                     RequirementStateInfoDto reqDto = pair.a;
                     Requirement requirement = pair.b;
+                    applyRequirementAttributesFromDto(reqDto, requirement);
+
                     BigDecimal diff = requirement.paidAmount.subtract(reqDto.amount);
+                    if (diff.signum() <= 0) {
+                        continue;
+                    }
 
                     if (paymentBalance.compareTo(diff) >= 0) {
                         log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, diff);
 
-                        // вид требования вычисляется с помощью настроенного алгоритма
-                        // который определяет его в зависимости от "расчетной категории" из записи массива
-                        Long systemLocale = systemParameterService.getSystemLocale(RmsConstants.SYSTEM_LOCALE_PARAM);
-                        RequirementTypeDTO requirementType = requirementTypeService.getRequirementType(reqDto.indicator.indicatorDescr, systemLocale);
-
-                        // приоритет - целая часть = приоритету из вида требования, дробная часть = "приоритет оплаты" из записи массива
-                        BigDecimal integerPriority = new BigDecimal(requirementType.priority);
-                        BigDecimal decimalPriority = new BigDecimal(reqDto.priority).divide(new BigDecimal("100"), 2, RoundingMode.UP);
-                        requirement.priority = integerPriority.add(decimalPriority);
-                        requirement.indicatorId = reqDto.indicator.id;
-
-                        requirement.amount = reqDto.amount;
-                        requirement.paidAmount = reqDto.amount;
-                        requirement.unpaidAmount = BigDecimal.ZERO;
-                        requirement.state = RequirementStatus.PAID;
+                        requirement.paidAmount = requirement.paidAmount.subtract(diff);
+                        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                        processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
 
                         RequirementRefundingPayment rrp = new RequirementRefundingPayment();
                         rrp.distributionAmount = diff;
@@ -910,19 +1017,16 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         rrp.refundingPayment = refundingPayment;
                         refundingPayments.add(rrp);
 
-                        log.infof("processRefundingPayment: linked refunding payment to requirement=%s, amount=%s", requirement, diff);
-
-                        requirement.update();
                         paymentBalance = paymentBalance.subtract(diff);
 
                         reqDto.payedAmount = requirement.paidAmount;
                         reqDto.status = requirement.state;
+                        reqDto.amount = requirement.amount;
                         result.requirements.add(reqDto);
                     }
                 }
 
                 RequirementRefundingPayment.persist(refundingPayments);
-                log.infof("processRefundingPayment: persisted %d refunding payment links refundingPayments=%s", refundingPayments.size(), requirementsForUpdate);
 
                 journal.requirementRefundingPaymentIds.addAll(
                     refundingPayments.stream().map(rp -> rp.id).toList()
