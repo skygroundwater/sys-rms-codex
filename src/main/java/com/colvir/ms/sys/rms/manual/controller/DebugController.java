@@ -1,5 +1,10 @@
 package com.colvir.ms.sys.rms.manual.controller;
 
+import com.colvir.ms.sys.opr.api.step.runner.method.StepMethod;
+import com.colvir.ms.sys.opr.api.step.runner.method.response.ProcessStageResponse;
+import com.colvir.ms.sys.rms.dto.AdjustByPastDateDto;
+import com.colvir.ms.sys.rms.dto.AdjustByPastDateJournalDto;
+import com.colvir.ms.sys.rms.dto.AdjustByPastDateResultDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
 import com.colvir.ms.sys.rms.dto.CheckQueueDto;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassRequestDto;
@@ -15,6 +20,7 @@ import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementResponse;
+import com.colvir.ms.sys.rms.manual.handler.AdjustByPastDateHandler;
 import com.colvir.ms.sys.rms.manual.handler.QueueCheckHandler;
 import com.colvir.ms.sys.rms.manual.service.PaymentOwMassReportService;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
@@ -47,6 +53,9 @@ public class DebugController {
 
     @Inject
     PaymentOwMassReportService paymentOwMassReportService;
+
+    @Inject
+    AdjustByPastDateHandler adjustByPastDateHandler;
 
     @POST
     @Path("/create-requirements")
@@ -116,5 +125,13 @@ public class DebugController {
     @Path("payment-ow-mass")
     public List<PaymentOwMassResultDto> paymentOwMassDto(PaymentOwMassRequestDto request) {
         return paymentOwMassReportService.getPaymentOwMassData(request.date);
+    }
+
+    @POST
+    @Path("adjust-by-past-date")
+    public ProcessStageResponse<AdjustByPastDateJournalDto, AdjustByPastDateResultDto> adjustByPastDate(
+        StepMethod.RequestItem.Request<AdjustByPastDateDto, AdjustByPastDateJournalDto> request
+    ) {
+        return adjustByPastDateHandler.handle(request);
     }
 }
