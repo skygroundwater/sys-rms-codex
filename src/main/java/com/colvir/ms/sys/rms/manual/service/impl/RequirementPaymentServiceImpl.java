@@ -867,6 +867,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         }
 
         if (!changedRequirementIds.isEmpty()) {
+            Map<Long, Pair<RequirementStateInfoDto, Requirement>> incomingRequirementMap = requirements.stream()
+                .collect(Collectors.toMap(pair -> pair.b.id, pair -> pair, (left, right) -> right));
+
             List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(changedRequirementIds);
             Map<Long, List<RelatedPayment>> relatedByPayment = relatedPayments.stream()
                 .collect(Collectors.groupingBy(rp -> rp.payment.id));
@@ -874,16 +877,47 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             for (Map.Entry<Long, List<RelatedPayment>> entry : relatedByPayment.entrySet()) {
                 Payment payment = entry.getValue().get(0).payment;
                 List<RelatedPayment> allPaymentLinks = relatedPaymentDao.findNonDeletedByPaymentId(payment.id);
-                allPaymentLinks.sort(Comparator.comparing(rp -> rp.requirementOfRelatedPayments.priority));
 
-                BigDecimal availableAmount = payment.amount;
+                Set<String> paymentPurposeCodes = allPaymentLinks.stream()
+                    .map(link -> incomingRequirementMap.get(link.requirementOfRelatedPayments.id))
+                    .filter(Objects::nonNull)
+                    .map(pair -> pair.a.paymentPurposeCode)
+                    .filter(ppc -> ppc != null && !ppc.isEmpty())
+                    .collect(Collectors.toSet());
 
-                for (RelatedPayment link : allPaymentLinks) {
-                    Requirement req = link.requirementOfRelatedPayments;
-                    BigDecimal newLinkAmount = req.amount.min(availableAmount).max(BigDecimal.ZERO);
-                    BigDecimal oldLinkAmount = link.amount == null ? BigDecimal.ZERO : link.amount;
+                if (paymentPurposeCodes.isEmpty()) {
+                    continue;
+                }
 
-                    if (oldLinkAmount.compareTo(newLinkAmount) != 0) {
+                List<Pair<RequirementStateInfoDto, Requirement>> candidates = requirements.stream()
+                    .filter(pair -> paymentPurposeCodes.contains(pair.a.paymentPurposeCode))
+                    .sorted(Comparator
+                        .comparing((Pair<RequirementStateInfoDto, Requirement> pair) -> pair.a.paymentPurposeCode)
+                        .thenComparing(pair -> pair.b.priority))
+                    .toList();
+
+                Map<Long, RelatedPayment> existingLinkByRequirementId = allPaymentLinks.stream()
+                    .collect(Collectors.toMap(link -> link.requirementOfRelatedPayments.id, link -> link, (left, right) -> left));
+
+                Set<Long> candidateRequirementIds = candidates.stream().map(pair -> pair.b.id).collect(Collectors.toSet());
+                BigDecimal lockedAmount = allPaymentLinks.stream()
+                    .filter(link -> !candidateRequirementIds.contains(link.requirementOfRelatedPayments.id))
+                    .map(link -> link.amount == null ? BigDecimal.ZERO : link.amount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                BigDecimal availableAmount = payment.amount.subtract(lockedAmount).max(BigDecimal.ZERO);
+
+                for (Pair<RequirementStateInfoDto, Requirement> candidate : candidates) {
+                    Requirement req = candidate.b;
+                    RelatedPayment link = existingLinkByRequirementId.get(req.id);
+
+                    BigDecimal oldLinkAmount = link == null || link.amount == null ? BigDecimal.ZERO : link.amount;
+                    BigDecimal requiredAmountForCurrentPayment = req.amount
+                        .subtract(req.paidAmount.subtract(oldLinkAmount))
+                        .max(BigDecimal.ZERO);
+                    BigDecimal newLinkAmount = requiredAmountForCurrentPayment.min(availableAmount);
+
+                    if (link != null && oldLinkAmount.compareTo(newLinkAmount) != 0) {
                         RelatedPaymentsJournalDto relatedPaymentSnapshot = fillRelatedPaymentsJournal(
                             link.id,
                             oldLinkAmount,
@@ -893,16 +927,22 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         );
                         journal.redistributedRelatedPayments.add(relatedPaymentSnapshot);
 
-                        // Сохраняем только дельту по связке, чтобы не плодить новые записи.
-                        // Так проще откатывать и анализировать, что поменялось в перерасчете.
+                        // При перераспределении обновляем только сумму исполнения по требованию.
+                        // amountOfPayment здесь не трогаем, потому что это агрегированный показатель по платежу.
                         link.amount = newLinkAmount;
                         link.update();
-
-                        req.paidAmount = req.paidAmount.subtract(oldLinkAmount).add(newLinkAmount);
                     }
 
+                    if (link == null && newLinkAmount.signum() > 0) {
+                        RelatedPayment newRelatedPayment = createRelatedPayment(newLinkAmount, BigDecimal.ZERO, req.id, payment.id);
+                        newRelatedPayment.persist();
+                        journal.relatedPaymentIds.add(newRelatedPayment.id);
+                    }
+
+                    req.paidAmount = req.paidAmount.subtract(oldLinkAmount).add(newLinkAmount);
                     req.unpaidAmount = req.amount.subtract(req.paidAmount);
                     processRequirementUpdateWithoutBbpUpdate(req, false, true);
+
                     availableAmount = availableAmount.subtract(newLinkAmount);
                 }
             }
