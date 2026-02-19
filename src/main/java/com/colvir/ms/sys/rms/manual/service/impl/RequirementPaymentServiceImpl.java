@@ -876,22 +876,85 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             .map(pair -> pair.b.id)
             .collect(Collectors.toSet());
 
-        Map<Long, RelatedPayment> relatedPaymentByRequirementId = new HashMap<>();
+        Map<Long, List<RelatedPayment>> relatedPaymentsByRequirementId = new HashMap<>();
         if (!changedRequirementIds.isEmpty()) {
             List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(changedRequirementIds);
-            for (RelatedPayment relatedPayment : relatedPayments) {
-                // Для текущего этапа нам важно только наличие связанного платежа по требованию.
-                // Если связок несколько, оставляем первую найденную (остальные обработаем на следующем шаге алгоритма).
-                relatedPaymentByRequirementId.putIfAbsent(relatedPayment.requirementOfRelatedPayments.id, relatedPayment);
-            }
+            relatedPaymentsByRequirementId = relatedPayments.stream()
+                .collect(Collectors.groupingBy(rp -> rp.requirementOfRelatedPayments.id));
         }
 
-        Map<String, List<Pair<Requirement, RelatedPayment>>> requirementsWithRelatedPaymentsByPpc = new HashMap<>();
+        Map<String, List<Pair<Requirement, List<RelatedPayment>>>> requirementsWithRelatedPaymentsByPpc = new HashMap<>();
         for (Map.Entry<String, List<Pair<RequirementStateInfoDto, Requirement>>> entry : requirementsByPpc.entrySet()) {
-            List<Pair<Requirement, RelatedPayment>> requirementsWithPayments = entry.getValue().stream()
-                .map(pair -> new Pair<>(pair.b, relatedPaymentByRequirementId.get(pair.b.id)))
+            List<Pair<Requirement, List<RelatedPayment>>> requirementsWithPayments = entry.getValue().stream()
+                .map(pair -> new Pair<>(pair.b, relatedPaymentsByRequirementId.getOrDefault(pair.b.id, List.of())))
                 .toList();
             requirementsWithRelatedPaymentsByPpc.put(entry.getKey(), requirementsWithPayments);
+        }
+
+        for (Map.Entry<String, List<Pair<Requirement, List<RelatedPayment>>>> ppcEntry : requirementsWithRelatedPaymentsByPpc.entrySet()) {
+            List<Pair<Requirement, List<RelatedPayment>>> requirementsBucket = ppcEntry.getValue();
+
+            Map<Long, List<RelatedPayment>> relatedPaymentsByPaymentId = requirementsBucket.stream()
+                .flatMap(pair -> pair.b.stream())
+                .collect(Collectors.groupingBy(rp -> rp.payment.id));
+
+            for (Map.Entry<Long, List<RelatedPayment>> paymentEntry : relatedPaymentsByPaymentId.entrySet()) {
+                Payment payment = paymentEntry.getValue().get(0).payment;
+                BigDecimal availableAmount = payment.amount == null ? BigDecimal.ZERO : payment.amount;
+
+                for (Pair<Requirement, List<RelatedPayment>> requirementPair : requirementsBucket) {
+                    if (availableAmount.signum() <= 0) {
+                        break;
+                    }
+
+                    Requirement requirement = requirementPair.a;
+                    List<RelatedPayment> paymentSpecificLinks = requirementPair.b.stream()
+                        .filter(rp -> Objects.equals(rp.payment.id, payment.id))
+                        .toList();
+
+                    BigDecimal existingAmountForThisPayment = paymentSpecificLinks.stream()
+                        .map(rp -> rp.amount == null ? BigDecimal.ZERO : rp.amount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    BigDecimal maxAmountFromCurrentPayment = requirement.amount
+                        .subtract(requirement.paidAmount.subtract(existingAmountForThisPayment))
+                        .max(BigDecimal.ZERO)
+                        .min(availableAmount);
+
+                    BigDecimal restToDistribute = maxAmountFromCurrentPayment;
+                    for (RelatedPayment paymentSpecificLink : paymentSpecificLinks) {
+                        BigDecimal oldAmount = paymentSpecificLink.amount == null ? BigDecimal.ZERO : paymentSpecificLink.amount;
+                        BigDecimal newAmount = restToDistribute.max(BigDecimal.ZERO);
+
+                        if (oldAmount.compareTo(newAmount) != 0) {
+                            RelatedPaymentsJournalDto relatedPaymentSnapshot = fillRelatedPaymentsJournal(
+                                paymentSpecificLink.id,
+                                oldAmount,
+                                paymentSpecificLink.amountOfPayment == null ? BigDecimal.ZERO : paymentSpecificLink.amountOfPayment,
+                                requirement.id,
+                                payment.id
+                            );
+                            journal.redistributedRelatedPayments.add(relatedPaymentSnapshot);
+
+                            paymentSpecificLink.amount = newAmount;
+                            paymentSpecificLink.update();
+                        }
+                        restToDistribute = BigDecimal.ZERO;
+                    }
+
+                    if (paymentSpecificLinks.isEmpty() && maxAmountFromCurrentPayment.signum() > 0) {
+                        RelatedPayment newRelatedPayment = createRelatedPayment(maxAmountFromCurrentPayment, BigDecimal.ZERO, requirement.id, payment.id);
+                        newRelatedPayment.persist();
+                        journal.relatedPaymentIds.add(newRelatedPayment.id);
+                    }
+
+                    requirement.paidAmount = requirement.paidAmount.subtract(existingAmountForThisPayment).add(maxAmountFromCurrentPayment);
+                    requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                    processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+
+                    availableAmount = availableAmount.subtract(maxAmountFromCurrentPayment);
+                }
+            }
         }
 
         log.infof("redistributeExistingRequirementPayments: requirementsWithRelatedPaymentsByPpc=%s", requirementsWithRelatedPaymentsByPpc);
