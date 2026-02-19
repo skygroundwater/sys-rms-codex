@@ -24,4 +24,14 @@ public class RequirementRefundingPaymentDaoImpl implements RequirementRefundingP
             Map.of("requirementId", requirementId)
         );
     }
+    @Override
+    public List<RequirementRefundingPayment> findActiveByRefundingPaymentIdOrderByValueDateDesc(Long refundingPaymentId) {
+        return RequirementRefundingPayment.list(
+            "select rrp from RequirementRefundingPayment rrp where rrp.refundingPayment.id = :refundingPaymentId " +
+                "and rrp.distributionAmount > 0 and (rrp.refundingPayment.isDeleted is null or rrp.refundingPayment.isDeleted = false) " +
+                "order by rrp.refundingPayment.valueDate desc",
+            Map.of("refundingPaymentId", refundingPaymentId)
+        );
+    }
+
 }

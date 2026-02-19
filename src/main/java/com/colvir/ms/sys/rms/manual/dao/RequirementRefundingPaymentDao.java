@@ -9,4 +9,6 @@ public interface RequirementRefundingPaymentDao {
     RequirementRefundingPayment findById(Long id);
 
     List<RequirementRefundingPayment> findActiveByRequirementIdOrderByValueDateDesc(Long requirementId);
+
+    List<RequirementRefundingPayment> findActiveByRefundingPaymentIdOrderByValueDateDesc(Long refundingPaymentId);
 }
