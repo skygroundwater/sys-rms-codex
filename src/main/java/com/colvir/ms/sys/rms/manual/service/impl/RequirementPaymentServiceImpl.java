@@ -853,36 +853,47 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                                                         AdjustByPastDateJournalDto journal,
                                                         AdjustByPastDateResultDto result) {
         if (requirements == null || requirements.isEmpty()) {
+            log.info("redistributeExistingRequirementPayments: no requirements provided, nothing to redistribute");
             return;
         }
 
+        // 1) Берем только действительно измененные требования.
+        // Это позволяет не трогать лишние связки и не раздувать журнал отката.
         List<Pair<RequirementStateInfoDto, Requirement>> changedRequirements = requirements.stream()
             .filter(pair -> pair.b.amount.compareTo(pair.a.amount) != 0 || pair.b.paidAmount.compareTo(pair.a.payedAmount) != 0)
             .toList();
+        log.infof("redistributeExistingRequirementPayments: changedRequirements count=%d", changedRequirements.size());
 
+        // 2) Раскладываем измененные требования по КНП и сортируем внутри каждого бакета по приоритету.
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementsByPpc = changedRequirements.stream()
             .filter(pair -> pair.a.paymentPurposeCode != null && !pair.a.paymentPurposeCode.isEmpty())
             .collect(Collectors.groupingBy(pair -> pair.a.paymentPurposeCode));
         requirementsByPpc.values().forEach(list ->
             list.sort(Comparator.comparing(pair -> pair.b.priority))
         );
+        log.infof("redistributeExistingRequirementPayments: PPC buckets=%s", requirementsByPpc.keySet());
 
+        // 3) Фиксируем исходное состояние требования в журнале и применяем новое входное состояние.
         for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
             journal.requirementJournalMap.putIfAbsent(pair.b.id, RequirementMapperUtils.fillRequirementJournal(pair.b));
             applyRequirementAttributesFromDto(pair.a, pair.b);
         }
+        log.infof("redistributeExistingRequirementPayments: requirement journal prepared, size=%d", journal.requirementJournalMap.size());
 
         Set<Long> changedRequirementIds = changedRequirements.stream()
             .map(pair -> pair.b.id)
             .collect(Collectors.toSet());
 
+        // 4) Поднимаем все существующие RelatedPayment для измененных требований.
         Map<Long, List<RelatedPayment>> relatedPaymentsByRequirementId = new HashMap<>();
         if (!changedRequirementIds.isEmpty()) {
             List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(changedRequirementIds);
             relatedPaymentsByRequirementId = relatedPayments.stream()
                 .collect(Collectors.groupingBy(rp -> rp.requirementOfRelatedPayments.id));
+            log.infof("redistributeExistingRequirementPayments: found relatedPayments=%d", relatedPayments.size());
         }
 
+        // 5) Для каждого КНП формируем пары Requirement + список его связок (или пустой список, если связок не было).
         Map<String, List<Pair<Requirement, List<RelatedPayment>>>> requirementsWithRelatedPaymentsByPpc = new HashMap<>();
         for (Map.Entry<String, List<Pair<RequirementStateInfoDto, Requirement>>> entry : requirementsByPpc.entrySet()) {
             List<Pair<Requirement, List<RelatedPayment>>> requirementsWithPayments = entry.getValue().stream()
@@ -891,16 +902,22 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             requirementsWithRelatedPaymentsByPpc.put(entry.getKey(), requirementsWithPayments);
         }
 
+        // 6) Внутри каждого КНП идем по каждому общему Payment и распределяем его сумму по требованиям по приоритету.
         for (Map.Entry<String, List<Pair<Requirement, List<RelatedPayment>>>> ppcEntry : requirementsWithRelatedPaymentsByPpc.entrySet()) {
+            String ppc = ppcEntry.getKey();
             List<Pair<Requirement, List<RelatedPayment>>> requirementsBucket = ppcEntry.getValue();
 
             Map<Long, List<RelatedPayment>> relatedPaymentsByPaymentId = requirementsBucket.stream()
                 .flatMap(pair -> pair.b.stream())
                 .collect(Collectors.groupingBy(rp -> rp.payment.id));
+            log.infof("redistributeExistingRequirementPayments: ppc=%s, requirements=%d, payments=%d",
+                ppc, requirementsBucket.size(), relatedPaymentsByPaymentId.size());
 
             for (Map.Entry<Long, List<RelatedPayment>> paymentEntry : relatedPaymentsByPaymentId.entrySet()) {
                 Payment payment = paymentEntry.getValue().get(0).payment;
                 BigDecimal availableAmount = payment.amount == null ? BigDecimal.ZERO : payment.amount;
+                log.infof("redistributeExistingRequirementPayments: processing paymentId=%d, availableAmount=%s, ppc=%s",
+                    payment.id, availableAmount, ppc);
 
                 for (Pair<Requirement, List<RelatedPayment>> requirementPair : requirementsBucket) {
                     if (availableAmount.signum() <= 0) {
@@ -938,6 +955,8 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
                             paymentSpecificLink.amount = newAmount;
                             paymentSpecificLink.update();
+                            log.infof("redistributeExistingRequirementPayments: updated relatedPaymentId=%d, oldAmount=%s, newAmount=%s",
+                                paymentSpecificLink.id, oldAmount, newAmount);
                         }
                         restToDistribute = BigDecimal.ZERO;
                     }
@@ -946,6 +965,8 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         RelatedPayment newRelatedPayment = createRelatedPayment(maxAmountFromCurrentPayment, BigDecimal.ZERO, requirement.id, payment.id);
                         newRelatedPayment.persist();
                         journal.relatedPaymentIds.add(newRelatedPayment.id);
+                        log.infof("redistributeExistingRequirementPayments: created relatedPaymentId=%d, amount=%s, requirementId=%d, paymentId=%d",
+                            newRelatedPayment.id, maxAmountFromCurrentPayment, requirement.id, payment.id);
                     }
 
                     requirement.paidAmount = requirement.paidAmount.subtract(existingAmountForThisPayment).add(maxAmountFromCurrentPayment);
@@ -957,17 +978,8 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             }
         }
 
-        log.infof("redistributeExistingRequirementPayments: requirementsWithRelatedPaymentsByPpc=%s", requirementsWithRelatedPaymentsByPpc);
-
-        for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
-            RequirementStateInfoDto reqDto = pair.a;
-            Requirement requirement = pair.b;
-            reqDto.payedAmount = requirement.paidAmount;
-            reqDto.amount = requirement.amount;
-            reqDto.status = requirement.state;
-            reqDto.paymentEndDate = requirement.paymentEndDate;
-            result.requirements.add(reqDto);
-        }
+        log.infof("redistributeExistingRequirementPayments: redistribution stage completed, redistributedRelatedPayments=%d, createdRelatedPayments=%d",
+            journal.redistributedRelatedPayments.size(), journal.relatedPaymentIds.size());
     }
 
     @Override
