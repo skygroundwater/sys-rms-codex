@@ -895,7 +895,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         // Сохраняем только дельту по связке, чтобы не плодить новые записи.
                         // Так проще откатывать и анализировать, что поменялось в перерасчете.
                         link.amount = newLinkAmount;
-                        link.amountOfPayment = newLinkAmount;
                         link.update();
 
                         req.paidAmount = req.paidAmount.subtract(oldLinkAmount).add(newLinkAmount);
@@ -1059,7 +1058,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             }
 
             relatedPayment.amount = relatedPaymentJournal.amount;
-            relatedPayment.amountOfPayment = relatedPaymentJournal.amountOfPayment;
             relatedPayment.update();
         }
     }
