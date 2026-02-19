@@ -885,12 +885,14 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             .collect(Collectors.toSet());
 
         // 4) Поднимаем все существующие RelatedPayment для измененных требований.
-        Map<Long, List<RelatedPayment>> relatedPaymentsByRequirementId = new HashMap<>();
+        final Map<Long, List<RelatedPayment>> relatedPaymentsByRequirementId;
         if (!changedRequirementIds.isEmpty()) {
             List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(changedRequirementIds);
             relatedPaymentsByRequirementId = relatedPayments.stream()
                 .collect(Collectors.groupingBy(rp -> rp.requirementOfRelatedPayments.id));
             log.infof("redistributeExistingRequirementPayments: found relatedPayments=%d", relatedPayments.size());
+        } else {
+            relatedPaymentsByRequirementId = Map.of();
         }
 
         // 5) Для каждого КНП формируем пары Requirement + список его связок (или пустой список, если связок не было).
