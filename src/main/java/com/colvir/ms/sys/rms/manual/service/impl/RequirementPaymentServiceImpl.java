@@ -856,188 +856,45 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             return;
         }
 
-        Set<Long> changedRequirementIds = requirements.stream()
+        List<Pair<RequirementStateInfoDto, Requirement>> changedRequirements = requirements.stream()
             .filter(pair -> pair.b.amount.compareTo(pair.a.amount) != 0 || pair.b.paidAmount.compareTo(pair.a.payedAmount) != 0)
-            .map(pair -> pair.b.id)
-            .collect(Collectors.toSet());
+            .toList();
 
-        for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
-            journal.requirementJournalMap.putIfAbsent(pair.b.id, RequirementMapperUtils.fillRequirementJournal(pair.b));
-            applyRequirementAttributesFromDto(pair.a, pair.b);
-        }
-
-        Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementsByPpc = requirements.stream()
+        Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementsByPpc = changedRequirements.stream()
             .filter(pair -> pair.a.paymentPurposeCode != null && !pair.a.paymentPurposeCode.isEmpty())
             .collect(Collectors.groupingBy(pair -> pair.a.paymentPurposeCode));
         requirementsByPpc.values().forEach(list ->
             list.sort(Comparator.comparing(pair -> pair.b.priority))
         );
 
+        for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
+            journal.requirementJournalMap.putIfAbsent(pair.b.id, RequirementMapperUtils.fillRequirementJournal(pair.b));
+            applyRequirementAttributesFromDto(pair.a, pair.b);
+        }
+
+        Set<Long> changedRequirementIds = changedRequirements.stream()
+            .map(pair -> pair.b.id)
+            .collect(Collectors.toSet());
+
+        Map<Long, RelatedPayment> relatedPaymentByRequirementId = new HashMap<>();
         if (!changedRequirementIds.isEmpty()) {
             List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(changedRequirementIds);
-            Map<Long, List<RelatedPayment>> relatedByPayment = relatedPayments.stream()
-                .collect(Collectors.groupingBy(rp -> rp.payment.id));
-
-            for (Map.Entry<Long, List<RelatedPayment>> entry : relatedByPayment.entrySet()) {
-                Payment payment = entry.getValue().get(0).payment;
-                List<RelatedPayment> allPaymentLinks = relatedPaymentDao.findNonDeletedByPaymentId(payment.id);
-
-                Set<String> paymentPpcCodes = entry.getValue().stream()
-                    .map(link -> requirements.stream()
-                        .filter(pair -> Objects.equals(pair.b.id, link.requirementOfRelatedPayments.id))
-                        .map(pair -> pair.a.paymentPurposeCode)
-                        .filter(ppc -> ppc != null && !ppc.isEmpty())
-                        .findFirst()
-                        .orElse(null)
-                    )
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-
-                for (String ppCode : paymentPpcCodes) {
-                    List<Pair<RequirementStateInfoDto, Requirement>> ppcRequirements = requirementsByPpc.get(ppCode);
-                    if (ppcRequirements == null || ppcRequirements.isEmpty()) {
-                        continue;
-                    }
-
-                    Set<Long> ppcRequirementIds = ppcRequirements.stream()
-                        .map(pair -> pair.b.id)
-                        .collect(Collectors.toSet());
-
-                    Map<Long, RelatedPayment> existingLinkByRequirementId = allPaymentLinks.stream()
-                        .filter(link -> ppcRequirementIds.contains(link.requirementOfRelatedPayments.id))
-                        .collect(Collectors.toMap(link -> link.requirementOfRelatedPayments.id, link -> link, (left, right) -> left));
-
-                    BigDecimal lockedAmount = allPaymentLinks.stream()
-                        .filter(link -> !ppcRequirementIds.contains(link.requirementOfRelatedPayments.id))
-                        .map(link -> link.amount == null ? BigDecimal.ZERO : link.amount)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    BigDecimal availableAmount = payment.amount.subtract(lockedAmount).max(BigDecimal.ZERO);
-
-                    for (Pair<RequirementStateInfoDto, Requirement> reqPair : ppcRequirements) {
-                        Requirement requirement = reqPair.b;
-                        RelatedPayment existingLink = existingLinkByRequirementId.get(requirement.id);
-
-                        BigDecimal oldLinkAmount = existingLink == null || existingLink.amount == null ? BigDecimal.ZERO : existingLink.amount;
-                        BigDecimal requiredAmountForCurrentPayment = requirement.amount
-                            .subtract(requirement.paidAmount.subtract(oldLinkAmount))
-                            .max(BigDecimal.ZERO);
-                        BigDecimal newLinkAmount = requiredAmountForCurrentPayment.min(availableAmount);
-
-                        if (existingLink != null && oldLinkAmount.compareTo(newLinkAmount) != 0) {
-                            RelatedPaymentsJournalDto relatedPaymentSnapshot = fillRelatedPaymentsJournal(
-                                existingLink.id,
-                                oldLinkAmount,
-                                existingLink.amountOfPayment == null ? BigDecimal.ZERO : existingLink.amountOfPayment,
-                                requirement.id,
-                                payment.id
-                            );
-                            journal.redistributedRelatedPayments.add(relatedPaymentSnapshot);
-
-                            // amountOfPayment тут не меняем: это агрегированный показатель по платежу.
-                            existingLink.amount = newLinkAmount;
-                            existingLink.update();
-                        }
-
-                        if (existingLink == null && newLinkAmount.signum() > 0) {
-                            RelatedPayment newRelatedPayment = createRelatedPayment(newLinkAmount, BigDecimal.ZERO, requirement.id, payment.id);
-                            newRelatedPayment.persist();
-                            journal.relatedPaymentIds.add(newRelatedPayment.id);
-                        }
-
-                        requirement.paidAmount = requirement.paidAmount.subtract(oldLinkAmount).add(newLinkAmount);
-                        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
-                        processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
-
-                        availableAmount = availableAmount.subtract(newLinkAmount);
-                    }
-                }
+            for (RelatedPayment relatedPayment : relatedPayments) {
+                // Для текущего этапа нам важно только наличие связанного платежа по требованию.
+                // Если связок несколько, оставляем первую найденную (остальные обработаем на следующем шаге алгоритма).
+                relatedPaymentByRequirementId.putIfAbsent(relatedPayment.requirementOfRelatedPayments.id, relatedPayment);
             }
         }
 
-        // Если после изменения сумм требования выросли и оплаченная сумма стала меньше новой,
-        // подтягиваем назад ранее оформленные возвраты, но идем в разрезе КНП и приоритета.
-        for (Map.Entry<String, List<Pair<RequirementStateInfoDto, Requirement>>> ppcEntry : requirementsByPpc.entrySet()) {
-            List<Pair<RequirementStateInfoDto, Requirement>> ppcRequirements = ppcEntry.getValue();
-
-            Set<Long> ppcRequirementIds = ppcRequirements.stream().map(pair -> pair.b.id).collect(Collectors.toSet());
-            Map<Long, List<RequirementRefundingPayment>> refundLinksByRequirement = ppcRequirementIds.stream()
-                .collect(Collectors.toMap(
-                    id -> id,
-                    requirementRefundingPaymentDao::findActiveByRequirementIdOrderByValueDateDesc
-                ));
-
-            Set<Long> refundingPaymentIds = refundLinksByRequirement.values().stream()
-                .flatMap(List::stream)
-                .map(link -> link.refundingPayment.id)
-                .collect(Collectors.toSet());
-
-            for (Long refundingPaymentId : refundingPaymentIds) {
-                RefundingPayment refundingPayment = refundingPaymentDao.findByIdOrThrow(refundingPaymentId);
-                List<RequirementRefundingPayment> allRefundingLinks =
-                    requirementRefundingPaymentDao.findActiveByRefundingPaymentIdOrderByValueDateDesc(refundingPaymentId);
-
-                BigDecimal lockedDistribution = allRefundingLinks.stream()
-                    .filter(link -> !ppcRequirementIds.contains(link.requirementOfRefundingPayments.id))
-                    .map(link -> link.distributionAmount == null ? BigDecimal.ZERO : link.distributionAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal availableAmount = refundingPayment.amount.subtract(lockedDistribution).max(BigDecimal.ZERO);
-
-                Map<Long, RequirementRefundingPayment> existingLinkByRequirementId = allRefundingLinks.stream()
-                    .filter(link -> ppcRequirementIds.contains(link.requirementOfRefundingPayments.id))
-                    .collect(Collectors.toMap(link -> link.requirementOfRefundingPayments.id, link -> link, (left, right) -> left));
-
-                for (Pair<RequirementStateInfoDto, Requirement> reqPair : ppcRequirements) {
-                    Requirement requirement = reqPair.b;
-                    BigDecimal deficit = requirement.amount.subtract(requirement.paidAmount);
-                    if (deficit.signum() <= 0 || availableAmount.signum() <= 0) {
-                        continue;
-                    }
-
-                    RequirementRefundingPayment refundLink = existingLinkByRequirementId.get(requirement.id);
-                    if (refundLink == null && availableAmount.signum() > 0) {
-                        BigDecimal initDistribution = deficit.min(availableAmount);
-                        if (initDistribution.signum() > 0) {
-                            RequirementRefundingPayment newRefundLink = new RequirementRefundingPayment();
-                            newRefundLink.requirementOfRefundingPayments = requirement;
-                            newRefundLink.refundingPayment = refundingPayment;
-                            newRefundLink.distributionAmount = initDistribution;
-                            newRefundLink.persist();
-                            journal.requirementRefundingPaymentIds.add(newRefundLink.id);
-                            existingLinkByRequirementId.put(requirement.id, newRefundLink);
-                            refundLink = newRefundLink;
-                        }
-                    }
-
-                    if (refundLink == null) {
-                        continue;
-                    }
-
-                    BigDecimal compensation = refundLink.distributionAmount.min(deficit).min(availableAmount);
-                    if (compensation.signum() <= 0) {
-                        continue;
-                    }
-
-                    RedistributedRefundingPaymentJournalDto refundSnapshot = new RedistributedRefundingPaymentJournalDto();
-                    refundSnapshot.requirementRefundingPaymentId = refundLink.id;
-                    refundSnapshot.requirementRefundingPaymentDistributionAmount = refundLink.distributionAmount;
-                    refundSnapshot.refundingPaymentId = refundingPayment.id;
-                    refundSnapshot.refundingPaymentAmount = refundingPayment.amount;
-                    journal.redistributedRefundingPayments.add(refundSnapshot);
-
-                    refundLink.distributionAmount = refundLink.distributionAmount.subtract(compensation);
-                    refundLink.update();
-
-                    refundingPayment.amount = refundingPayment.amount.subtract(compensation);
-                    refundingPayment.update();
-
-                    requirement.paidAmount = requirement.paidAmount.add(compensation);
-                    requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
-                    processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
-
-                    availableAmount = availableAmount.subtract(compensation);
-                }
-            }
+        Map<String, List<Pair<Requirement, RelatedPayment>>> requirementsWithRelatedPaymentsByPpc = new HashMap<>();
+        for (Map.Entry<String, List<Pair<RequirementStateInfoDto, Requirement>>> entry : requirementsByPpc.entrySet()) {
+            List<Pair<Requirement, RelatedPayment>> requirementsWithPayments = entry.getValue().stream()
+                .map(pair -> new Pair<>(pair.b, relatedPaymentByRequirementId.get(pair.b.id)))
+                .toList();
+            requirementsWithRelatedPaymentsByPpc.put(entry.getKey(), requirementsWithPayments);
         }
+
+        log.infof("redistributeExistingRequirementPayments: requirementsWithRelatedPaymentsByPpc=%s", requirementsWithRelatedPaymentsByPpc);
 
         for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
             RequirementStateInfoDto reqDto = pair.a;
