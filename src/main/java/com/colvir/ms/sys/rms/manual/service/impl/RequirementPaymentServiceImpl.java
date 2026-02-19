@@ -17,6 +17,7 @@ import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentJournalDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RelatedPaymentsJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
+import com.colvir.ms.sys.rms.dto.RedistributedRefundingPaymentJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.dto.WithdrawalResultDto;
 import com.colvir.ms.sys.rms.generated.domain.Payment;
@@ -924,14 +925,20 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                     break;
                 }
                 BigDecimal compensation = refundLink.distributionAmount.min(deficit);
+
+                RedistributedRefundingPaymentJournalDto refundSnapshot = new RedistributedRefundingPaymentJournalDto();
+                refundSnapshot.requirementRefundingPaymentId = refundLink.id;
+                refundSnapshot.requirementRefundingPaymentDistributionAmount = refundLink.distributionAmount;
+                refundSnapshot.refundingPaymentId = refundLink.refundingPayment.id;
+                refundSnapshot.refundingPaymentAmount = refundLink.refundingPayment.amount;
+                journal.redistributedRefundingPayments.add(refundSnapshot);
+
                 refundLink.distributionAmount = refundLink.distributionAmount.subtract(compensation);
                 refundLink.update();
-                journal.requirementRefundingPaymentIds.add(refundLink.id);
 
                 RefundingPayment refundingPayment = refundLink.refundingPayment;
                 refundingPayment.amount = refundingPayment.amount.subtract(compensation);
                 refundingPayment.update();
-                journal.refundingPaymentIds.add(refundingPayment.id);
 
                 requirement.paidAmount = requirement.paidAmount.add(compensation);
                 requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
@@ -1059,6 +1066,29 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
             relatedPayment.amount = relatedPaymentJournal.amount;
             relatedPayment.update();
+        }
+    }
+
+
+    @Override
+    @Transactional
+    public void undoRedistributedRefundingPayments(List<RedistributedRefundingPaymentJournalDto> redistributedRefundingPayments) {
+        if (redistributedRefundingPayments == null || redistributedRefundingPayments.isEmpty()) {
+            return;
+        }
+
+        for (RedistributedRefundingPaymentJournalDto refundJournal : redistributedRefundingPayments) {
+            RequirementRefundingPayment requirementRefundingPayment = requirementRefundingPaymentDao.findById(refundJournal.requirementRefundingPaymentId);
+            if (requirementRefundingPayment != null && !Boolean.TRUE.equals(requirementRefundingPayment.refundingPayment.isDeleted)) {
+                requirementRefundingPayment.distributionAmount = refundJournal.requirementRefundingPaymentDistributionAmount;
+                requirementRefundingPayment.update();
+            }
+
+            RefundingPayment refundingPayment = refundingPaymentDao.findById(refundJournal.refundingPaymentId);
+            if (refundingPayment != null && !Boolean.TRUE.equals(refundingPayment.isDeleted)) {
+                refundingPayment.amount = refundJournal.refundingPaymentAmount;
+                refundingPayment.update();
+            }
         }
     }
 

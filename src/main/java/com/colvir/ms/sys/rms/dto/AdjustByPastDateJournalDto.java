@@ -21,6 +21,8 @@ public class AdjustByPastDateJournalDto extends JournalDto {
 
     public List<RelatedPaymentsJournalDto> redistributedRelatedPayments = new ArrayList<>();
 
+    public List<RedistributedRefundingPaymentJournalDto> redistributedRefundingPayments = new ArrayList<>();
+
     @Override
     public String toString() {
         return "AdjustByPastDateJournalDto{" +
@@ -31,6 +33,7 @@ public class AdjustByPastDateJournalDto extends JournalDto {
             ", paymentIds=" + paymentIds +
             ", relatedPaymentIds=" + relatedPaymentIds +
             ", redistributedRelatedPayments=" + redistributedRelatedPayments +
+            ", redistributedRefundingPayments=" + redistributedRefundingPayments +
             ", isFirstRun=" + isFirstRun +
             '}';
     }

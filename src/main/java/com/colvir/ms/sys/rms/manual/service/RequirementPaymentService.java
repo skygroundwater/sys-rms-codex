@@ -10,6 +10,7 @@ import com.colvir.ms.sys.rms.dto.RefundResponse;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RelatedPaymentsJournalDto;
+import com.colvir.ms.sys.rms.dto.RedistributedRefundingPaymentJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import org.antlr.v4.runtime.misc.Pair;
@@ -34,4 +35,6 @@ public interface RequirementPaymentService {
                                  AdjustByPastDateJournalDto journal, AdjustByPastDateResultDto result);
 
     void undoRedistributedRelatedPayments(List<RelatedPaymentsJournalDto> redistributedRelatedPayments);
+
+    void undoRedistributedRefundingPayments(List<RedistributedRefundingPaymentJournalDto> redistributedRefundingPayments);
 }

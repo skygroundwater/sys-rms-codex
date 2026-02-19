@@ -11,6 +11,11 @@ import java.util.Map;
 public class RequirementRefundingPaymentDaoImpl implements RequirementRefundingPaymentDao {
 
     @Override
+    public RequirementRefundingPayment findById(Long id) {
+        return RequirementRefundingPayment.findById(id);
+    }
+
+    @Override
     public List<RequirementRefundingPayment> findActiveByRequirementIdOrderByValueDateDesc(Long requirementId) {
         return RequirementRefundingPayment.list(
             "select rrp from RequirementRefundingPayment rrp where rrp.requirementOfRefundingPayments.id = :requirementId " +
