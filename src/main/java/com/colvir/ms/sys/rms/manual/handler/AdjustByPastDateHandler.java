@@ -195,6 +195,8 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
     @Override
     public void undo(AdjustByPastDateJournalDto journal) {
         log.infof("adjustByPastDateUndo:\n%s", journal);
+        paymentService.undoRedistributedRelatedPayments(journal.redistributedRelatedPayments);
+
         requirementService.restoreWithoutBbpCancelExecution(
             journal.requirementJournalMap.values().stream().toList(),
             journal.paymentIds, journal.relatedPaymentIds,

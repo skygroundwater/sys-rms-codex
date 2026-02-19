@@ -883,12 +883,20 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                     BigDecimal oldLinkAmount = link.amount == null ? BigDecimal.ZERO : link.amount;
 
                     if (oldLinkAmount.compareTo(newLinkAmount) != 0) {
+                        RelatedPaymentsJournalDto relatedPaymentSnapshot = fillRelatedPaymentsJournal(
+                            link.id,
+                            oldLinkAmount,
+                            link.amountOfPayment == null ? BigDecimal.ZERO : link.amountOfPayment,
+                            req.id,
+                            payment.id
+                        );
+                        journal.redistributedRelatedPayments.add(relatedPaymentSnapshot);
+
                         // Сохраняем только дельту по связке, чтобы не плодить новые записи.
                         // Так проще откатывать и анализировать, что поменялось в перерасчете.
                         link.amount = newLinkAmount;
                         link.amountOfPayment = newLinkAmount;
                         link.update();
-                        journal.relatedPaymentIds.add(link.id);
 
                         req.paidAmount = req.paidAmount.subtract(oldLinkAmount).add(newLinkAmount);
                     }
@@ -1037,4 +1045,23 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             }
         }
     }
+    @Override
+    @Transactional
+    public void undoRedistributedRelatedPayments(List<RelatedPaymentsJournalDto> redistributedRelatedPayments) {
+        if (redistributedRelatedPayments == null || redistributedRelatedPayments.isEmpty()) {
+            return;
+        }
+
+        for (RelatedPaymentsJournalDto relatedPaymentJournal : redistributedRelatedPayments) {
+            RelatedPayment relatedPayment = relatedPaymentDao.findById(relatedPaymentJournal.relationId);
+            if (relatedPayment == null || Boolean.TRUE.equals(relatedPayment.isDeleted)) {
+                continue;
+            }
+
+            relatedPayment.amount = relatedPaymentJournal.amount;
+            relatedPayment.amountOfPayment = relatedPaymentJournal.amountOfPayment;
+            relatedPayment.update();
+        }
+    }
+
 }
