@@ -26,6 +26,7 @@ import org.jboss.logging.Logger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.List;
@@ -77,31 +78,12 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 return new AggregationResult<>(journal, List.of());
             }
 
-            List<RequirementStateInfoDto> newRequirements = new ArrayList<>(properties.requirements);
+            List<Pair<RequirementStateInfoDto, Requirement>> requirementsWithEntities = mapRequirementsWithEntities(properties.requirements);
+            log.infof("adjustByPastDate: starting to process requirements %s", requirementsWithEntities);
 
-            log.infof("adjustByPastDate: starting to process requirements %s", newRequirements);
-
-            Set<Long> requirementIds = newRequirements.stream()
-                .map(req -> req.requirementId)
-                .collect(Collectors.toSet());
-
-            Map<Long, Requirement> dbRequirements = requirementService.getRequirementsByIds(requirementIds).stream()
-                .collect(Collectors.toMap(req -> req.id, req -> req));
-
-            List<Pair<RequirementStateInfoDto, Requirement>> requirementsWithEntities = newRequirements.stream()
-                .map(req -> new Pair<>(req, dbRequirements.get(req.requirementId)))
-                .toList();
-
-            if (requirementsWithEntities.stream().anyMatch(pair -> pair.b == null)) {
-                throw new RuntimeException("One or more requirements were not found in DB for adjustByPastDate");
-            }
-
-            Map<Long, Pair<RequirementStateInfoDto, Requirement>> increasingRequirements = new HashMap<>();
-            requirementsWithEntities.forEach(pair -> {
-                if (pair.a.payedAmount.compareTo(pair.a.amount) < 0) {
-                    increasingRequirements.put(pair.b.id, pair);
-                }
-            });
+            Map<Long, Pair<RequirementStateInfoDto, Requirement>> increasingRequirements = requirementsWithEntities.stream()
+                .filter(pair -> pair.a.payedAmount.compareTo(pair.a.amount) < 0)
+                .collect(Collectors.toMap(pair -> pair.b.id, pair -> pair, (left, right) -> right, HashMap::new));
 
             // Сначала перераспределяем то, что уже есть в БД, даже если на вход не пришли платежи.
             // Это важно, потому что требование могло измениться только по сумме, а движения по платежам нет.
@@ -203,5 +185,21 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             journal.paymentIds, journal.relatedPaymentIds,
             journal.refundingPaymentIds, journal.requirementRefundingPaymentIds
         );
+    }
+
+    private List<Pair<RequirementStateInfoDto, Requirement>> mapRequirementsWithEntities(List<RequirementStateInfoDto> requirements) {
+        Map<Long, Requirement> dbRequirements = requirementService.getRequirementsByIds(
+                requirements.stream().map(req -> req.requirementId).collect(Collectors.toSet())
+            ).stream()
+            .collect(Collectors.toMap(req -> req.id, req -> req));
+
+        List<Pair<RequirementStateInfoDto, Requirement>> requirementsWithEntities = requirements.stream()
+            .map(req -> new Pair<>(req, dbRequirements.get(req.requirementId)))
+            .toList();
+
+        if (requirementsWithEntities.stream().map(pair -> pair.b).anyMatch(Objects::isNull)) {
+            throw new RuntimeException("One or more requirements were not found in DB for adjustByPastDate");
+        }
+        return requirementsWithEntities;
     }
 }
