@@ -1,10 +1,9 @@
 package com.colvir.ms.sys.rms.manual.controller;
 
-import com.colvir.ms.sys.rms.dto.AdjustByPastDateDto;
-import com.colvir.ms.sys.rms.dto.AdjustByPastDateJournalDto;
 import com.colvir.ms.sys.rms.dto.AdjustByPastDateResultDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
 import com.colvir.ms.sys.rms.dto.CheckQueueDto;
+import com.colvir.ms.sys.rms.dto.DebugRedistributeRequestDto;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassRequestDto;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassResultDto;
 import com.colvir.ms.sys.rms.dto.RefundJournalDto;
@@ -18,7 +17,6 @@ import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementResponse;
-import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.manual.handler.QueueCheckHandler;
 import com.colvir.ms.sys.rms.manual.service.PaymentOwMassReportService;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
@@ -30,12 +28,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.antlr.v4.runtime.misc.Pair;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Path("/debug")
 @Produces(MediaType.APPLICATION_JSON)
@@ -128,30 +123,12 @@ public class DebugController {
 
     @POST
     @Path("adjust-by-past-date")
-    public AdjustByPastDateResultDto adjustByPastDate(AdjustByPastDateDto request) {
-        AdjustByPastDateJournalDto journal = new AdjustByPastDateJournalDto();
-        AdjustByPastDateResultDto result = new AdjustByPastDateResultDto();
-
-        if (request == null || request.requirements == null || request.requirements.isEmpty()) {
-            return result;
-        }
-
-        Set<Long> requirementIds = request.requirements.stream()
-            .map(req -> req.requirementId)
-            .collect(Collectors.toSet());
-
-        var dbRequirements = requirementService.getRequirementsByIds(requirementIds).stream()
-            .collect(Collectors.toMap(req -> req.id, req -> req));
-
-        List<Pair<RequirementStateInfoDto, Requirement>> requirementsWithEntities = request.requirements.stream()
-            .map(req -> new Pair<>(req, dbRequirements.get(req.requirementId)))
-            .toList();
-
-        if (requirementsWithEntities.stream().anyMatch(pair -> pair.b == null)) {
-            throw new RuntimeException("One or more requirements were not found in DB for debug adjust-by-past-date");
-        }
-
-        paymentService.redistributeExistingRequirementPayments(requirementsWithEntities, journal, result);
-        return result;
+    public AdjustByPastDateResultDto adjustByPastDate(DebugRedistributeRequestDto request) {
+        paymentService.redistributeExistingRequirementPayments(
+            request.requirements,
+            request.journal,
+            request.result
+        );
+        return request.result;
     }
 }
