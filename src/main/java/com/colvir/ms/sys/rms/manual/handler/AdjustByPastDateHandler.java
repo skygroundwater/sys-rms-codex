@@ -87,7 +87,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             // Сначала перераспределяем то, что уже есть в БД, даже если на вход не пришли платежи.
             // Это важно, потому что требование могло измениться только по сумме, а движения по платежам нет.
-            paymentService.redistributeExistingRequirementPayments(requirementsWithEntities, journal, result);
+            paymentService.redistributeExistingRequirementPayments(requirementsWithEntities, journal);
 
             log.infof("adjustByPastDate: increasing requirements=%s", increasingRequirements);
 

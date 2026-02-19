@@ -126,9 +126,8 @@ public class DebugController {
     public AdjustByPastDateResultDto adjustByPastDate(DebugRedistributeRequestDto request) {
         paymentService.redistributeExistingRequirementPayments(
             request.requirements,
-            request.journal,
-            request.result
+            request.journal
         );
-        return request.result;
+        return request.journal.intermediateResult;
     }
 }

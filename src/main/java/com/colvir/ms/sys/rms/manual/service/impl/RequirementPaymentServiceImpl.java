@@ -850,8 +850,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Override
     @Transactional
     public void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
-                                                        AdjustByPastDateJournalDto journal,
-                                                        AdjustByPastDateResultDto result) {
+                                                        AdjustByPastDateJournalDto journal) {
         if (requirements == null || requirements.isEmpty()) {
             log.info("redistributeExistingRequirementPayments: no requirements provided, nothing to redistribute");
             return;

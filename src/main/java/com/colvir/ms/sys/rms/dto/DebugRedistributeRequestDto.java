@@ -11,5 +11,4 @@ public class DebugRedistributeRequestDto {
 
     public AdjustByPastDateJournalDto journal;
 
-    public AdjustByPastDateResultDto result;
 }
