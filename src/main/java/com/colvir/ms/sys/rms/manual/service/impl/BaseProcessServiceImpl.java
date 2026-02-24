@@ -206,15 +206,7 @@ public class BaseProcessServiceImpl implements BaseProcessService {
 
         String errorMessage = String.format("Combination of states %s : %s is not allowed", prevStatus, newStatus);
 
-        // 1. Если статус не поменялся — проверяем движение суммы
-        if (newStatus.equals(prevStatus)) {
-            int cmp = newReqState.payedAmount.compareTo(prevReqState.paidAmount);
-            if (cmp > 0) return RmsConstants.BBP_RUN_PAYMENT_EVENT;
-            if (cmp < 0) return RmsConstants.BBP_RUN_REFUND_EVENT;
-            return "";
-        }
-
-        // 2. Если статус изменился — обрабатываем по переходам
+        // Если статус изменился — обрабатываем по переходам
         return switch (prevStatus) {
             case WAIT -> switch (newStatus) {
                 case CANCELED -> RmsConstants.BBP_CANCEL_EVENT;
