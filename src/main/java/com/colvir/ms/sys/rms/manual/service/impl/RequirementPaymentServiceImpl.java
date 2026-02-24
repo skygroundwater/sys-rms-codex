@@ -62,6 +62,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -1034,9 +1035,12 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 for (Pair<RequirementStateInfoDto, Requirement> pair : requirementsForUpdate) {
                     RequirementStateInfoDto reqDto = pair.a;
                     Requirement requirement = pair.b;
-                    applyRequirementAttributesFromDto(reqDto, requirement);
 
-                    BigDecimal diff = requirement.paidAmount.subtract(reqDto.amount);
+                    BigDecimal originalPaidAmount = Optional.ofNullable(journal.requirementJournalMap.get(requirement.id))
+                        .map(requirementJournal -> requirementJournal.paidAmount)
+                        .orElse(requirement.paidAmount);
+
+                    BigDecimal diff = originalPaidAmount.subtract(reqDto.amount);
                     if (diff.signum() <= 0) {
                         continue;
                     }
@@ -1044,9 +1048,13 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                     if (paymentBalance.compareTo(diff) >= 0) {
                         log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, diff);
 
-                        requirement.paidAmount = requirement.paidAmount.subtract(diff);
-                        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
-                        processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+                        applyRequirementAttributesFromDto(reqDto, requirement);
+
+                        if (requirement.paidAmount.compareTo(reqDto.amount) != 0) {
+                            requirement.paidAmount = reqDto.amount;
+                            requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                            processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+                        }
 
                         RequirementRefundingPayment rrp = new RequirementRefundingPayment();
                         rrp.distributionAmount = diff;
