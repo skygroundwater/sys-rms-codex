@@ -62,7 +62,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -971,9 +970,15 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                             newRelatedPayment.id, maxAmountFromCurrentPayment, requirement.id, payment.id);
                     }
 
-                    requirement.paidAmount = requirement.paidAmount.subtract(existingAmountForThisPayment).add(maxAmountFromCurrentPayment);
-                    requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
-                    processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+                    BigDecimal paidAmountDelta = maxAmountFromCurrentPayment.subtract(existingAmountForThisPayment);
+                    if (paidAmountDelta.signum() >= 0) {
+                        requirement.paidAmount = requirement.paidAmount.add(paidAmountDelta);
+                        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                        processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+                    } else {
+                        log.infof("redistributeExistingRequirementPayments: keep requirement paidAmount unchanged, paymentId=%d, requirementId=%d, remainderForRefund=%s",
+                            payment.id, requirement.id, existingAmountForThisPayment.subtract(maxAmountFromCurrentPayment));
+                    }
 
                     availableAmount = availableAmount.subtract(maxAmountFromCurrentPayment);
                 }
@@ -1036,11 +1041,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                     RequirementStateInfoDto reqDto = pair.a;
                     Requirement requirement = pair.b;
 
-                    BigDecimal originalPaidAmount = Optional.ofNullable(journal.requirementJournalMap.get(requirement.id))
-                        .map(requirementJournal -> requirementJournal.paidAmount)
-                        .orElse(requirement.paidAmount);
+                    applyRequirementAttributesFromDto(reqDto, requirement);
 
-                    BigDecimal diff = originalPaidAmount.subtract(reqDto.amount);
+                    BigDecimal diff = requirement.paidAmount.subtract(reqDto.amount);
                     if (diff.signum() <= 0) {
                         continue;
                     }
@@ -1048,13 +1051,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                     if (paymentBalance.compareTo(diff) >= 0) {
                         log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, diff);
 
-                        applyRequirementAttributesFromDto(reqDto, requirement);
-
-                        if (requirement.paidAmount.compareTo(reqDto.amount) != 0) {
-                            requirement.paidAmount = reqDto.amount;
-                            requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
-                            processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
-                        }
+                        requirement.paidAmount = requirement.paidAmount.subtract(diff);
+                        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                        processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
 
                         RequirementRefundingPayment rrp = new RequirementRefundingPayment();
                         rrp.distributionAmount = diff;
