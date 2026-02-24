@@ -123,18 +123,15 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                     journal.paymentIds.addAll(registrationResponse.journal.createdPayments);
                     journal.relatedPaymentIds.addAll(registrationResponse.journal.createdRelatedPayments);
 
-                    result.requirements.addAll(
-                        registrationResponse.requirements.stream()
-                            .map(updatedRequirement -> {
-                                RequirementStateInfoDto reqInfoResult = increasingRequirements.get(updatedRequirement.id).a;
-                                reqInfoResult.status = updatedRequirement.state;
-                                reqInfoResult.payedAmount = updatedRequirement.paidAmount;
-                                reqInfoResult.amount = updatedRequirement.amount;
-                                reqInfoResult.paymentEndDate = updatedRequirement.paymentEndDate;
-                                reqInfoResult.currentTransactionAmount = registrationResponse.currentTransactionAmounts.get(reqInfoResult.requirementId);
-                                return reqInfoResult;
-                            }).toList()
-                    );
+                    registrationResponse.requirements.forEach(updatedRequirement -> {
+                        RequirementStateInfoDto reqInfoResult = increasingRequirements.get(updatedRequirement.id).a;
+                        reqInfoResult.status = updatedRequirement.state;
+                        reqInfoResult.payedAmount = updatedRequirement.paidAmount;
+                        reqInfoResult.amount = updatedRequirement.amount;
+                        reqInfoResult.paymentEndDate = updatedRequirement.paymentEndDate;
+                        reqInfoResult.currentTransactionAmount = registrationResponse.currentTransactionAmounts.get(reqInfoResult.requirementId);
+                        putRequirementResult(result, reqInfoResult);
+                    });
                 }
             }
 
@@ -167,12 +164,8 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 reqInfoResult.action = sourceReq.action;
                 reqInfoResult.paymentPurposeCode = sourceReq.paymentPurposeCode;
                 reqInfoResult.currentTransactionAmount = sourceReq.currentTransactionAmount;
-                result.requirements.add(reqInfoResult);
+                putRequirementResult(result, reqInfoResult);
             });
-
-            result.requirements = new ArrayList<>(result.requirements.stream()
-                .collect(Collectors.toMap(req -> req.requirementId, req -> req, (left, right) -> right, HashMap::new))
-                .values());
 
             log.infof("adjustByPastDate: final state of requirements =%s", result.requirements);
             log.infof("adjustByPastDate: state of requirements journal =%s", journal.requirementJournalMap.values());
@@ -205,6 +198,21 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             return new AggregationResult<>(properties, journal, journal.intermediateResult);
         }
+    }
+
+    private void putRequirementResult(AdjustByPastDateResultDto result, RequirementStateInfoDto requirementStateInfo) {
+        if (requirementStateInfo == null || requirementStateInfo.requirementId == null) {
+            return;
+        }
+
+        for (int i = 0; i < result.requirements.size(); i++) {
+            RequirementStateInfoDto existing = result.requirements.get(i);
+            if (Objects.equals(existing.requirementId, requirementStateInfo.requirementId)) {
+                result.requirements.set(i, requirementStateInfo);
+                return;
+            }
+        }
+        result.requirements.add(requirementStateInfo);
     }
 
     @Override

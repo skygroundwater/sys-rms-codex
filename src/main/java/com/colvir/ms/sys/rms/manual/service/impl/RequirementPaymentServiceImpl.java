@@ -884,10 +884,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             .map(pair -> pair.b.id)
             .collect(Collectors.toSet());
 
-        Set<Long> requirementIdsAddedToResult = result.requirements.stream()
-            .map(req -> req.requirementId)
-            .collect(Collectors.toSet());
-
         // 4) Поднимаем все существующие RelatedPayment для измененных требований.
         final Map<Long, List<RelatedPayment>> relatedPaymentsByRequirementId;
         if (!changedRequirementIds.isEmpty()) {
@@ -987,9 +983,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         updatedReqDto.payedAmount = requirement.paidAmount;
                         updatedReqDto.status = requirement.state;
                         updatedReqDto.paymentEndDate = requirement.paymentEndDate;
-                        if (requirementIdsAddedToResult.add(updatedReqDto.requirementId)) {
-                            result.requirements.add(updatedReqDto);
-                        }
+                        putRequirementResult(result, updatedReqDto);
                     } else {
                         log.infof("redistributeExistingRequirementPayments: keep requirement paidAmount unchanged, paymentId=%d, requirementId=%d, remainderForRefund=%s",
                             payment.id, requirement.id, existingAmountForThisPayment.subtract(maxAmountFromCurrentPayment));
@@ -1081,7 +1075,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         reqDto.payedAmount = requirement.paidAmount;
                         reqDto.status = requirement.state;
                         reqDto.amount = requirement.amount;
-                        result.requirements.add(reqDto);
+                        putRequirementResult(result, reqDto);
                     }
                 }
 
@@ -1097,6 +1091,20 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             }
         }
     }
+    private void putRequirementResult(AdjustByPastDateResultDto result, RequirementStateInfoDto requirementStateInfo) {
+        if (requirementStateInfo == null || requirementStateInfo.requirementId == null) {
+            return;
+        }
+        for (int i = 0; i < result.requirements.size(); i++) {
+            RequirementStateInfoDto existing = result.requirements.get(i);
+            if (Objects.equals(existing.requirementId, requirementStateInfo.requirementId)) {
+                result.requirements.set(i, requirementStateInfo);
+                return;
+            }
+        }
+        result.requirements.add(requirementStateInfo);
+    }
+
     @Override
     @Transactional
     public void undoRedistributedRelatedPayments(List<RelatedPaymentsJournalDto> redistributedRelatedPayments) {
