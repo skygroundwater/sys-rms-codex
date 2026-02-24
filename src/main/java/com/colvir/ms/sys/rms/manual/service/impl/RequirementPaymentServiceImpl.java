@@ -1057,20 +1057,21 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         continue;
                     }
 
-                    if (paymentBalance.compareTo(diff) >= 0) {
-                        log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, diff);
+                    BigDecimal refundableAmount = diff.min(paymentBalance);
+                    if (refundableAmount.signum() > 0) {
+                        log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, refundableAmount);
 
-                        requirement.paidAmount = requirement.paidAmount.subtract(diff);
+                        requirement.paidAmount = requirement.paidAmount.subtract(refundableAmount);
                         requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
                         processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
 
                         RequirementRefundingPayment rrp = new RequirementRefundingPayment();
-                        rrp.distributionAmount = diff;
+                        rrp.distributionAmount = refundableAmount;
                         rrp.requirementOfRefundingPayments = requirement;
                         rrp.refundingPayment = refundingPayment;
                         refundingPayments.add(rrp);
 
-                        paymentBalance = paymentBalance.subtract(diff);
+                        paymentBalance = paymentBalance.subtract(refundableAmount);
 
                         reqDto.payedAmount = requirement.paidAmount;
                         reqDto.status = requirement.state;
