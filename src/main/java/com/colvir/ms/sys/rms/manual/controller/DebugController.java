@@ -1,7 +1,9 @@
 package com.colvir.ms.sys.rms.manual.controller;
 
+import com.colvir.ms.sys.rms.dto.AdjustByPastDateResultDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
 import com.colvir.ms.sys.rms.dto.CheckQueueDto;
+import com.colvir.ms.sys.rms.dto.DebugRedistributeRequestDto;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassRequestDto;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassResultDto;
 import com.colvir.ms.sys.rms.dto.RefundJournalDto;
@@ -47,6 +49,7 @@ public class DebugController {
 
     @Inject
     PaymentOwMassReportService paymentOwMassReportService;
+
 
     @POST
     @Path("/create-requirements")
@@ -116,5 +119,15 @@ public class DebugController {
     @Path("payment-ow-mass")
     public List<PaymentOwMassResultDto> paymentOwMassDto(PaymentOwMassRequestDto request) {
         return paymentOwMassReportService.getPaymentOwMassData(request.date);
+    }
+
+    @POST
+    @Path("adjust-by-past-date")
+    public AdjustByPastDateResultDto adjustByPastDate(DebugRedistributeRequestDto request) {
+        paymentService.redistributeExistingRequirementPayments(
+            request.requirements,
+            request.journal
+        );
+        return request.journal.intermediateResult;
     }
 }

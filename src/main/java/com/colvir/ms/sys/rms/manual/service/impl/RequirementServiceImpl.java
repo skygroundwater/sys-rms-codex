@@ -45,6 +45,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -360,6 +361,14 @@ public class RequirementServiceImpl implements RequirementService {
             throw new RuntimeException("Requirement id is null");
         }
         return requirementDao.findByIdOrThrow(id);
+    }
+
+    @Override
+    public List<Requirement> getRequirementsByIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return requirementDao.findActiveByIds(ids);
     }
 
     private List<Requirement> getRequirements(ReferenceDto requirement, ReferenceDto contract, ReferenceDto client) {

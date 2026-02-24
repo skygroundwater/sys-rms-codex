@@ -17,6 +17,7 @@ import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentJournalDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RelatedPaymentsJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
+import com.colvir.ms.sys.rms.dto.RedistributedRefundingPaymentJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.dto.WithdrawalResultDto;
 import com.colvir.ms.sys.rms.generated.domain.Payment;
@@ -37,6 +38,7 @@ import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
+import com.colvir.ms.sys.rms.manual.dao.RequirementRefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
@@ -54,6 +56,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -94,6 +97,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
     @Inject
     RelatedPaymentDao relatedPaymentDao;
+
+    @Inject
+    RequirementRefundingPaymentDao requirementRefundingPaymentDao;
 
     @Override
     @Transactional
@@ -826,28 +832,177 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         }
     }
 
+    private void applyRequirementAttributesFromDto(RequirementStateInfoDto reqDto, Requirement requirement) {
+        // Здесь мы сразу приводим карточку требования к новому состоянию из входного списка.
+        // Делаем это в одном месте, чтобы не размазывать логику по разным веткам перерасчета.
+        Long systemLocale = systemParameterService.getSystemLocale(RmsConstants.SYSTEM_LOCALE_PARAM);
+        RequirementTypeDTO requirementType = requirementTypeService.getRequirementType(reqDto.indicator.indicatorDescr, systemLocale);
+
+        BigDecimal integerPriority = new BigDecimal(requirementType.priority);
+        BigDecimal decimalPriority = new BigDecimal(reqDto.priority).divide(new BigDecimal("100"), 2, RoundingMode.UP);
+
+        requirement.priority = integerPriority.add(decimalPriority);
+        requirement.indicatorId = reqDto.indicator.id;
+        requirement.amount = reqDto.amount;
+        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+    }
+
+    @Override
+    @Transactional
+    public void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
+                                                        AdjustByPastDateJournalDto journal) {
+        if (requirements == null || requirements.isEmpty()) {
+            log.info("redistributeExistingRequirementPayments: no requirements provided, nothing to redistribute");
+            return;
+        }
+
+        // 1) Берем только действительно измененные требования.
+        // Это позволяет не трогать лишние связки и не раздувать журнал отката.
+        List<Pair<RequirementStateInfoDto, Requirement>> changedRequirements = requirements.stream()
+            .filter(pair -> pair.b.amount.compareTo(pair.a.amount) != 0 || pair.b.paidAmount.compareTo(pair.a.payedAmount) != 0)
+            .toList();
+        log.infof("redistributeExistingRequirementPayments: changedRequirements count=%d", changedRequirements.size());
+
+        // 2) Раскладываем измененные требования по КНП и сортируем внутри каждого бакета по приоритету.
+        Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementsByPpc = changedRequirements.stream()
+            .filter(pair -> pair.a.paymentPurposeCode != null && !pair.a.paymentPurposeCode.isEmpty())
+            .collect(Collectors.groupingBy(pair -> pair.a.paymentPurposeCode));
+        requirementsByPpc.values().forEach(list ->
+            list.sort(Comparator.comparing(pair -> pair.b.priority))
+        );
+        log.infof("redistributeExistingRequirementPayments: PPC buckets=%s", requirementsByPpc.keySet());
+
+        // 3) Фиксируем исходное состояние требования в журнале и применяем новое входное состояние.
+        for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
+            journal.requirementJournalMap.putIfAbsent(pair.b.id, RequirementMapperUtils.fillRequirementJournal(pair.b));
+            applyRequirementAttributesFromDto(pair.a, pair.b);
+        }
+        log.infof("redistributeExistingRequirementPayments: requirement journal prepared, size=%d", journal.requirementJournalMap.size());
+
+        Set<Long> changedRequirementIds = changedRequirements.stream()
+            .map(pair -> pair.b.id)
+            .collect(Collectors.toSet());
+
+        // 4) Поднимаем все существующие RelatedPayment для измененных требований.
+        final Map<Long, List<RelatedPayment>> relatedPaymentsByRequirementId;
+        if (!changedRequirementIds.isEmpty()) {
+            List<RelatedPayment> relatedPayments = relatedPaymentDao.findPaidByRequirementIds(changedRequirementIds);
+            relatedPaymentsByRequirementId = relatedPayments.stream()
+                .collect(Collectors.groupingBy(rp -> rp.requirementOfRelatedPayments.id));
+            log.infof("redistributeExistingRequirementPayments: found relatedPayments=%d", relatedPayments.size());
+        } else {
+            relatedPaymentsByRequirementId = Map.of();
+        }
+
+        // 5) Для каждого КНП формируем пары Requirement + список его связок (или пустой список, если связок не было).
+        Map<String, List<Pair<Requirement, List<RelatedPayment>>>> requirementsWithRelatedPaymentsByPpc = new HashMap<>();
+        for (Map.Entry<String, List<Pair<RequirementStateInfoDto, Requirement>>> entry : requirementsByPpc.entrySet()) {
+            List<Pair<Requirement, List<RelatedPayment>>> requirementsWithPayments = entry.getValue().stream()
+                .map(pair -> new Pair<>(pair.b, relatedPaymentsByRequirementId.getOrDefault(pair.b.id, List.of())))
+                .toList();
+            requirementsWithRelatedPaymentsByPpc.put(entry.getKey(), requirementsWithPayments);
+        }
+
+        // 6) Внутри каждого КНП идем по каждому общему Payment и распределяем его сумму по требованиям по приоритету.
+        for (Map.Entry<String, List<Pair<Requirement, List<RelatedPayment>>>> ppcEntry : requirementsWithRelatedPaymentsByPpc.entrySet()) {
+            String ppc = ppcEntry.getKey();
+            List<Pair<Requirement, List<RelatedPayment>>> requirementsBucket = ppcEntry.getValue();
+
+            Map<Long, List<RelatedPayment>> relatedPaymentsByPaymentId = requirementsBucket.stream()
+                .flatMap(pair -> pair.b.stream())
+                .collect(Collectors.groupingBy(rp -> rp.payment.id));
+            log.infof("redistributeExistingRequirementPayments: ppc=%s, requirements=%d, payments=%d",
+                ppc, requirementsBucket.size(), relatedPaymentsByPaymentId.size());
+
+            for (Map.Entry<Long, List<RelatedPayment>> paymentEntry : relatedPaymentsByPaymentId.entrySet()) {
+                Payment payment = paymentEntry.getValue().get(0).payment;
+                BigDecimal availableAmount = payment.amount == null ? BigDecimal.ZERO : payment.amount;
+                log.infof("redistributeExistingRequirementPayments: processing paymentId=%d, availableAmount=%s, ppc=%s",
+                    payment.id, availableAmount, ppc);
+
+                for (Pair<Requirement, List<RelatedPayment>> requirementPair : requirementsBucket) {
+                    if (availableAmount.signum() <= 0) {
+                        break;
+                    }
+
+                    Requirement requirement = requirementPair.a;
+                    List<RelatedPayment> paymentSpecificLinks = requirementPair.b.stream()
+                        .filter(rp -> Objects.equals(rp.payment.id, payment.id))
+                        .toList();
+
+                    BigDecimal existingAmountForThisPayment = paymentSpecificLinks.stream()
+                        .map(rp -> rp.amount == null ? BigDecimal.ZERO : rp.amount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    BigDecimal maxAmountFromCurrentPayment = requirement.amount
+                        .subtract(requirement.paidAmount.subtract(existingAmountForThisPayment))
+                        .max(BigDecimal.ZERO)
+                        .min(availableAmount);
+
+                    BigDecimal restToDistribute = maxAmountFromCurrentPayment;
+                    for (RelatedPayment paymentSpecificLink : paymentSpecificLinks) {
+                        BigDecimal oldAmount = paymentSpecificLink.amount == null ? BigDecimal.ZERO : paymentSpecificLink.amount;
+                        BigDecimal newAmount = restToDistribute.max(BigDecimal.ZERO);
+
+                        if (oldAmount.compareTo(newAmount) != 0) {
+                            RelatedPaymentsJournalDto relatedPaymentSnapshot = fillRelatedPaymentsJournal(
+                                paymentSpecificLink.id,
+                                oldAmount,
+                                paymentSpecificLink.amountOfPayment == null ? BigDecimal.ZERO : paymentSpecificLink.amountOfPayment,
+                                requirement.id,
+                                payment.id
+                            );
+                            journal.redistributedRelatedPayments.add(relatedPaymentSnapshot);
+
+                            paymentSpecificLink.amount = newAmount;
+                            paymentSpecificLink.update();
+                            log.infof("redistributeExistingRequirementPayments: updated relatedPaymentId=%d, oldAmount=%s, newAmount=%s",
+                                paymentSpecificLink.id, oldAmount, newAmount);
+                        }
+                        restToDistribute = BigDecimal.ZERO;
+                    }
+
+                    if (paymentSpecificLinks.isEmpty() && maxAmountFromCurrentPayment.signum() > 0) {
+                        RelatedPayment newRelatedPayment = createRelatedPayment(maxAmountFromCurrentPayment, BigDecimal.ZERO, requirement.id, payment.id);
+                        newRelatedPayment.persist();
+                        journal.relatedPaymentIds.add(newRelatedPayment.id);
+                        log.infof("redistributeExistingRequirementPayments: created relatedPaymentId=%d, amount=%s, requirementId=%d, paymentId=%d",
+                            newRelatedPayment.id, maxAmountFromCurrentPayment, requirement.id, payment.id);
+                    }
+
+                    requirement.paidAmount = requirement.paidAmount.subtract(existingAmountForThisPayment).add(maxAmountFromCurrentPayment);
+                    requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                    processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+
+                    availableAmount = availableAmount.subtract(maxAmountFromCurrentPayment);
+                }
+            }
+        }
+
+        log.infof("redistributeExistingRequirementPayments: redistribution stage completed, redistributedRelatedPayments=%d, createdRelatedPayments=%d",
+            journal.redistributedRelatedPayments.size(), journal.relatedPaymentIds.size());
+    }
+
     @Override
     @Transactional
     public void processRefundingPayment(List<AdjustRefundPaymentResultDto> outgoingPayments,
-                                        List<Pair<RequirementStateInfoDto, ReferenceDto>> decreasingRequirements,
+                                        List<Pair<RequirementStateInfoDto, Requirement>> requirements,
                                         AdjustByPastDateJournalDto journal, AdjustByPastDateResultDto result) {
 
         if (outgoingPayments == null || outgoingPayments.isEmpty()) {
-            throw new RuntimeException("outgoingPayments cannot be null or empty for decreasing requirements");
+            return;
         }
 
         Map<String, List<Pair<RequirementStateInfoDto, Requirement>>> requirementMapByPpc = new HashMap<>();
 
-        decreasingRequirements.forEach(pair -> {
-            Requirement requirement = requirementDao.findByIdOrThrow(pair.b.id);
+        requirements.forEach(pair -> {
+            Requirement requirement = pair.b;
             String requirementPpc = pair.a.paymentPurposeCode;
-            log.infof("adjustByPastDate: decreasing requirement=%s, requirementPpc=%s", requirement, requirementPpc);
-            if (requirementMapByPpc.containsKey(requirementPpc)) {
-                requirementMapByPpc.get(requirementPpc).add(new Pair<>(pair.a, requirement));
-            } else {
-                requirementMapByPpc.put(requirementPpc, new ArrayList<>(List.of(new Pair<>(pair.a, requirement))));
+            if (requirementPpc == null || requirementPpc.isEmpty()) {
+                return;
             }
-            journal.requirementJournalMap.put(requirement.id, RequirementMapperUtils.fillRequirementJournal(requirement));
+            requirementMapByPpc.computeIfAbsent(requirementPpc, key -> new ArrayList<>()).add(pair);
+            journal.requirementJournalMap.putIfAbsent(requirement.id, RequirementMapperUtils.fillRequirementJournal(requirement));
         });
 
         log.infof("adjustByPastDate: requirementMapByPpc=%s", requirementMapByPpc);
@@ -861,8 +1016,6 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
             log.infof("processRefundingPayment: start processing refund payment amount=%s", paymentBalance);
             if (paymentBalance.signum() > 0) {
-                log.infof("processRefundingPayment: creating refunding payment entity");
-
                 List<Pair<RequirementStateInfoDto, Requirement>> requirementsForUpdate = requirementMapByPpc.get(ppc);
 
                 RefundingPayment refundingPayment = new RefundingPayment();
@@ -876,33 +1029,24 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
                 RefundingPayment.persistOrUpdate(refundingPayment);
 
-                log.infof("processRefundingPayment: refunding payment persisted, %s", refundingPayment);
-
                 List<RequirementRefundingPayment> refundingPayments = new ArrayList<>();
 
                 for (Pair<RequirementStateInfoDto, Requirement> pair : requirementsForUpdate) {
                     RequirementStateInfoDto reqDto = pair.a;
                     Requirement requirement = pair.b;
+                    applyRequirementAttributesFromDto(reqDto, requirement);
+
                     BigDecimal diff = requirement.paidAmount.subtract(reqDto.amount);
+                    if (diff.signum() <= 0) {
+                        continue;
+                    }
 
                     if (paymentBalance.compareTo(diff) >= 0) {
                         log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, diff);
 
-                        // вид требования вычисляется с помощью настроенного алгоритма
-                        // который определяет его в зависимости от "расчетной категории" из записи массива
-                        Long systemLocale = systemParameterService.getSystemLocale(RmsConstants.SYSTEM_LOCALE_PARAM);
-                        RequirementTypeDTO requirementType = requirementTypeService.getRequirementType(reqDto.indicator.indicatorDescr, systemLocale);
-
-                        // приоритет - целая часть = приоритету из вида требования, дробная часть = "приоритет оплаты" из записи массива
-                        BigDecimal integerPriority = new BigDecimal(requirementType.priority);
-                        BigDecimal decimalPriority = new BigDecimal(reqDto.priority).divide(new BigDecimal("100"), 2, RoundingMode.UP);
-                        requirement.priority = integerPriority.add(decimalPriority);
-                        requirement.indicatorId = reqDto.indicator.id;
-
-                        requirement.amount = reqDto.amount;
-                        requirement.paidAmount = reqDto.amount;
-                        requirement.unpaidAmount = BigDecimal.ZERO;
-                        requirement.state = RequirementStatus.PAID;
+                        requirement.paidAmount = requirement.paidAmount.subtract(diff);
+                        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                        processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
 
                         RequirementRefundingPayment rrp = new RequirementRefundingPayment();
                         rrp.distributionAmount = diff;
@@ -910,19 +1054,16 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         rrp.refundingPayment = refundingPayment;
                         refundingPayments.add(rrp);
 
-                        log.infof("processRefundingPayment: linked refunding payment to requirement=%s, amount=%s", requirement, diff);
-
-                        requirement.update();
                         paymentBalance = paymentBalance.subtract(diff);
 
                         reqDto.payedAmount = requirement.paidAmount;
                         reqDto.status = requirement.state;
+                        reqDto.amount = requirement.amount;
                         result.requirements.add(reqDto);
                     }
                 }
 
                 RequirementRefundingPayment.persist(refundingPayments);
-                log.infof("processRefundingPayment: persisted %d refunding payment links refundingPayments=%s", refundingPayments.size(), requirementsForUpdate);
 
                 journal.requirementRefundingPaymentIds.addAll(
                     refundingPayments.stream().map(rp -> rp.id).toList()
@@ -934,4 +1075,45 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             }
         }
     }
+    @Override
+    @Transactional
+    public void undoRedistributedRelatedPayments(List<RelatedPaymentsJournalDto> redistributedRelatedPayments) {
+        if (redistributedRelatedPayments == null || redistributedRelatedPayments.isEmpty()) {
+            return;
+        }
+
+        for (RelatedPaymentsJournalDto relatedPaymentJournal : redistributedRelatedPayments) {
+            RelatedPayment relatedPayment = relatedPaymentDao.findById(relatedPaymentJournal.relationId);
+            if (relatedPayment == null || Boolean.TRUE.equals(relatedPayment.isDeleted)) {
+                continue;
+            }
+
+            relatedPayment.amount = relatedPaymentJournal.amount;
+            relatedPayment.update();
+        }
+    }
+
+
+    @Override
+    @Transactional
+    public void undoRedistributedRefundingPayments(List<RedistributedRefundingPaymentJournalDto> redistributedRefundingPayments) {
+        if (redistributedRefundingPayments == null || redistributedRefundingPayments.isEmpty()) {
+            return;
+        }
+
+        for (RedistributedRefundingPaymentJournalDto refundJournal : redistributedRefundingPayments) {
+            RequirementRefundingPayment requirementRefundingPayment = requirementRefundingPaymentDao.findById(refundJournal.requirementRefundingPaymentId);
+            if (requirementRefundingPayment != null && !Boolean.TRUE.equals(requirementRefundingPayment.refundingPayment.isDeleted)) {
+                requirementRefundingPayment.distributionAmount = refundJournal.requirementRefundingPaymentDistributionAmount;
+                requirementRefundingPayment.update();
+            }
+
+            RefundingPayment refundingPayment = refundingPaymentDao.findById(refundJournal.refundingPaymentId);
+            if (refundingPayment != null && !Boolean.TRUE.equals(refundingPayment.isDeleted)) {
+                refundingPayment.amount = refundJournal.refundingPaymentAmount;
+                refundingPayment.update();
+            }
+        }
+    }
+
 }
