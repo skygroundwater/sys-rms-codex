@@ -124,10 +124,12 @@ public class DebugController {
     @POST
     @Path("adjust-by-past-date")
     public AdjustByPastDateResultDto adjustByPastDate(DebugRedistributeRequestDto request) {
+        AdjustByPastDateResultDto result = new AdjustByPastDateResultDto();
         paymentService.redistributeExistingRequirementPayments(
             request.requirements,
-            request.journal
+            request.journal,
+            result
         );
-        return request.journal.intermediateResult;
+        return result;
     }
 }

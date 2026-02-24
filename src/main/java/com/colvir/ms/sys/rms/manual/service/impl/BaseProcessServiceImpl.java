@@ -208,9 +208,6 @@ public class BaseProcessServiceImpl implements BaseProcessService {
 
         // 1. Если статус не поменялся — проверяем движение суммы
         if (newStatus.equals(prevStatus)) {
-            int cmp = newReqState.payedAmount.compareTo(prevReqState.paidAmount);
-            if (cmp > 0) return RmsConstants.BBP_RUN_PAYMENT_EVENT;
-            if (cmp < 0) return RmsConstants.BBP_RUN_REFUND_EVENT;
             return "";
         }
 

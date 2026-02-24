@@ -10,6 +10,7 @@ import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
+import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.manual.constant.StepsNames;
@@ -87,7 +88,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             // Сначала перераспределяем то, что уже есть в БД, даже если на вход не пришли платежи.
             // Это важно, потому что требование могло измениться только по сумме, а движения по платежам нет.
-            paymentService.redistributeExistingRequirementPayments(requirementsWithEntities, journal);
+            paymentService.redistributeExistingRequirementPayments(requirementsWithEntities, journal, result);
 
             log.infof("adjustByPastDate: increasing requirements=%s", increasingRequirements);
 
@@ -122,24 +123,49 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                     journal.paymentIds.addAll(registrationResponse.journal.createdPayments);
                     journal.relatedPaymentIds.addAll(registrationResponse.journal.createdRelatedPayments);
 
-                    result.requirements.addAll(
-                        registrationResponse.requirements.stream()
-                            .map(updatedRequirement -> {
-                                RequirementStateInfoDto reqInfoResult = increasingRequirements.get(updatedRequirement.id).a;
-                                reqInfoResult.status = updatedRequirement.state;
-                                reqInfoResult.payedAmount = updatedRequirement.paidAmount;
-                                reqInfoResult.amount = updatedRequirement.amount;
-                                reqInfoResult.paymentEndDate = updatedRequirement.paymentEndDate;
-                                reqInfoResult.currentTransactionAmount = registrationResponse.currentTransactionAmounts.get(reqInfoResult.requirementId);
-                                return reqInfoResult;
-                            }).toList()
-                    );
+                    registrationResponse.requirements.forEach(updatedRequirement -> {
+                        RequirementStateInfoDto reqInfoResult = increasingRequirements.get(updatedRequirement.id).a;
+                        reqInfoResult.status = updatedRequirement.state;
+                        reqInfoResult.payedAmount = updatedRequirement.paidAmount;
+                        reqInfoResult.amount = updatedRequirement.amount;
+                        reqInfoResult.paymentEndDate = updatedRequirement.paymentEndDate;
+                        reqInfoResult.currentTransactionAmount = registrationResponse.currentTransactionAmounts.get(reqInfoResult.requirementId);
+                        putRequirementResult(result, reqInfoResult);
+                    });
                 }
             }
 
-            result.requirements = new ArrayList<>(result.requirements.stream()
-                .collect(Collectors.toMap(req -> req.requirementId, req -> req, (left, right) -> right, HashMap::new))
-                .values());
+            requirementsWithEntities.forEach(pair -> {
+                RequirementStateInfoDto sourceReq = pair.a;
+                Requirement currentRequirement = pair.b;
+                RequirementJournalDto requirementJournal = journal.requirementJournalMap.get(currentRequirement.id);
+                if (requirementJournal == null) {
+                    return;
+                }
+
+                boolean isChanged = currentRequirement.amount.compareTo(requirementJournal.amount) != 0
+                    || currentRequirement.paidAmount.compareTo(requirementJournal.paidAmount) != 0
+                    || currentRequirement.unpaidAmount.compareTo(requirementJournal.unpaidAmount) != 0
+                    || !Objects.equals(currentRequirement.state, requirementJournal.state)
+                    || !Objects.equals(currentRequirement.paymentEndDate, requirementJournal.paymentEndDate);
+
+                if (!isChanged) {
+                    return;
+                }
+
+                RequirementStateInfoDto reqInfoResult = new RequirementStateInfoDto();
+                reqInfoResult.requirementId = currentRequirement.id;
+                reqInfoResult.amount = currentRequirement.amount;
+                reqInfoResult.payedAmount = currentRequirement.paidAmount;
+                reqInfoResult.status = currentRequirement.state;
+                reqInfoResult.paymentEndDate = currentRequirement.paymentEndDate;
+                reqInfoResult.priority = sourceReq.priority;
+                reqInfoResult.indicator = sourceReq.indicator;
+                reqInfoResult.action = sourceReq.action;
+                reqInfoResult.paymentPurposeCode = sourceReq.paymentPurposeCode;
+                reqInfoResult.currentTransactionAmount = sourceReq.currentTransactionAmount;
+                putRequirementResult(result, reqInfoResult);
+            });
 
             log.infof("adjustByPastDate: final state of requirements =%s", result.requirements);
             log.infof("adjustByPastDate: state of requirements journal =%s", journal.requirementJournalMap.values());
@@ -172,6 +198,21 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             return new AggregationResult<>(properties, journal, journal.intermediateResult);
         }
+    }
+
+    private void putRequirementResult(AdjustByPastDateResultDto result, RequirementStateInfoDto requirementStateInfo) {
+        if (requirementStateInfo == null || requirementStateInfo.requirementId == null) {
+            return;
+        }
+
+        for (int i = 0; i < result.requirements.size(); i++) {
+            RequirementStateInfoDto existing = result.requirements.get(i);
+            if (Objects.equals(existing.requirementId, requirementStateInfo.requirementId)) {
+                result.requirements.set(i, requirementStateInfo);
+                return;
+            }
+        }
+        result.requirements.add(requirementStateInfo);
     }
 
     @Override

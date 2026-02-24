@@ -32,7 +32,8 @@ public interface RequirementPaymentService {
                                  AdjustByPastDateJournalDto journal, AdjustByPastDateResultDto result);
 
     void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
-                                 AdjustByPastDateJournalDto journal);
+                                 AdjustByPastDateJournalDto journal,
+                                 AdjustByPastDateResultDto result);
 
     void undoRedistributedRelatedPayments(List<RelatedPaymentsJournalDto> redistributedRelatedPayments);
 

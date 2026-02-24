@@ -850,7 +850,8 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Override
     @Transactional
     public void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
-                                                        AdjustByPastDateJournalDto journal) {
+                                                        AdjustByPastDateJournalDto journal,
+                                                        AdjustByPastDateResultDto result) {
         if (requirements == null || requirements.isEmpty()) {
             log.info("redistributeExistingRequirementPayments: no requirements provided, nothing to redistribute");
             return;
@@ -970,9 +971,23 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                             newRelatedPayment.id, maxAmountFromCurrentPayment, requirement.id, payment.id);
                     }
 
-                    requirement.paidAmount = requirement.paidAmount.subtract(existingAmountForThisPayment).add(maxAmountFromCurrentPayment);
-                    requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
-                    processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+                    BigDecimal paidAmountDelta = maxAmountFromCurrentPayment.subtract(existingAmountForThisPayment);
+                    if (paidAmountDelta.signum() >= 0) {
+                        requirement.paidAmount = requirement.paidAmount.add(paidAmountDelta);
+                        requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+                        processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+
+                        RequirementStateInfoDto updatedReqDto = new RequirementStateInfoDto();
+                        updatedReqDto.requirementId = requirement.id;
+                        updatedReqDto.amount = requirement.amount;
+                        updatedReqDto.payedAmount = requirement.paidAmount;
+                        updatedReqDto.status = requirement.state;
+                        updatedReqDto.paymentEndDate = requirement.paymentEndDate;
+                        putRequirementResult(result, updatedReqDto);
+                    } else {
+                        log.infof("redistributeExistingRequirementPayments: keep requirement paidAmount unchanged, paymentId=%d, requirementId=%d, remainderForRefund=%s",
+                            payment.id, requirement.id, existingAmountForThisPayment.subtract(maxAmountFromCurrentPayment));
+                    }
 
                     availableAmount = availableAmount.subtract(maxAmountFromCurrentPayment);
                 }
@@ -1034,6 +1049,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 for (Pair<RequirementStateInfoDto, Requirement> pair : requirementsForUpdate) {
                     RequirementStateInfoDto reqDto = pair.a;
                     Requirement requirement = pair.b;
+
                     applyRequirementAttributesFromDto(reqDto, requirement);
 
                     BigDecimal diff = requirement.paidAmount.subtract(reqDto.amount);
@@ -1041,25 +1057,26 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         continue;
                     }
 
-                    if (paymentBalance.compareTo(diff) >= 0) {
-                        log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, diff);
+                    BigDecimal refundableAmount = diff.min(paymentBalance);
+                    if (refundableAmount.signum() > 0) {
+                        log.infof("processRefundingPayment: processing requirement=%s, refundable amount=%s", requirement, refundableAmount);
 
-                        requirement.paidAmount = requirement.paidAmount.subtract(diff);
+                        requirement.paidAmount = requirement.paidAmount.subtract(refundableAmount);
                         requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
                         processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
 
                         RequirementRefundingPayment rrp = new RequirementRefundingPayment();
-                        rrp.distributionAmount = diff;
+                        rrp.distributionAmount = refundableAmount;
                         rrp.requirementOfRefundingPayments = requirement;
                         rrp.refundingPayment = refundingPayment;
                         refundingPayments.add(rrp);
 
-                        paymentBalance = paymentBalance.subtract(diff);
+                        paymentBalance = paymentBalance.subtract(refundableAmount);
 
                         reqDto.payedAmount = requirement.paidAmount;
                         reqDto.status = requirement.state;
                         reqDto.amount = requirement.amount;
-                        result.requirements.add(reqDto);
+                        putRequirementResult(result, reqDto);
                     }
                 }
 
@@ -1075,6 +1092,20 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             }
         }
     }
+    private void putRequirementResult(AdjustByPastDateResultDto result, RequirementStateInfoDto requirementStateInfo) {
+        if (requirementStateInfo == null || requirementStateInfo.requirementId == null) {
+            return;
+        }
+        for (int i = 0; i < result.requirements.size(); i++) {
+            RequirementStateInfoDto existing = result.requirements.get(i);
+            if (Objects.equals(existing.requirementId, requirementStateInfo.requirementId)) {
+                result.requirements.set(i, requirementStateInfo);
+                return;
+            }
+        }
+        result.requirements.add(requirementStateInfo);
+    }
+
     @Override
     @Transactional
     public void undoRedistributedRelatedPayments(List<RelatedPaymentsJournalDto> redistributedRelatedPayments) {
