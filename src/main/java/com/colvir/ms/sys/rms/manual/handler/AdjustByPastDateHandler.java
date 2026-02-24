@@ -10,6 +10,7 @@ import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
+import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.manual.constant.StepsNames;
@@ -87,7 +88,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             // Сначала перераспределяем то, что уже есть в БД, даже если на вход не пришли платежи.
             // Это важно, потому что требование могло измениться только по сумме, а движения по платежам нет.
-            paymentService.redistributeExistingRequirementPayments(requirementsWithEntities, journal);
+            paymentService.redistributeExistingRequirementPayments(requirementsWithEntities, journal, result);
 
             log.infof("adjustByPastDate: increasing requirements=%s", increasingRequirements);
 
@@ -136,6 +137,38 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                     );
                 }
             }
+
+            requirementsWithEntities.forEach(pair -> {
+                RequirementStateInfoDto sourceReq = pair.a;
+                Requirement currentRequirement = pair.b;
+                RequirementJournalDto requirementJournal = journal.requirementJournalMap.get(currentRequirement.id);
+                if (requirementJournal == null) {
+                    return;
+                }
+
+                boolean isChanged = currentRequirement.amount.compareTo(requirementJournal.amount) != 0
+                    || currentRequirement.paidAmount.compareTo(requirementJournal.paidAmount) != 0
+                    || currentRequirement.unpaidAmount.compareTo(requirementJournal.unpaidAmount) != 0
+                    || !Objects.equals(currentRequirement.state, requirementJournal.state)
+                    || !Objects.equals(currentRequirement.paymentEndDate, requirementJournal.paymentEndDate);
+
+                if (!isChanged) {
+                    return;
+                }
+
+                RequirementStateInfoDto reqInfoResult = new RequirementStateInfoDto();
+                reqInfoResult.requirementId = currentRequirement.id;
+                reqInfoResult.amount = currentRequirement.amount;
+                reqInfoResult.payedAmount = currentRequirement.paidAmount;
+                reqInfoResult.status = currentRequirement.state;
+                reqInfoResult.paymentEndDate = currentRequirement.paymentEndDate;
+                reqInfoResult.priority = sourceReq.priority;
+                reqInfoResult.indicator = sourceReq.indicator;
+                reqInfoResult.action = sourceReq.action;
+                reqInfoResult.paymentPurposeCode = sourceReq.paymentPurposeCode;
+                reqInfoResult.currentTransactionAmount = sourceReq.currentTransactionAmount;
+                result.requirements.add(reqInfoResult);
+            });
 
             result.requirements = new ArrayList<>(result.requirements.stream()
                 .collect(Collectors.toMap(req -> req.requirementId, req -> req, (left, right) -> right, HashMap::new))

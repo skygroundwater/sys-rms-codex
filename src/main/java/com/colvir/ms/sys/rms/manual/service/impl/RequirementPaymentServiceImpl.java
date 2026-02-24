@@ -850,7 +850,8 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Override
     @Transactional
     public void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
-                                                        AdjustByPastDateJournalDto journal) {
+                                                        AdjustByPastDateJournalDto journal,
+                                                        AdjustByPastDateResultDto result) {
         if (requirements == null || requirements.isEmpty()) {
             log.info("redistributeExistingRequirementPayments: no requirements provided, nothing to redistribute");
             return;
@@ -881,6 +882,10 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         Set<Long> changedRequirementIds = changedRequirements.stream()
             .map(pair -> pair.b.id)
+            .collect(Collectors.toSet());
+
+        Set<Long> requirementIdsAddedToResult = result.requirements.stream()
+            .map(req -> req.requirementId)
             .collect(Collectors.toSet());
 
         // 4) Поднимаем все существующие RelatedPayment для измененных требований.
@@ -975,6 +980,16 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         requirement.paidAmount = requirement.paidAmount.add(paidAmountDelta);
                         requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
                         processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
+
+                        RequirementStateInfoDto updatedReqDto = new RequirementStateInfoDto();
+                        updatedReqDto.requirementId = requirement.id;
+                        updatedReqDto.amount = requirement.amount;
+                        updatedReqDto.payedAmount = requirement.paidAmount;
+                        updatedReqDto.status = requirement.state;
+                        updatedReqDto.paymentEndDate = requirement.paymentEndDate;
+                        if (requirementIdsAddedToResult.add(updatedReqDto.requirementId)) {
+                            result.requirements.add(updatedReqDto);
+                        }
                     } else {
                         log.infof("redistributeExistingRequirementPayments: keep requirement paidAmount unchanged, paymentId=%d, requirementId=%d, remainderForRefund=%s",
                             payment.id, requirement.id, existingAmountForThisPayment.subtract(maxAmountFromCurrentPayment));
