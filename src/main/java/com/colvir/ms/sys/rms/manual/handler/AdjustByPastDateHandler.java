@@ -124,7 +124,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                         registrationResponse.journal.createdPayments.size(), registrationResponse.journal.createdRelatedPayments.size());
 
                     registrationResponse.journal.requirementJournal.forEach(
-                        reqJournal -> journal.requirementJournalMap.put(reqJournal.id, reqJournal)
+                        reqJournal -> journal.requirementJournalMap.putIfAbsent(reqJournal.id, reqJournal)
                     );
                     journal.paymentIds.addAll(registrationResponse.journal.createdPayments);
                     journal.relatedPaymentIds.addAll(registrationResponse.journal.createdRelatedPayments);
