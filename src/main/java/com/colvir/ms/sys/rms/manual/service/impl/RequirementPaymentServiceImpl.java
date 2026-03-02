@@ -843,6 +843,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
         requirement.priority = integerPriority.add(decimalPriority);
         requirement.indicatorId = reqDto.indicator.id;
+        requirement.state = reqDto.status;
         requirement.amount = reqDto.amount;
         requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
     }
@@ -870,7 +871,10 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         // 1) Берем только действительно измененные требования.
         // Это позволяет не трогать лишние связки и не раздувать журнал отката.
         List<Pair<RequirementStateInfoDto, Requirement>> changedRequirements = requirements.stream()
-            .filter(pair -> pair.b.amount.compareTo(pair.a.amount) != 0 || pair.b.paidAmount.compareTo(pair.a.payedAmount) != 0)
+            .filter(pair -> pair.b.amount.compareTo(pair.a.amount) != 0
+                || pair.b.paidAmount.compareTo(pair.a.payedAmount) != 0
+                || !Objects.equals(pair.b.state, pair.a.status)
+                || !Objects.equals(pair.b.paymentEndDate, pair.a.paymentEndDate))
             .toList();
         log.infof("redistributeExistingRequirementPayments: changedRequirements count=%d", changedRequirements.size());
 
@@ -889,6 +893,8 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             applyRequirementAttributesFromDto(pair.a, pair.b);
         }
         log.infof("redistributeExistingRequirementPayments: requirement journal prepared, size=%d", journal.requirementJournalMap.size());
+
+        changedRequirements.forEach(pair -> syncRequirementState(pair.a, pair.b, result));
 
         Set<Long> changedRequirementIds = changedRequirements.stream()
             .map(pair -> pair.b.id)
