@@ -83,7 +83,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             log.infof("adjustByPastDate: starting to process requirements %s", requirementsWithEntities);
 
             Map<Long, Pair<RequirementStateInfoDto, Requirement>> increasingRequirements = requirementsWithEntities.stream()
-                .filter(pair -> pair.a.payedAmount.compareTo(pair.a.amount) < 0)
+                .filter(pair -> pair.a.payedAmount.compareTo(pair.b.paidAmount) > 0)
                 .collect(Collectors.toMap(pair -> pair.b.id, pair -> pair, (left, right) -> right, HashMap::new));
 
             // Сначала перераспределяем то, что уже есть в БД, даже если на вход не пришли платежи.
