@@ -847,6 +847,16 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
     }
 
+    private void syncRequirementState(RequirementStateInfoDto reqDto,
+                                      Requirement requirement,
+                                      AdjustByPastDateResultDto result) {
+        reqDto.payedAmount = requirement.paidAmount;
+        reqDto.status = requirement.state;
+        reqDto.amount = requirement.amount;
+        reqDto.paymentEndDate = requirement.paymentEndDate;
+        putRequirementResult(result, reqDto);
+    }
+
     @Override
     @Transactional
     public void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
@@ -896,21 +906,21 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
         }
 
         // 5) Для каждого КНП формируем пары Requirement + список его связок (или пустой список, если связок не было).
-        Map<String, List<Pair<Requirement, List<RelatedPayment>>>> requirementsWithRelatedPaymentsByPpc = new HashMap<>();
+        Map<String, List<Pair<RequirementStateInfoDto, Pair<Requirement, List<RelatedPayment>>>>> requirementsWithRelatedPaymentsByPpc = new HashMap<>();
         for (Map.Entry<String, List<Pair<RequirementStateInfoDto, Requirement>>> entry : requirementsByPpc.entrySet()) {
-            List<Pair<Requirement, List<RelatedPayment>>> requirementsWithPayments = entry.getValue().stream()
-                .map(pair -> new Pair<>(pair.b, relatedPaymentsByRequirementId.getOrDefault(pair.b.id, List.of())))
+            List<Pair<RequirementStateInfoDto, Pair<Requirement, List<RelatedPayment>>>> requirementsWithPayments = entry.getValue().stream()
+                .map(pair -> new Pair<>(pair.a, new Pair<>(pair.b, relatedPaymentsByRequirementId.getOrDefault(pair.b.id, List.of()))))
                 .toList();
             requirementsWithRelatedPaymentsByPpc.put(entry.getKey(), requirementsWithPayments);
         }
 
         // 6) Внутри каждого КНП идем по каждому общему Payment и распределяем его сумму по требованиям по приоритету.
-        for (Map.Entry<String, List<Pair<Requirement, List<RelatedPayment>>>> ppcEntry : requirementsWithRelatedPaymentsByPpc.entrySet()) {
+        for (Map.Entry<String, List<Pair<RequirementStateInfoDto, Pair<Requirement, List<RelatedPayment>>>>> ppcEntry : requirementsWithRelatedPaymentsByPpc.entrySet()) {
             String ppc = ppcEntry.getKey();
-            List<Pair<Requirement, List<RelatedPayment>>> requirementsBucket = ppcEntry.getValue();
+            List<Pair<RequirementStateInfoDto, Pair<Requirement, List<RelatedPayment>>>> requirementsBucket = ppcEntry.getValue();
 
             Map<Long, List<RelatedPayment>> relatedPaymentsByPaymentId = requirementsBucket.stream()
-                .flatMap(pair -> pair.b.stream())
+                .flatMap(pair -> pair.b.b.stream())
                 .collect(Collectors.groupingBy(rp -> rp.payment.id));
             log.infof("redistributeExistingRequirementPayments: ppc=%s, requirements=%d, payments=%d",
                 ppc, requirementsBucket.size(), relatedPaymentsByPaymentId.size());
@@ -921,13 +931,14 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 log.infof("redistributeExistingRequirementPayments: processing paymentId=%d, availableAmount=%s, ppc=%s",
                     payment.id, availableAmount, ppc);
 
-                for (Pair<Requirement, List<RelatedPayment>> requirementPair : requirementsBucket) {
+                for (Pair<RequirementStateInfoDto, Pair<Requirement, List<RelatedPayment>>> requirementPair : requirementsBucket) {
                     if (availableAmount.signum() <= 0) {
                         break;
                     }
 
-                    Requirement requirement = requirementPair.a;
-                    List<RelatedPayment> paymentSpecificLinks = requirementPair.b.stream()
+                    RequirementStateInfoDto reqDto = requirementPair.a;
+                    Requirement requirement = requirementPair.b.a;
+                    List<RelatedPayment> paymentSpecificLinks = requirementPair.b.b.stream()
                         .filter(rp -> Objects.equals(rp.payment.id, payment.id))
                         .toList();
 
@@ -972,18 +983,12 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                     }
 
                     BigDecimal paidAmountDelta = maxAmountFromCurrentPayment.subtract(existingAmountForThisPayment);
-                    if (paidAmountDelta.signum() >= 0) {
+                    if (paidAmountDelta.signum() != 0) {
                         requirement.paidAmount = requirement.paidAmount.add(paidAmountDelta);
                         requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
                         processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
 
-                        RequirementStateInfoDto updatedReqDto = new RequirementStateInfoDto();
-                        updatedReqDto.requirementId = requirement.id;
-                        updatedReqDto.amount = requirement.amount;
-                        updatedReqDto.payedAmount = requirement.paidAmount;
-                        updatedReqDto.status = requirement.state;
-                        updatedReqDto.paymentEndDate = requirement.paymentEndDate;
-                        putRequirementResult(result, updatedReqDto);
+                        syncRequirementState(reqDto, requirement, result);
                     } else {
                         log.infof("redistributeExistingRequirementPayments: keep requirement paidAmount unchanged, paymentId=%d, requirementId=%d, remainderForRefund=%s",
                             payment.id, requirement.id, existingAmountForThisPayment.subtract(maxAmountFromCurrentPayment));
@@ -1073,10 +1078,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
 
                         paymentBalance = paymentBalance.subtract(refundableAmount);
 
-                        reqDto.payedAmount = requirement.paidAmount;
-                        reqDto.status = requirement.state;
-                        reqDto.amount = requirement.amount;
-                        putRequirementResult(result, reqDto);
+                        syncRequirementState(reqDto, requirement, result);
                     }
                 }
 

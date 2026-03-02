@@ -102,9 +102,15 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             if (properties.incomingPayments != null && !properties.incomingPayments.isEmpty() ) {
                 log.infof("adjustByPastDate: processing %d incoming payments", properties.incomingPayments.size());
 
+                Set<String> incomingPaymentPpcs = properties.incomingPayments.stream()
+                    .map(payment -> payment.paymentPurposeCode)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
                 RegistrationOfPaymentDto registrationRequest = new RegistrationOfPaymentDto();
                 registrationRequest.payments = properties.incomingPayments;
                 registrationRequest.requirements = increasingRequirements.values().stream()
+                    .filter(pair -> pair.a.paymentPurposeCode != null && incomingPaymentPpcs.contains(pair.a.paymentPurposeCode))
                     .sorted(Comparator.comparingInt(pair -> pair.a.priority))
                     .map(pair -> new ReferenceDto(pair.b.id, SYS_RMS_REQUIREMENT_NAMESPACE))
                     .toList();
