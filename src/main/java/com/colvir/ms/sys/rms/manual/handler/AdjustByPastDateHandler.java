@@ -9,8 +9,8 @@ import com.colvir.ms.sys.rms.dto.BbpStateResult;
 import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
-import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
+import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.manual.constant.StepsNames;
@@ -24,14 +24,13 @@ import jakarta.inject.Inject;
 import org.antlr.v4.runtime.misc.Pair;
 import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.List;
-import java.util.Map;
 
 import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.SYS_RMS_REQUIREMENT_NAMESPACE;
 import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
@@ -83,7 +82,7 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             log.infof("adjustByPastDate: starting to process requirements %s", requirementsWithEntities);
 
             Map<Long, Pair<RequirementStateInfoDto, Requirement>> increasingRequirements = requirementsWithEntities.stream()
-                .filter(pair -> pair.a.payedAmount.compareTo(pair.a.amount) < 0)
+                .filter(pair -> pair.a.payedAmount.compareTo(pair.b.paidAmount) > 0)
                 .collect(Collectors.toMap(pair -> pair.b.id, pair -> pair, (left, right) -> right, HashMap::new));
 
             // Сначала перераспределяем то, что уже есть в БД, даже если на вход не пришли платежи.
@@ -102,9 +101,15 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
             if (properties.incomingPayments != null && !properties.incomingPayments.isEmpty() ) {
                 log.infof("adjustByPastDate: processing %d incoming payments", properties.incomingPayments.size());
 
+                Set<String> incomingPaymentPpcs = properties.incomingPayments.stream()
+                    .map(payment -> payment.paymentPurposeCode)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
                 RegistrationOfPaymentDto registrationRequest = new RegistrationOfPaymentDto();
                 registrationRequest.payments = properties.incomingPayments;
                 registrationRequest.requirements = increasingRequirements.values().stream()
+                    .filter(pair -> pair.a.paymentPurposeCode != null && incomingPaymentPpcs.contains(pair.a.paymentPurposeCode))
                     .sorted(Comparator.comparingInt(pair -> pair.a.priority))
                     .map(pair -> new ReferenceDto(pair.b.id, SYS_RMS_REQUIREMENT_NAMESPACE))
                     .toList();
@@ -117,9 +122,6 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                     log.infof("adjustByPastDate: registration completed. Created payments: %d, related payments: %d",
                         registrationResponse.journal.createdPayments.size(), registrationResponse.journal.createdRelatedPayments.size());
 
-                    registrationResponse.journal.requirementJournal.forEach(
-                        reqJournal -> journal.requirementJournalMap.put(reqJournal.id, reqJournal)
-                    );
                     journal.paymentIds.addAll(registrationResponse.journal.createdPayments);
                     journal.relatedPaymentIds.addAll(registrationResponse.journal.createdRelatedPayments);
 
@@ -130,7 +132,6 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                         reqInfoResult.amount = updatedRequirement.amount;
                         reqInfoResult.paymentEndDate = updatedRequirement.paymentEndDate;
                         reqInfoResult.currentTransactionAmount = registrationResponse.currentTransactionAmounts.get(reqInfoResult.requirementId);
-                        putRequirementResult(result, reqInfoResult);
                     });
                 }
             }
@@ -167,8 +168,8 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 putRequirementResult(result, reqInfoResult);
             });
 
-            log.infof("adjustByPastDate: final state of requirements =%s", result.requirements);
-            log.infof("adjustByPastDate: state of requirements journal =%s", journal.requirementJournalMap.values());
+            log.infof("adjustByPastDate: final state of requirements size=%d : %s", result.requirements.size(), result.requirements);
+            log.infof("adjustByPastDate: state of requirements journal size=%d : %s", journal.requirementJournalMap.size(), journal.requirementJournalMap.values());
 
             journal.intermediateResult = result;
 
