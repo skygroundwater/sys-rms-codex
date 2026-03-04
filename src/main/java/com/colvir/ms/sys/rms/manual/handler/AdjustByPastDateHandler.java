@@ -135,6 +135,10 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                 }
             }
 
+            // Финальное приведение требований к состоянию из входного DTO выполняем
+            // только после перераспределений, возвратов и возможной регистрации incoming-платежей.
+            paymentService.finalizeRequirementsByDto(requirementsWithEntities, result);
+
             requirementsWithEntities.forEach(pair -> {
                 RequirementStateInfoDto sourceReq = pair.a;
                 Requirement currentRequirement = pair.b;

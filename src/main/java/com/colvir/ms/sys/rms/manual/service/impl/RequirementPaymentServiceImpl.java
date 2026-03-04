@@ -1139,7 +1139,16 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             }
         }
 
-        // После этапа перераспределений/возвратов приводим требования к финальному входному состоянию.
+    }
+
+    @Override
+    @Transactional
+    public void finalizeRequirementsByDto(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
+                                          AdjustByPastDateResultDto result) {
+        if (requirements == null || requirements.isEmpty()) {
+            return;
+        }
+
         for (Pair<RequirementStateInfoDto, Requirement> pair : requirements) {
             RequirementStateInfoDto reqDto = pair.a;
             Requirement requirement = pair.b;
@@ -1150,6 +1159,7 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             syncRequirementState(reqDto, requirement, result);
         }
     }
+
     private void putRequirementResult(AdjustByPastDateResultDto result, RequirementStateInfoDto requirementStateInfo) {
         if (requirementStateInfo == null || requirementStateInfo.requirementId == null) {
             return;

@@ -31,6 +31,9 @@ public interface RequirementPaymentService {
                                  List<Pair<RequirementStateInfoDto, Requirement>> requirements,
                                  AdjustByPastDateJournalDto journal, AdjustByPastDateResultDto result);
 
+    void finalizeRequirementsByDto(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
+                                   AdjustByPastDateResultDto result);
+
     void redistributeExistingRequirementPayments(List<Pair<RequirementStateInfoDto, Requirement>> requirements,
                                  AdjustByPastDateJournalDto journal,
                                  AdjustByPastDateResultDto result);
