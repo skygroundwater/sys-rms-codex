@@ -851,11 +851,18 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     private void syncRequirementState(RequirementStateInfoDto reqDto,
                                       Requirement requirement,
                                       AdjustByPastDateResultDto result) {
-        reqDto.payedAmount = requirement.paidAmount;
-        reqDto.status = requirement.state;
-        reqDto.amount = requirement.amount;
-        reqDto.paymentEndDate = requirement.paymentEndDate;
-        putRequirementResult(result, reqDto);
+        RequirementStateInfoDto reqInfoResult = new RequirementStateInfoDto();
+        reqInfoResult.requirementId = reqDto.requirementId;
+        reqInfoResult.amount = requirement.amount;
+        reqInfoResult.payedAmount = requirement.paidAmount;
+        reqInfoResult.status = requirement.state;
+        reqInfoResult.paymentEndDate = requirement.paymentEndDate;
+        reqInfoResult.priority = reqDto.priority;
+        reqInfoResult.indicator = reqDto.indicator;
+        reqInfoResult.action = reqDto.action;
+        reqInfoResult.paymentPurposeCode = reqDto.paymentPurposeCode;
+        reqInfoResult.currentTransactionAmount = reqDto.currentTransactionAmount;
+        putRequirementResult(result, reqInfoResult);
     }
 
     @Override
@@ -956,7 +963,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         .map(rp -> rp.amount == null ? BigDecimal.ZERO : rp.amount)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                    BigDecimal targetRequirementAmount = reqDto.amount == null ? BigDecimal.ZERO : reqDto.amount;
+                    BigDecimal targetRequirementAmount = paymentSpecificLinks.isEmpty()
+                        ? (reqDto.amount == null ? BigDecimal.ZERO : reqDto.amount)
+                        : (requirement.amount == null ? BigDecimal.ZERO : requirement.amount);
                     BigDecimal maxAmountFromCurrentPayment = targetRequirementAmount
                         .subtract(requirement.paidAmount.subtract(existingAmountForThisRequirement))
                         .max(BigDecimal.ZERO)
@@ -1071,17 +1080,15 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                         continue;
                     }
 
-                    BigDecimal relatedAmountBeforeRedistribution = requirementRelatedPayments.stream()
-                        .map(rp -> {
-                            RelatedPaymentsJournalDto snapshot = relatedSnapshotById.get(rp.id);
-                            if (snapshot != null && snapshot.amount != null) {
-                                return snapshot.amount;
-                            }
-                            return rp.amount == null ? BigDecimal.ZERO : rp.amount;
-                        })
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal targetAmount = pair.a.amount == null ? BigDecimal.ZERO : pair.a.amount;
+                    BigDecimal targetPaidAmount = pair.a.payedAmount == null ? BigDecimal.ZERO : pair.a.payedAmount;
+                    if (targetAmount.signum() == 0) {
+                        targetPaidAmount = BigDecimal.ZERO;
+                    } else if (targetPaidAmount.compareTo(targetAmount) > 0) {
+                        targetPaidAmount = targetAmount;
+                    }
 
-                    BigDecimal diff = relatedAmountBeforeRedistribution.subtract(requirement.paidAmount);
+                    BigDecimal diff = requirement.paidAmount.subtract(targetPaidAmount);
                     log.infof("processRefundingPayment: requirement = %s, diff=%s", requirement, diff);
                     if (diff.signum() <= 0) {
                         continue;
@@ -1153,8 +1160,14 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
             RequirementStateInfoDto reqDto = pair.a;
             Requirement requirement = pair.b;
             applyRequirementAttributesFromDto(reqDto, requirement);
-            requirement.paidAmount = reqDto.payedAmount == null ? BigDecimal.ZERO : reqDto.payedAmount;
-            requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+            if (requirement.amount == null || requirement.amount.signum() == 0) {
+                requirement.paidAmount = BigDecimal.ZERO;
+                requirement.unpaidAmount = BigDecimal.ZERO;
+            } else {
+                BigDecimal paidAmount = requirement.paidAmount == null ? BigDecimal.ZERO : requirement.paidAmount;
+                requirement.paidAmount = paidAmount.min(requirement.amount);
+                requirement.unpaidAmount = requirement.amount.subtract(requirement.paidAmount);
+            }
             processRequirementUpdateWithoutBbpUpdate(requirement, false, true);
             syncRequirementState(reqDto, requirement, result);
         }
