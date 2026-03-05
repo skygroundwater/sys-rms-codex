@@ -91,11 +91,10 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
 
             log.infof("adjustByPastDate: increasing requirements=%s", increasingRequirements);
 
-            // После перераспределения обрабатываем исходящие платежи, если они переданы.
-            if (properties.outgoingPayments != null && !properties.outgoingPayments.isEmpty()) {
-                log.infof("adjustByPastDate: processing outgoing payments=%s", properties.outgoingPayments);
-                paymentService.processRefundingPayment(properties.outgoingPayments, requirementsWithEntities, journal, result);
-            }
+            // После перераспределения выполняем этап возвратов (если есть исходящие платежи)
+            // и затем финально приводим требования к целевому входному состоянию.
+            log.infof("adjustByPastDate: processing outgoing payments=%s", properties.outgoingPayments);
+            paymentService.processRefundingPayment(properties.outgoingPayments, requirementsWithEntities, journal, result);
 
             // Обрабатываем входящие платежи
             if (properties.incomingPayments != null && !properties.incomingPayments.isEmpty() ) {
@@ -135,6 +134,10 @@ public class AdjustByPastDateHandler extends AbstractStepRunnerHandler<AdjustByP
                     });
                 }
             }
+
+            // Финальное приведение требований к состоянию из входного DTO выполняем
+            // только после перераспределений, возвратов и возможной регистрации incoming-платежей.
+            paymentService.finalizeRequirementsByDto(requirementsWithEntities, result);
 
             requirementsWithEntities.forEach(pair -> {
                 RequirementStateInfoDto sourceReq = pair.a;
