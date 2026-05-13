@@ -1,6 +1,6 @@
 package com.colvir.ms.sys.rms.dto;
 
-import com.colvir.ms.sys.rms.manual.domain.ClientAccountSelectionType;
+import com.colvir.ms.sys.rms.manual.constant.ClientAccountSelectionType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;

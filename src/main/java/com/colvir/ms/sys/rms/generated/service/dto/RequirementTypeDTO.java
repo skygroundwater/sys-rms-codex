@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,51 +32,51 @@ public class RequirementTypeDTO implements Serializable {
      */
     @NotNull
     @Size(min = 1, max = 30)
-    @SchemaProperty(name = "code", description = "обозначение")
+    @Schema(name = "code", description = "обозначение")
     public String code;
 
     /**
      * описание
      */
-    @SchemaProperty(name = "description", description = "описание", nullable = true)
+    @Schema(name = "description", description = "описание", nullable = true)
     public String description;
 
     /**
      * дата редактирования
      */
-    @SchemaProperty(name = "editDate", description = "дата редактирования", nullable = true)
+    @Schema(name = "editDate", description = "дата редактирования", nullable = true)
     public Instant editDate;
 
     /**
      * редактор
      */
-    @SchemaProperty(name = "editorId", description = "редактор", nullable = true)
+    @Schema(name = "editorId", description = "редактор", nullable = true)
     public Long editorId;
 
     /**
      * исполнитель
      */
-    @SchemaProperty(name = "executorId", description = "исполнитель", nullable = true)
+    @Schema(name = "executorId", description = "исполнитель", nullable = true)
     public Long executorId;
 
     /**
      * требование банка
      */
     @NotNull
-    @SchemaProperty(name = "isBankIssued", description = "требование банка")
+    @Schema(name = "isBankIssued", description = "требование банка")
     public Boolean isBankIssued;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * разрешена оплата по частям
      */
     @NotNull
-    @SchemaProperty(name = "isPartialPayable", description = "разрешена оплата по частям")
+    @Schema(name = "isPartialPayable", description = "разрешена оплата по частям")
     public Boolean isPartialPayable;
 
     /**
@@ -85,26 +84,26 @@ public class RequirementTypeDTO implements Serializable {
      */
     @NotNull
     @Size(min = 0, max = 255)
-    @SchemaProperty(name = "name", description = "наименование")
+    @Schema(name = "name", description = "наименование")
     public String name;
 
     /**
      * приоритет
      */
-    @SchemaProperty(name = "priority", description = "приоритет", nullable = true)
+    @Schema(name = "priority", description = "приоритет", nullable = true)
     public Integer priority;
 
     /**
      * разрешено использование заемных средств
      */
     @NotNull
-    @SchemaProperty(name = "useLoanFunds", description = "разрешено использование заемных средств")
+    @Schema(name = "useLoanFunds", description = "разрешено использование заемных средств")
     public Boolean useLoanFunds;
 
     /**
      * номер версии
      */
-    @SchemaProperty(name = "version", description = "номер версии", nullable = true)
+    @Schema(name = "version", description = "номер версии", nullable = true)
     public Integer version;
 
 

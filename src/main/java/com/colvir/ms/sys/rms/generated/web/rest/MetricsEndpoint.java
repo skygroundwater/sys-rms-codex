@@ -5,17 +5,24 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.distribution.ValueAtPercentile;
 import io.micrometer.core.instrument.search.Search;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+
 @Path("/management")
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+
 public class MetricsEndpoint {
 
     /** Constant <code>MISSING_NAME_TAG_MESSAGE="Missing name tag for metric {}"</code> */
@@ -43,6 +50,15 @@ public class MetricsEndpoint {
      */
     @GET
     @Path("/metrics")
+    @Operation(
+        summary = "Get application metrics",
+        description = "Returns a collection of metrics including JVM, HTTP, service, garbage collector, and process metrics."
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Successfully retrieved all metrics",
+        content = @Content(mediaType = MediaType.APPLICATION_JSON)
+    )
     public Map<String, Map> allMetrics() {
         Map<String, Map> results = new HashMap<>();
         // JVM stats
@@ -61,6 +77,15 @@ public class MetricsEndpoint {
 
     @GET
     @Path("/threaddump")
+    @Operation(
+        summary = "Get thread dump",
+        description = "Returns a thread dump of the JVM including thread states and stack traces."
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Successfully retrieved thread dump",
+        content = @Content(mediaType = MediaType.APPLICATION_JSON)
+    )
     public Map<String, List<ThreadInfo>> getThreadDump() {
         var threads = Arrays.asList(ManagementFactory.getThreadMXBean().dumpAllThreads(true, true));
         return Map.of("threads", threads);

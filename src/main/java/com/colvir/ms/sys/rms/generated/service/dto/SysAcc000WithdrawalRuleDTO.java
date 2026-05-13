@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,39 +31,39 @@ public class SysAcc000WithdrawalRuleDTO implements Serializable {
      * способ выбора счетов / карт клиента
      */
     @NotNull
-    @SchemaProperty(name = "accountSelectionType", description = "способ выбора счетов / карт клиента")
+    @Schema(name = "accountSelectionType", description = "способ выбора счетов / карт клиента")
     public com.colvir.ms.sys.acc.generated.domain.enumeration.ClientAccountSelectionType accountSelectionType;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * очередность
      */
     @NotNull
-    @SchemaProperty(name = "priority", description = "очередность")
+    @Schema(name = "priority", description = "очередность")
     public Integer priority;
 
     /**
      * шаблон назначения платежа
      */
-    @SchemaProperty(name = "purposeTemplateId", description = "шаблон назначения платежа", nullable = true)
+    @Schema(name = "purposeTemplateId", description = "шаблон назначения платежа", nullable = true)
     public Long purposeTemplateId;
 
     /**
      * правило поиска счетов / карт
      */
-    @SchemaProperty(name = "searchRule", description = "правило поиска счетов / карт", nullable = true)
+    @Schema(name = "searchRule", description = "правило поиска счетов / карт", nullable = true)
     @Lob
     public String searchRule;
 
     /**
      * вариант списания денег
      */
-    @SchemaProperty(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
+    @Schema(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
     public Long withdrawalTypeId;
 
     public Long requirementOfWithdrawalRulesId;

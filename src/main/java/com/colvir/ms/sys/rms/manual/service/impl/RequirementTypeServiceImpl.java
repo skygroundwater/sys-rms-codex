@@ -7,7 +7,7 @@ import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
 import com.colvir.ms.sys.rms.generated.service.mapper.RequirementTypeMapper;
 import com.colvir.ms.sys.rms.manual.dao.RequirementTypeDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
-import com.colvir.ms.sys.rms.manual.util.AlgorithmHelpers;
+import com.colvir.ms.sys.rms.manual.util.AlgorithmHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.cache.CacheResult;
@@ -19,18 +19,18 @@ import org.jboss.logging.Logger;
 public class RequirementTypeServiceImpl implements RequirementTypeService {
     private final Logger log;
     private final ObjectMapper objectMapper;
-    private final AlgorithmHelpers algorithmHelpers;
+    private final AlgorithmHelper algorithmHelper;
     private final RequirementTypeMapper requirementTypeMapper;
     private final RequirementTypeDao requirementTypeDao;
 
 
     public RequirementTypeServiceImpl(Logger log, ObjectMapper objectMapper,
-                                      AlgorithmHelpers algorithmHelpers,
+                                      AlgorithmHelper algorithmHelper,
                                       RequirementTypeMapper requirementTypeMapper,
                                       RequirementTypeDao requirementTypeDao) {
         this.log = log;
         this.objectMapper = objectMapper;
-        this.algorithmHelpers = algorithmHelpers;
+        this.algorithmHelper = algorithmHelper;
         this.requirementTypeMapper = requirementTypeMapper;
         this.requirementTypeDao = requirementTypeDao;
     }
@@ -63,7 +63,7 @@ public class RequirementTypeServiceImpl implements RequirementTypeService {
                 .put("__objectType", indicatorDesc.__objectType));
         Long requirementTypeId;
         try {
-            requirementTypeId = algorithmHelpers.evaluateAlgorithmAsId(requirementTypeMap.requirementTypeRule, algContext);
+            requirementTypeId = algorithmHelper.evaluateAlgorithmAsId(requirementTypeMap.requirementTypeRule, algContext);
         }catch (Exception e) {
             log.error("Failed to evaluate algorithm: algorithm = %s, context = %s"
                 .formatted(requirementTypeMap.requirementTypeRule, algContext.toPrettyString()), e);

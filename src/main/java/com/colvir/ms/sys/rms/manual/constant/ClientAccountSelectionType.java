@@ -1,4 +1,4 @@
-package com.colvir.ms.sys.rms.manual.domain;
+package com.colvir.ms.sys.rms.manual.constant;
 
 /** Способ выбора счетов / карт клиента */
 public enum ClientAccountSelectionType {

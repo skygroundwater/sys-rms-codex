@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,63 +30,63 @@ public class RefundingPaymentDTO implements Serializable {
     /**
      * сумма
      */
-    @SchemaProperty(name = "amount", description = "сумма", nullable = true)
+    @Schema(name = "amount", description = "сумма", nullable = true)
     public BigDecimal amount;
 
     /**
      * дата и время создания
      */
-    @SchemaProperty(name = "creationTime", description = "дата и время создания", nullable = true)
+    @Schema(name = "creationTime", description = "дата и время создания", nullable = true)
     public Instant creationTime;
 
     /**
      * валюта
      */
-    @SchemaProperty(name = "currencyId", description = "валюта", nullable = true)
+    @Schema(name = "currencyId", description = "валюта", nullable = true)
     public Long currencyId;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * вид связи с платежом
      */
     @NotNull
-    @SchemaProperty(name = "paymentLinkType", description = "вид связи с платежом")
+    @Schema(name = "paymentLinkType", description = "вид связи с платежом")
     public PaymentLinkType paymentLinkType;
 
     /**
      * результат оплаты
      */
     @NotNull
-    @SchemaProperty(name = "paymentResult", description = "результат оплаты")
+    @Schema(name = "paymentResult", description = "результат оплаты")
     public PaymentResult paymentResult;
 
     /**
      * вариант выплаты
      */
-    @SchemaProperty(name = "provisionMethodId", description = "вариант выплаты", nullable = true)
+    @Schema(name = "provisionMethodId", description = "вариант выплаты", nullable = true)
     public Long provisionMethodId;
 
     /**
      * референс платежа
      */
-    @SchemaProperty(name = "reference", description = "референс платежа", nullable = true)
+    @Schema(name = "reference", description = "референс платежа", nullable = true)
     public String reference;
 
     /**
      * дата и время возврата
      */
-    @SchemaProperty(name = "refundTime", description = "дата и время возврата", nullable = true)
+    @Schema(name = "refundTime", description = "дата и время возврата", nullable = true)
     public Instant refundTime;
 
     /**
      * дата валютирования
      */
-    @SchemaProperty(name = "valueDate", description = "дата валютирования", nullable = true)
+    @Schema(name = "valueDate", description = "дата валютирования", nullable = true)
     public LocalDate valueDate;
 
     public Long paymentOfRefundPaymentsId;

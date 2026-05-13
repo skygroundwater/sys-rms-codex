@@ -1,4 +1,4 @@
-package com.colvir.ms.sys.rms.manual.util;
+package com.colvir.ms.sys.rms.manual.constant;
 
 public class RmsConstants {
 

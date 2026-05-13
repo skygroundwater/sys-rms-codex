@@ -8,6 +8,8 @@ import java.util.Set;
 
 public interface RelatedPaymentDao {
 
+    RelatedPayment findById(Long id);
+
     List<RelatedPayment> findNonDeletedByPaymentId(Long paymentId);
 
     List<RelatedPayment> findRefundableByPaymentId(Long paymentId);

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,19 +30,19 @@ public class RelatedPaymentDTO implements Serializable {
     /**
      * сумма исполнения
      */
-    @SchemaProperty(name = "amount", description = "сумма исполнения", nullable = true)
+    @Schema(name = "amount", description = "сумма исполнения", nullable = true)
     public BigDecimal amount;
 
     /**
      * сумма платежа
      */
-    @SchemaProperty(name = "amountOfPayment", description = "сумма платежа", nullable = true)
+    @Schema(name = "amountOfPayment", description = "сумма платежа", nullable = true)
     public BigDecimal amountOfPayment;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     public Long requirementOfRelatedPaymentsId;

@@ -13,6 +13,11 @@ import java.util.Set;
 public class RelatedPaymentDaoImpl implements RelatedPaymentDao {
 
     @Override
+    public RelatedPayment findById(Long id) {
+        return RelatedPayment.findById(id);
+    }
+
+    @Override
     public List<RelatedPayment> findNonDeletedByPaymentId(Long paymentId) {
         return RelatedPayment.list("select r from RelatedPayment r where " +
                 " r.payment.id = :paymentId " +

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,7 +30,7 @@ public class SysAcc000WithdrawalRuleLsAccountNumbersDTO implements Serializable 
      * значение
      */
     @NotNull
-    @SchemaProperty(name = "value", description = "значение")
+    @Schema(name = "value", description = "значение")
     public String value;
 
     public Long ownerId;

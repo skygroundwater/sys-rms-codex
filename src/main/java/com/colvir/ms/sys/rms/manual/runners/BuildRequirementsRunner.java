@@ -9,7 +9,7 @@ import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsJournalDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsResultDto;
 import com.colvir.ms.sys.rms.manual.handler.BuildRequirementsHandler;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

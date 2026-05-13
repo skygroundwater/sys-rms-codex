@@ -37,7 +37,7 @@ public class IndicatorRequirementTypeMapRule extends AlgorithmSpecResult {
         params.add(objectMapper.createObjectNode()
             .put("code", "indicator")
             .put("label", "Шаблонная расчетная категория")
-            .put("dataType", "/SYS/CMPT/IndicatorDescr"));
+            .put("dataType", "/SYS/PROD/IndicatorDescr"));
         return Uni.createFrom().item(result);
     }
 

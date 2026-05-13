@@ -2,7 +2,6 @@ package com.colvir.ms.sys.rms.manual.service;
 
 import com.colvir.ms.sys.rms.dto.BbpStateResult;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
-import com.colvir.ms.sys.rms.dto.CreateRequirementDto;
 import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.dto.RequirementAmountResponse;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
@@ -16,14 +15,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface RequirementService {
 
-    List<RequirementStateInfoDto> createRequirements(BuildRequirementsDto request);
-
-    List<RequirementStateInfoDto> createRequirements(List<CreateRequirementDto> createRequirements);
-
-    RequirementStateInfoDto createRequirement(CreateRequirementDto createRequirementDto);
+    List<RequirementStateInfoDto> createRequirements(BuildRequirementsDto request, List<String> initialBbpStates);
 
     void checkBuildRequirements(BuildRequirementsDto request);
 
@@ -44,6 +40,8 @@ public interface RequirementService {
     void updateRequirementBbpStates(List<RequirementJournalDto> values, Map<String, BbpStateResult> processIdStateMap);
 
     Requirement getRequirementById(Long id);
+
+    List<Requirement> getRequirementsByIds(Set<Long> ids);
 
     // получение оплаченной суммы
     // предполагается что все требования в валюте договора

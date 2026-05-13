@@ -2,9 +2,9 @@ package com.colvir.ms.sys.rms.manual.service.impl;
 
 import com.colvir.ms.common.Constants;
 import com.colvir.ms.sys.rms.dto.AmountForIndicatorDto;
+import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
 import com.colvir.ms.sys.rms.dto.BbpStateResult;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
-import com.colvir.ms.sys.rms.dto.CreateRequirementDto;
 import com.colvir.ms.sys.rms.dto.ReferenceDto;
 import com.colvir.ms.sys.rms.dto.RefundOfRequirementsDto;
 import com.colvir.ms.sys.rms.dto.RefundResponse;
@@ -20,21 +20,21 @@ import com.colvir.ms.sys.rms.generated.domain.RefundingPayment;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
-import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
+import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
@@ -46,19 +46,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.SYS_RMS_NAMESPACE;
 
 @ApplicationScoped
 public class RequirementServiceImpl implements RequirementService {
-
-    @ConfigProperty(name = "requirements-machine-id", defaultValue = "")
-    String machineId;
-
-    @Inject
-    BaseProcessService baseProcessService;
 
     @Inject
     RequirementPaymentService paymentService;
@@ -81,81 +73,92 @@ public class RequirementServiceImpl implements RequirementService {
     public static final DateTimeFormatter LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern(Constants.LOCAL_DATE_FORMAT);
 
     @Override
-    public List<RequirementStateInfoDto> createRequirements(BuildRequirementsDto request) {
-        // метод является частью общего метода "Изменение требований по договору"
-        // TODO: установка холдов
+    @Transactional
+    public List<RequirementStateInfoDto> createRequirements(BuildRequirementsDto request, List<String> initialBbpStates) {
 
-        if (request.getPaymentData() == null || request.getPaymentData().isEmpty()) {
-            // возвращаем без изменений, но исключаем null
+        if (request == null || request.getPaymentData() == null || request.getPaymentData().isEmpty()) {
             return List.of();
         }
-        checkBuildRequirements(request);
-        List<RequirementStateInfoDto> result = new ArrayList<>();
-        for (RequirementStateInfoDto paymentData : request.getPaymentData()) {
-            CreateRequirementDto createRequirementDto = new CreateRequirementDto()
-                .setPaymentData(paymentData)
-                .setClient(request.getClient())
-                .setContract(request.getContract())
-                .setCurrency(request.getCurrency())
-                .setBusinessDate(request.getBusinessDate());
-            RequirementStateInfoDto requirementInfo = this.createRequirement(createRequirementDto);
-            result.add(requirementInfo);
+
+        List<RequirementStateInfoDto> paymentData = request.getPaymentData();
+
+        if (initialBbpStates == null || initialBbpStates.size() != paymentData.size()) {
+            throw new RuntimeException(String.format(
+                "Created bbp states list size is not equal payment data size initialBbpStates = %s, paymentData = %s",
+                initialBbpStates == null ? null : initialBbpStates.size(),
+                paymentData.size()
+            ));
         }
+        List<RequirementStateInfoDto> result = new ArrayList<>(paymentData.size());
+
+        for (int i = 0; i < paymentData.size(); i++) {
+            RequirementStateInfoDto payment = paymentData.get(i);
+            Requirement requirement = buildRequirement(payment, initialBbpStates.get(i), request);
+            Requirement.persist(requirement);
+            result.add(RequirementMapperUtils.mapRequirementStateInfoDto(payment, requirement.id, RequirementAction.SAVE, RequirementStatus.WAIT));
+        }
+
         return result;
     }
 
-    @Override
-    public List<RequirementStateInfoDto> createRequirements(List<CreateRequirementDto> metaRequirements) {
-        if (Objects.isNull(metaRequirements) || metaRequirements.isEmpty()) {
-            // возвращаем без изменений, но исключаем null
-            return List.of();
-        }
-        List<Long> ids = requirementRouterService.createRequirements(metaRequirements);
-        if (ids.size() != metaRequirements.size()) {
-            throw new RuntimeException(String.format("Ids list size is not equal createRequirements size ids = %s, createRequirements = %s", ids.size(), metaRequirements.size()));
-        }
-        return IntStream.range(0, ids.size())
-            .mapToObj(
-                i -> RequirementMapperUtils.mapRequirementStateInfoDto(
-                    metaRequirements.get(i).getPaymentData(), ids.get(i), RequirementAction.SAVE, RequirementStatus.WAIT)
-            ).toList();
+    private Requirement buildRequirement(RequirementStateInfoDto paymentData, String initialBbpState, BuildRequirementsDto request) {
+        Requirement requirement = new Requirement();
+
+        requirement.id = paymentData.requirementId;
+        requirement.state = RequirementStatus.WAIT;
+        requirement.amount = paymentData.amount;
+        requirement.unpaidAmount = paymentData.amount;
+        requirement.paidAmount = BigDecimal.ZERO;
+        requirement.writeOffAmount = BigDecimal.ZERO;
+        requirement.currencyId = request.getCurrency().id;
+        requirement.clientId = request.getClient().id;
+        requirement.indicatorId = paymentData.indicator.id;
+        requirement.date = request.getBusinessDate();
+        requirement.startPaymentDate = request.getBusinessDate();
+        requirement.paymentEndDate = request.getBusinessDate();
+        requirement.isContractBound = true;
+        requirement.baseDocument = request.getContract().toString();
+        requirement.priority = calculatePriority(paymentData);
+        fillBbpState(requirement, initialBbpState);
+
+        return requirement;
     }
 
-    @Override
-    public RequirementStateInfoDto createRequirement(CreateRequirementDto createRequirementDto) {
+    private void fillBbpState(Requirement requirement, String initialBbpState) {
+        try {
+            BaseProcessResultDto bbpState = ContextObjectMapper.get()
+                .readValue(initialBbpState, BaseProcessResultDto.class);
 
-        log.infof("------------- createRequirementDto = %s ", createRequirementDto);
-        // старт процесса ББП (удалить вместе с createRequirements)
-        if (StringUtils.isEmpty(createRequirementDto.getInitialBbpState())) {
-            String initialState = baseProcessService.startProcess(machineId, null);
-            createRequirementDto.setInitialBbpState(initialState);
+            if (bbpState.stateCode == null || bbpState.stateCode.isBlank()) {
+                JsonNode root = ContextObjectMapper.get().readTree(initialBbpState);
+                requirement.bbpState000StateCode = root.path("state").asText("wait_pay");
+            } else {
+                requirement.bbpState000StateCode = bbpState.stateCode;
+            }
+
+            requirement.bbpState000ProcessId = bbpState.processId;
+            requirement.bbpState000JournalId = String.valueOf(bbpState.journalId);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(
+                String.format("Не удалось прочесть состояние бизнес процесса. bbState=%s", initialBbpState),
+                e
+            );
         }
-        Long id = requirementRouterService.createRequirement(createRequirementDto);
-        return RequirementMapperUtils.mapRequirementStateInfoDto(createRequirementDto.getPaymentData(), id, RequirementAction.SAVE, RequirementStatus.WAIT);
+    }
+
+    private BigDecimal calculatePriority(RequirementStateInfoDto paymentData) {
+        // ВАЖНО: здесь нужен тот же source, из которого раньше брался RequirementTypeDTO.
+        // Если requirementType уже есть в paymentData — лучше брать оттуда.
+        BigDecimal integerPriority = BigDecimal.ZERO;
+
+        BigDecimal decimalPriority = new BigDecimal(paymentData.priority)
+            .divide(new BigDecimal("100"), 2, RoundingMode.UP);
+
+        return integerPriority.add(decimalPriority);
     }
 
     @Override
     public void checkBuildRequirements(BuildRequirementsDto request) {
-        // проверяем корректность атрибутов записи:
-        //    "состояние требования" должно быть = не сформировано;
-        //    "сумма к оплате" должна быть > 0;
-        //    "оплаченная сумма" должна быть = 0
-        List<RequirementStateInfoDto> incorrectPaymentData = request.getPaymentData().stream()
-            .peek(r -> {
-                // защита от пустых сумм, чтобы не падала проверка дальше
-                r.payedAmount = Objects.requireNonNullElse(r.payedAmount, BigDecimal.ZERO);
-                r.amount = Objects.requireNonNullElse(r.amount, BigDecimal.ZERO);
-            })
-            .filter(r -> !RequirementAction.CREATE.equals(r.action) ||
-                !RequirementStatus.NONEXISTENT.equals(r.status) ||
-                r.amount.compareTo(BigDecimal.ZERO) <= 0 ||
-                r.payedAmount.compareTo(BigDecimal.ZERO) != 0
-            )
-            .toList();
-
-        if (!incorrectPaymentData.isEmpty()) {
-            throw new RuntimeException(String.format("Incorrect PaymentData: %s", incorrectPaymentData));
-        }
         if (request.getContract() == null || request.getContract().id == null) {
             throw new RuntimeException("Contract is null or does not contain id");
         }
@@ -166,18 +169,29 @@ public class RequirementServiceImpl implements RequirementService {
             throw new RuntimeException("Client is null or does not contain id");
         }
 
+        List<Long> newRequirementIds = new ArrayList<>();
 
-        // если требования создают с готовыми идентификаторами, они не должны совпадать с существующими
-        // в противном случае роутер их обновит
-        List<Long> newRequirementIds = request.getPaymentData().stream()
-            .map(r -> r.requirementId)
-            .filter(Objects::nonNull)
-            .toList();
-        if (!newRequirementIds.isEmpty()) {
-            long countExisting = requirementDao.countByIds(newRequirementIds);
-            if (countExisting > 0) {
-                throw new RuntimeException("Some of new requirements already exist");
+        for (RequirementStateInfoDto r : request.getPaymentData()) {
+            BigDecimal amount = Objects.requireNonNullElse(r.amount, BigDecimal.ZERO);
+            BigDecimal payedAmount = Objects.requireNonNullElse(r.payedAmount, BigDecimal.ZERO);
+
+            boolean incorrect =
+                !RequirementAction.CREATE.equals(r.action) ||
+                    !RequirementStatus.NONEXISTENT.equals(r.status) ||
+                    amount.signum() <= 0 ||
+                    payedAmount.signum() != 0;
+
+            if (incorrect) {
+                throw new RuntimeException("Incorrect PaymentData: " + r);
             }
+
+            if (r.requirementId != null) {
+                newRequirementIds.add(r.requirementId);
+            }
+        }
+
+        if (!newRequirementIds.isEmpty() && requirementDao.countByIds(newRequirementIds) > 0) {
+            throw new RuntimeException("Some of new requirements already exist");
         }
     }
 
@@ -362,6 +376,14 @@ public class RequirementServiceImpl implements RequirementService {
             throw new RuntimeException("Requirement id is null");
         }
         return requirementDao.findByIdOrThrow(id);
+    }
+
+    @Override
+    public List<Requirement> getRequirementsByIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return requirementDao.findActiveByIds(ids);
     }
 
     private List<Requirement> getRequirements(ReferenceDto requirement, ReferenceDto contract, ReferenceDto client) {

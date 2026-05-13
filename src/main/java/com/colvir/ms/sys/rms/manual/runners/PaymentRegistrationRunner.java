@@ -8,7 +8,7 @@ import com.colvir.ms.sys.rms.dto.PaymentRegistrationResultDto;
 import com.colvir.ms.sys.rms.dto.PaymentRegistrationDto;
 import com.colvir.ms.sys.rms.dto.PaymentRegistrationJournalDto;
 import com.colvir.ms.sys.rms.manual.handler.PaymentRegistrationHandler;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

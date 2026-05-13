@@ -12,7 +12,7 @@ import com.colvir.ms.sys.rms.generated.domain.RequirementsGroup;
 import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.dao.RequirementGroupDao;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.enterprise.context.ApplicationScoped;

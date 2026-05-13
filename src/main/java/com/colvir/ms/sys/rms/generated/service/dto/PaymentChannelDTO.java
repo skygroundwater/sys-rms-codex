@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,75 +30,75 @@ public class PaymentChannelDTO implements Serializable {
     /**
      * используется
      */
-    @SchemaProperty(name = "active", description = "используется", nullable = true)
+    @Schema(name = "active", description = "используется", nullable = true)
     public Boolean active;
 
     /**
      * обозначение
      */
     @NotNull
-    @SchemaProperty(name = "code", description = "обозначение")
+    @Schema(name = "code", description = "обозначение")
     public String code;
 
     /**
      * дата редактирования
      */
-    @SchemaProperty(name = "editDate", description = "дата редактирования", nullable = true)
+    @Schema(name = "editDate", description = "дата редактирования", nullable = true)
     public Instant editDate;
 
     /**
      * редактор
      */
-    @SchemaProperty(name = "editorId", description = "редактор", nullable = true)
+    @Schema(name = "editorId", description = "редактор", nullable = true)
     public Long editorId;
 
     /**
      * исполнитель
      */
-    @SchemaProperty(name = "executorId", description = "исполнитель", nullable = true)
+    @Schema(name = "executorId", description = "исполнитель", nullable = true)
     public Long executorId;
 
     /**
      * возможна автоматическая оплата
      */
-    @SchemaProperty(name = "isAutoPayment", description = "возможна автоматическая оплата", nullable = true)
+    @Schema(name = "isAutoPayment", description = "возможна автоматическая оплата", nullable = true)
     public Boolean isAutoPayment;
 
     /**
      * возможно создание платежа
      */
-    @SchemaProperty(name = "isCreatePayment", description = "возможно создание платежа", nullable = true)
+    @Schema(name = "isCreatePayment", description = "возможно создание платежа", nullable = true)
     public Boolean isCreatePayment;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * возможна установка холдов
      */
-    @SchemaProperty(name = "isInitHolds", description = "возможна установка холдов", nullable = true)
+    @Schema(name = "isInitHolds", description = "возможна установка холдов", nullable = true)
     public Boolean isInitHolds;
 
     /**
      * наименование
      */
     @NotNull
-    @SchemaProperty(name = "name", description = "наименование")
+    @Schema(name = "name", description = "наименование")
     public String name;
 
     /**
      * класс платежей
      */
-    @SchemaProperty(name = "paymentClass", description = "класс платежей", nullable = true)
+    @Schema(name = "paymentClass", description = "класс платежей", nullable = true)
     public String paymentClass;
 
     /**
      * номер версии
      */
-    @SchemaProperty(name = "version", description = "номер версии", nullable = true)
+    @Schema(name = "version", description = "номер версии", nullable = true)
     public Integer version;
 
 

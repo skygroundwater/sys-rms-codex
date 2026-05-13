@@ -7,7 +7,7 @@ import com.colvir.ms.sys.rms.generated.domain.RelatedPayment;
 import com.colvir.ms.sys.rms.manual.dao.RelatedPaymentDao;
 import com.colvir.ms.sys.rms.manual.service.PaymentOwMassReportService;
 import com.colvir.ms.sys.rms.manual.service.RouterService;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.enterprise.context.ApplicationScoped;

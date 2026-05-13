@@ -8,7 +8,7 @@ import com.colvir.ms.sys.rms.dto.UpdateSingleRequirementDto;
 import com.colvir.ms.sys.rms.dto.UpdateSingleRequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.UpdateSingleRequirementResultDto;
 import com.colvir.ms.sys.rms.manual.handler.UpdateSingleRequirementHandler;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

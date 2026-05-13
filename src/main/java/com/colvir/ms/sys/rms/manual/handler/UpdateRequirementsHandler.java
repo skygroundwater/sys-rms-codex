@@ -11,7 +11,7 @@ import com.colvir.ms.sys.rms.dto.UpdateRequirementsResultDto;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;

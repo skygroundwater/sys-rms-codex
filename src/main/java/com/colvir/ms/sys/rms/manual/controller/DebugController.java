@@ -1,7 +1,8 @@
 package com.colvir.ms.sys.rms.manual.controller;
 
-import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
+import com.colvir.ms.sys.rms.dto.AdjustByPastDateResultDto;
 import com.colvir.ms.sys.rms.dto.CheckQueueDto;
+import com.colvir.ms.sys.rms.dto.DebugRedistributeRequestDto;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassRequestDto;
 import com.colvir.ms.sys.rms.dto.PaymentOwMassResultDto;
 import com.colvir.ms.sys.rms.dto.RefundJournalDto;
@@ -11,7 +12,6 @@ import com.colvir.ms.sys.rms.dto.RefundResponse;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentDto;
 import com.colvir.ms.sys.rms.dto.RegistrationOfPaymentResponse;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
-import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.ReviewRequirementResponse;
@@ -47,12 +47,6 @@ public class DebugController {
 
     @Inject
     PaymentOwMassReportService paymentOwMassReportService;
-
-    @POST
-    @Path("/create-requirements")
-    public List<RequirementStateInfoDto> debugCreateRequirements(BuildRequirementsDto request){
-        return requirementService.createRequirements(request);
-    }
 
     @POST
     @Path("/delete-requirements")
@@ -116,5 +110,17 @@ public class DebugController {
     @Path("payment-ow-mass")
     public List<PaymentOwMassResultDto> paymentOwMassDto(PaymentOwMassRequestDto request) {
         return paymentOwMassReportService.getPaymentOwMassData(request.date);
+    }
+
+    @POST
+    @Path("adjust-by-past-date")
+    public AdjustByPastDateResultDto adjustByPastDate(DebugRedistributeRequestDto request) {
+        AdjustByPastDateResultDto result = new AdjustByPastDateResultDto();
+        paymentService.redistributeExistingRequirementPayments(
+            request.requirements,
+            request.journal,
+            result
+        );
+        return result;
     }
 }

@@ -16,7 +16,7 @@ import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.colvir.ms.sys.rms.manual.util.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
+import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.UPDATE_BASE_BUSINESS_PROCESS_RESULT_PATH;
 
 @ApplicationScoped
 public class RefundOfRequirementsHandler extends AbstractStepRunnerHandler<RefundOfRequirementsRunnerDto, RefundJournalDto, RefundOfRequirementsResultDto> {

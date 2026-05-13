@@ -6,15 +6,12 @@ import com.colvir.ms.sys.rms.dto.AggregationResult;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsJournalDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsResultDto;
-import com.colvir.ms.sys.rms.dto.CreateRequirementDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
-import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -59,13 +56,11 @@ public class BuildRequirementsHandler extends AbstractStepRunnerHandler<BuildReq
 
         if (isFirstRun) {
             requirementService.checkBuildRequirements(properties);
-            ObjectNode context = request.getContextMapper().getContext();
             List<Substep> subSteps = new ArrayList<>();
             for (RequirementStateInfoDto reqStateInfo : properties.getPaymentData()) {
                 if (reqStateInfo != null && reqStateInfo.requirementId != null) {
                     String id = UUID.randomUUID().toString();
                     String stateField = RmsConstants.START_BASE_BUSINESS_PROCESS_STATE_FIELD_PREFIX + id;
-                    context.set(stateField, ContextObjectMapper.get().createObjectNode());
                     subSteps.add(stepCreatorService.createSysBbpStartSubStep(stateField));
                     journal.getProcessStateIds().add(stateField);
                 }
@@ -74,9 +69,10 @@ public class BuildRequirementsHandler extends AbstractStepRunnerHandler<BuildReq
         }
 
         List<String> initialBppStates = journal.getProcessStateIds().stream()
-            .map(stateField -> request.getContextMapper().getContext().at("/" + stateField + "/" + stateField))
-            .filter(jn -> jn != null && jn.isTextual())
-            .map(JsonNode::asText)
+            .map(stateField -> request.getContextMapper()
+                .getContext().at("/" + stateField))
+            .filter(node -> !node.isMissingNode() && !node.isNull() && node.isObject())
+            .map(JsonNode::toString)
             .toList();
         if (initialBppStates.size() != properties.getPaymentData().size()) {
             throw new RuntimeException(String.format(
@@ -84,20 +80,8 @@ public class BuildRequirementsHandler extends AbstractStepRunnerHandler<BuildReq
                 initialBppStates.size(), properties.getPaymentData().size()
             ));
         }
-        List<CreateRequirementDto> createRequirements = new ArrayList<>(properties.getPaymentData().size());
 
-        for (int i = 0; i < properties.getPaymentData().size(); i++) {
-            CreateRequirementDto createRequirementDto = new CreateRequirementDto()
-                .setBusinessDate(properties.getBusinessDate())
-                .setContract(properties.getContract())
-                .setPaymentData(properties.getPaymentData().get(i))
-                .setInitialBbpState(initialBppStates.get(i))
-                .setClient(properties.getClient())
-                .setCurrency(properties.getCurrency());
-            createRequirements.add(createRequirementDto);
-        }
-
-        List<RequirementStateInfoDto> requirements = requirementService.createRequirements(createRequirements);
+        List<RequirementStateInfoDto> requirements = requirementService.createRequirements(properties, initialBppStates);
         result.getRequirements().addAll(requirements);
         journal.getRequirementIdList().addAll(requirements.stream().map(req -> req.requirementId).toList());
 

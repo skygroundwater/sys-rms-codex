@@ -2,6 +2,8 @@ package com.colvir.ms.sys.rms.algorithm.std;
 
 import com.colvir.ms.common.alg.extension.api.RemoteFunction;
 import com.colvir.ms.common.alg.extension.api.StandardFunction;
+import com.colvir.ms.common.alg.extension.api.annotations.AlgFunction;
+import com.colvir.ms.common.alg.extension.api.annotations.AlgParam;
 import com.colvir.ms.common.alg.extension.api.dto.FunctionDTO;
 import com.colvir.ms.common.alg.extension.api.dto.enumeration.FunctionGroup;
 import com.colvir.ms.common.alg.extension.api.dto.enumeration.ParameterType;
@@ -36,6 +38,27 @@ public class PaymentOwMassReport extends StandardFunction {
             .setDescription(PAYMENT_OW_MASS_REPORT_DESCRIPTION)
             .addFunctionGroup(FunctionGroup.PRODUCTS)
             .addParameter(DATE, "The report date", ParameterType.STRING, false, null, DATATYPE_LOCAL_DATE);
+    }
+
+    /** Implementation for the new algorithm runtime (v2). */
+    @AlgFunction(
+            code = PAYMENT_OW_MASS_REPORT_CODE,
+            description = PAYMENT_OW_MASS_REPORT_DESCRIPTION,
+            functionGroup = {FunctionGroup.PRODUCTS},
+            isRemoteFunction = true
+    )
+    public Object paymentOwMassReport(
+            @AlgParam(descr = "The report date", dataType = DATATYPE_LOCAL_DATE) String date) {
+        LocalDate valueDate;
+        try {
+            valueDate = AlgorithmUtils.convertParameterAsLocalDate(date);
+        } catch (AlgorithmCalculationProcessException e) {
+            throw new RuntimeException(e);
+        }
+        if (valueDate == null) {
+            throw new IllegalArgumentException("Date for Payment Ow Mass is required.");
+        }
+        return paymentOwMassReportService.get().getPaymentOwMassData(valueDate);
     }
 
     @Override

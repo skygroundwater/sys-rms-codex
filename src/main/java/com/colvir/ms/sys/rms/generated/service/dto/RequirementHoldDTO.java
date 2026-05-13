@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,44 +30,44 @@ public class RequirementHoldDTO implements Serializable {
     /**
      * номер счета
      */
-    @SchemaProperty(name = "accountNumber", description = "номер счета", nullable = true)
+    @Schema(name = "accountNumber", description = "номер счета", nullable = true)
     public String accountNumber;
 
     /**
      * сумма
      */
     @NotNull
-    @SchemaProperty(name = "amount", description = "сумма")
+    @Schema(name = "amount", description = "сумма")
     public BigDecimal amount;
 
     /**
      * валюта
      */
-    @SchemaProperty(name = "currencyId", description = "валюта", nullable = true)
+    @Schema(name = "currencyId", description = "валюта", nullable = true)
     public Long currencyId;
 
     /**
      * холд по online счету
      */
-    @SchemaProperty(name = "holdId", description = "холд по online счету", nullable = true)
+    @Schema(name = "holdId", description = "холд по online счету", nullable = true)
     public Long holdId;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * рефернс холда во внешней системе
      */
-    @SchemaProperty(name = "reference", description = "рефернс холда во внешней системе", nullable = true)
+    @Schema(name = "reference", description = "рефернс холда во внешней системе", nullable = true)
     public String reference;
 
     /**
      * вариант списания денег
      */
-    @SchemaProperty(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
+    @Schema(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
     public Long withdrawalTypeId;
 
     public Long requirementOfAssignedHoldsId;

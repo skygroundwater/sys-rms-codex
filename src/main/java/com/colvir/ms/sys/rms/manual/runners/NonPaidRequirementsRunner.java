@@ -7,7 +7,7 @@ import com.colvir.ms.sys.rms.dto.JournalDto;
 import com.colvir.ms.sys.rms.dto.NonPaidRequirementsDto;
 import com.colvir.ms.sys.rms.dto.NonPaidRequirementsResultDto;
 import com.colvir.ms.sys.rms.manual.handler.NonPaidRequirementsHandler;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

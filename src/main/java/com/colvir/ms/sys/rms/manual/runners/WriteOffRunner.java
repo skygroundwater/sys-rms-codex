@@ -8,7 +8,7 @@ import com.colvir.ms.sys.rms.dto.WriteOffDto;
 import com.colvir.ms.sys.rms.dto.WriteOffJournalDto;
 import com.colvir.ms.sys.rms.dto.WriteOffResultDto;
 import com.colvir.ms.sys.rms.manual.handler.WriteOffHandler;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

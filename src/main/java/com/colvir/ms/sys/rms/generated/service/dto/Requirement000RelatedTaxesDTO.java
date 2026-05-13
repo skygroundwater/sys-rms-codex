@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,19 +30,19 @@ public class Requirement000RelatedTaxesDTO implements Serializable {
     /**
      * сумма
      */
-    @SchemaProperty(name = "amount", description = "сумма", nullable = true)
+    @Schema(name = "amount", description = "сумма", nullable = true)
     public BigDecimal amount;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * вид налога
      */
-    @SchemaProperty(name = "typeOfTaxId", description = "вид налога", nullable = true)
+    @Schema(name = "typeOfTaxId", description = "вид налога", nullable = true)
     public Long typeOfTaxId;
 
     public Long requirementOfRelatedTaxesId;

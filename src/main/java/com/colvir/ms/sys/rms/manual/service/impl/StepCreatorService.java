@@ -5,18 +5,19 @@ import com.colvir.ms.sys.opr.api.step.runner.method.response.SubstepParameter;
 import com.colvir.ms.sys.rms.dto.BbpObjectProperties;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.inject.Inject;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import jakarta.inject.Inject;
 import org.antlr.v4.runtime.misc.Pair;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,12 +52,11 @@ public class StepCreatorService {
     }
 
     public Substep createSysBbpStartSubStep(String stateField) {
-
-        Map<String, SubstepParameter> parameters = Map.of(
-            "machineId", SubstepParameter.value(requirementsMachineId),
-            "objectPath", SubstepParameter.value(stateField),
-            "stateField", SubstepParameter.value(stateField)
-        );
+        Map<String, SubstepParameter> parameters = new HashMap<>();
+        parameters.put("state", SubstepParameter.result(stateField));
+        parameters.put("machineId", SubstepParameter.value(requirementsMachineId));
+        parameters.put("stateField", SubstepParameter.value(stateField));
+        parameters.put("objectResult", SubstepParameter.value(true));
 
         return createSubStep(StepsNames.SYS_BP_BBP_START, parameters, SYS_BP_BBP_DP);
     }
@@ -64,6 +64,12 @@ public class StepCreatorService {
     private BbpObjectProperties buildObjectProperties(Pair<RequirementJournalDto, RequirementStateInfoDto> pair) {
         RequirementJournalDto journal = pair.a;
         RequirementStateInfoDto state = pair.b;
+
+        log.infof("links states of requirement prevReqState=%s and newReqState=%s", journal, state);
+
+        if (journal == null || state == null) {
+            return null;
+        }
 
         String event = baseProcessService.getBbpUpdateEvent(state, journal);
         if (event == null || event.isEmpty()) {

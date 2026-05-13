@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,44 +30,44 @@ public class IndicatorRequirementTypeMapDTO implements Serializable {
     /**
      * дата редактирования
      */
-    @SchemaProperty(name = "editDate", description = "дата редактирования", nullable = true)
+    @Schema(name = "editDate", description = "дата редактирования", nullable = true)
     public Instant editDate;
 
     /**
      * редактор
      */
-    @SchemaProperty(name = "editorId", description = "редактор", nullable = true)
+    @Schema(name = "editorId", description = "редактор", nullable = true)
     public Long editorId;
 
     /**
      * исполнитель
      */
-    @SchemaProperty(name = "executorId", description = "исполнитель", nullable = true)
+    @Schema(name = "executorId", description = "исполнитель", nullable = true)
     public Long executorId;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * локализация
      */
-    @SchemaProperty(name = "localeId", description = "локализация", nullable = true)
+    @Schema(name = "localeId", description = "локализация", nullable = true)
     public Long localeId;
 
     /**
      * правило определения вида требования
      */
-    @SchemaProperty(name = "requirementTypeRule", description = "правило определения вида требования", nullable = true)
+    @Schema(name = "requirementTypeRule", description = "правило определения вида требования", nullable = true)
     @Lob
     public String requirementTypeRule;
 
     /**
      * номер версии
      */
-    @SchemaProperty(name = "version", description = "номер версии", nullable = true)
+    @Schema(name = "version", description = "номер версии", nullable = true)
     public Integer version;
 
 

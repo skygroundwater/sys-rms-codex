@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,97 +30,97 @@ public class PaymentDTO implements Serializable {
     /**
      * сумма
      */
-    @SchemaProperty(name = "amount", description = "сумма", nullable = true)
+    @Schema(name = "amount", description = "сумма", nullable = true)
     public BigDecimal amount;
 
     /**
      * время отмены
      */
-    @SchemaProperty(name = "cancelTime", description = "время отмены", nullable = true)
+    @Schema(name = "cancelTime", description = "время отмены", nullable = true)
     public Instant cancelTime;
 
     /**
      * время создания
      */
-    @SchemaProperty(name = "createTime", description = "время создания", nullable = true)
+    @Schema(name = "createTime", description = "время создания", nullable = true)
     public Instant createTime;
 
     /**
      * валюта
      */
-    @SchemaProperty(name = "currencyId", description = "валюта", nullable = true)
+    @Schema(name = "currencyId", description = "валюта", nullable = true)
     public Long currencyId;
 
     /**
      * дата редактирования
      */
-    @SchemaProperty(name = "editDate", description = "дата редактирования", nullable = true)
+    @Schema(name = "editDate", description = "дата редактирования", nullable = true)
     public Instant editDate;
 
     /**
      * редактор
      */
-    @SchemaProperty(name = "editorId", description = "редактор", nullable = true)
+    @Schema(name = "editorId", description = "редактор", nullable = true)
     public Long editorId;
 
     /**
      * время исполнения
      */
-    @SchemaProperty(name = "execTime", description = "время исполнения", nullable = true)
+    @Schema(name = "execTime", description = "время исполнения", nullable = true)
     public Instant execTime;
 
     /**
      * исполнитель
      */
-    @SchemaProperty(name = "executorId", description = "исполнитель", nullable = true)
+    @Schema(name = "executorId", description = "исполнитель", nullable = true)
     public Long executorId;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * платеж
      */
-    @SchemaProperty(name = "payment", description = "платеж", nullable = true)
+    @Schema(name = "payment", description = "платеж", nullable = true)
     public String payment;
 
     /**
      * вид связи с платежом
      */
-    @SchemaProperty(name = "paymentLinkType", description = "вид связи с платежом", nullable = true)
+    @Schema(name = "paymentLinkType", description = "вид связи с платежом", nullable = true)
     public PaymentLinkType paymentLinkType;
 
     /**
      * результат оплаты
      */
-    @SchemaProperty(name = "paymentResult", description = "результат оплаты", nullable = true)
+    @Schema(name = "paymentResult", description = "результат оплаты", nullable = true)
     public PaymentResult paymentResult;
 
     /**
      * референс платежа
      */
-    @SchemaProperty(name = "reference", description = "референс платежа", nullable = true)
+    @Schema(name = "reference", description = "референс платежа", nullable = true)
     public String reference;
 
     /**
      * дата валютирования
      */
-    @SchemaProperty(name = "valDate", description = "дата валютирования", nullable = true)
+    @Schema(name = "valDate", description = "дата валютирования", nullable = true)
     public LocalDate valDate;
 
     /**
      * номер версии
      */
-    @SchemaProperty(name = "version", description = "номер версии", nullable = true)
+    @Schema(name = "version", description = "номер версии", nullable = true)
     public Integer version;
 
     /**
      * вариант списания денег
      */
-    @SchemaProperty(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
+    @Schema(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
     public Long withdrawalTypeId;
 
 

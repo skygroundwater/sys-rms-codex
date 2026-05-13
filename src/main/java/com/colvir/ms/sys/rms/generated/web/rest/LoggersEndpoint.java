@@ -13,12 +13,36 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+
+
 @Path("/management/loggers")
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped
 public class LoggersEndpoint {
 
+    /**
+     * Return a list of all loggers and their levels.
+     *
+     * @return a map of logger names to their corresponding levels
+     */
     @GET
+    @Operation(
+        summary = "Get all loggers",
+        description = "Returns a list of all loggers in the application with their current log levels."
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Successfully retrieved logger configurations",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = LoggersWrapper.class)
+        )
+    )
     public LoggersWrapper getLoggers() {
         Enumeration<String> loggerNames = LogManager.getLogManager().getLoggerNames();
 
@@ -37,8 +61,31 @@ public class LoggersEndpoint {
         return Optional.ofNullable(Logger.getLogger(loggerName)).map(logger -> new LoggerVM(loggerName, logger)).orElse(null);
     }
 
+    /**
+     * Updates the level of the logger with the given name.
+     *
+     * @param name the name of the logger to be updated
+     * @param loggerVM the loggerVM containing the name and the configured level
+     * @return a response indicating the success or failure of the update
+     */
     @POST
     @Path("/{name}")
+    @Operation(
+        summary = "Update logger level",
+        description = "Updates the log level for the specified logger. The logger will be created if it doesn't exist."
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Logger level updated successfully"
+    )
+    @APIResponse(
+        responseCode = "400",
+        description = "Invalid log level provided"
+    )
+    @APIResponse(
+        responseCode = "500",
+        description = "Internal server error while updating logger level"
+    )
     public Response updateLoggerLevel(@PathParam("name") String name, LoggerVM loggerVM) {
         Logger logger = Logger.getLogger(name);
 

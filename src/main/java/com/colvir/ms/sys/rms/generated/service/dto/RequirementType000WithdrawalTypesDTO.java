@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,7 +31,7 @@ public class RequirementType000WithdrawalTypesDTO implements Serializable {
      * варианты списания
      */
     @NotNull
-    @SchemaProperty(name = "referenceId", description = "варианты списания")
+    @Schema(name = "referenceId", description = "варианты списания")
     public Long referenceId;
 
     public Long requirementTypeId;

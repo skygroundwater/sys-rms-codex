@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,63 +30,63 @@ public class MonitoringRuleDTO implements Serializable {
     /**
      * атрибут даты
      */
-    @SchemaProperty(name = "attrDate", description = "атрибут даты", nullable = true)
+    @Schema(name = "attrDate", description = "атрибут даты", nullable = true)
     public String attrDate;
 
     /**
      * атрибут подразделения
      */
-    @SchemaProperty(name = "attrDep", description = "атрибут подразделения", nullable = true)
+    @Schema(name = "attrDep", description = "атрибут подразделения", nullable = true)
     public String attrDep;
 
     /**
      * дата редактирования
      */
-    @SchemaProperty(name = "editDate", description = "дата редактирования", nullable = true)
+    @Schema(name = "editDate", description = "дата редактирования", nullable = true)
     public Instant editDate;
 
     /**
      * редактор
      */
-    @SchemaProperty(name = "editorId", description = "редактор", nullable = true)
+    @Schema(name = "editorId", description = "редактор", nullable = true)
     public Long editorId;
 
     /**
      * исполнитель
      */
-    @SchemaProperty(name = "executorId", description = "исполнитель", nullable = true)
+    @Schema(name = "executorId", description = "исполнитель", nullable = true)
     public Long executorId;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * правило отбора платежей
      */
-    @SchemaProperty(name = "ruleFind", description = "правило отбора платежей", nullable = true)
+    @Schema(name = "ruleFind", description = "правило отбора платежей", nullable = true)
     @Lob
     public String ruleFind;
 
     /**
      * правило соответствия
      */
-    @SchemaProperty(name = "ruleMatch", description = "правило соответствия", nullable = true)
+    @Schema(name = "ruleMatch", description = "правило соответствия", nullable = true)
     @Lob
     public String ruleMatch;
 
     /**
      * номер версии
      */
-    @SchemaProperty(name = "version", description = "номер версии", nullable = true)
+    @Schema(name = "version", description = "номер версии", nullable = true)
     public Integer version;
 
     /**
      * вариант списания денег
      */
-    @SchemaProperty(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
+    @Schema(name = "withdrawalTypeId", description = "вариант списания денег", nullable = true)
     public Long withdrawalTypeId;
 
 

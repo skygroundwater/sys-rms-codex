@@ -10,6 +10,7 @@
     <property dbms="mysql, mariadb" name="datetimeType" value="datetime(6)"/>
     <property dbms="oracle, mssql, postgresql, h2" name="datetimeType" value="datetime"/>
     <include file="config/liquibase/changelog/00000000000000_initial_schema.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/feature-index-validation-ddl-v1.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/upgrade-v0000-to-v0001.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/upgrade-v0001-to-v0002.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/upgrade-v0002-to-v0003.xml" relativeToChangelogFile="false"/>

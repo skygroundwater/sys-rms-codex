@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.media.SchemaProperty;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,37 +30,37 @@ public class Requirement000PayerDetailsDTO implements Serializable {
     /**
      * online счет клиента
      */
-    @SchemaProperty(name = "accountId", description = "online счет клиента", nullable = true)
+    @Schema(name = "accountId", description = "online счет клиента", nullable = true)
     public Long accountId;
 
     /**
      * оплата активна
      */
-    @SchemaProperty(name = "active", description = "оплата активна", nullable = true)
+    @Schema(name = "active", description = "оплата активна", nullable = true)
     public Boolean active;
 
     /**
      * Возможна автоматическая оплата
      */
-    @SchemaProperty(name = "autoPay", description = "Возможна автоматическая оплата", nullable = true)
+    @Schema(name = "autoPay", description = "Возможна автоматическая оплата", nullable = true)
     public Boolean autoPay;
 
     /**
      * номер счета во внешней системе
      */
-    @SchemaProperty(name = "externalAccount", description = "номер счета во внешней системе", nullable = true)
+    @Schema(name = "externalAccount", description = "номер счета во внешней системе", nullable = true)
     public String externalAccount;
 
     /**
      * является удалённым объектом
      */
-    @SchemaProperty(name = "isDeleted", description = "является удалённым объектом", nullable = true)
+    @Schema(name = "isDeleted", description = "является удалённым объектом", nullable = true)
     public Boolean isDeleted;
 
     /**
      * порядковый номер
      */
-    @SchemaProperty(name = "num", description = "порядковый номер", nullable = true)
+    @Schema(name = "num", description = "порядковый номер", nullable = true)
     public Long num;
 
     public Long paymentChannelId;

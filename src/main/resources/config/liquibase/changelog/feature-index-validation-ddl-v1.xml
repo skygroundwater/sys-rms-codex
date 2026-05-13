@@ -1,0 +1,1085 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="colvir-ms" dbms="postgresql" id="idx-val-ddl-sysrms-type" objectQuotingStrategy="LEGACY">
+        <preConditions onError="MARK_RAN" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <and>
+                <sqlCheck expectedResult="1">SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM pg_namespace n
+  WHERE n.nspname = 'sysrms'
+  ) THEN 1 ELSE 0 END
+</sqlCheck>
+                <sqlCheck expectedResult="0">SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM pg_type t
+  JOIN pg_namespace n ON t.typnamespace = n.oid
+  WHERE n.nspname = 'sysrms'
+    AND t.typname = 'index_definition'
+  ) THEN 1 ELSE 0 END
+</sqlCheck>
+            </and>
+        </preConditions>
+        <sql splitStatements="false" stripComments="false">CREATE TYPE sysrms.index_definition AS
+(
+    table_name character varying,
+    column_names character varying[],
+    is_unique boolean,
+    where_clause text,
+    index_name character varying,
+    predicate_match_pattern text
+);</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" id="idx-val-ddl-sysrms-function" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <sqlCheck expectedResult="1">SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM pg_type t
+  JOIN pg_namespace n ON t.typnamespace = n.oid
+  WHERE n.nspname = 'sysrms'
+    AND t.typname = 'index_definition'
+  ) THEN 1 ELSE 0 END
+</sqlCheck>
+        </preConditions>
+        <sql splitStatements="false" stripComments="false">CREATE OR REPLACE FUNCTION sysrms.validate_indexes_get_index_info(schema_name text)
+ RETURNS TABLE(schemaname text, tablename text, indexname text, columns text, is_unique boolean, condition text)
+ LANGUAGE sql
+AS $function$
+            SELECT n.nspname::text,
+                t.relname::text,
+                c.relname::text,
+                string_agg(a.attname::text, ',' ORDER BY u.ord) AS columns,
+                pi.indisunique,
+                regexp_replace(pg_get_expr(pi.indpred, pi.indrelid), '[()]', '', 'g') AS condition
+            FROM pg_index pi
+                    JOIN pg_class c ON c.oid = pi.indexrelid AND c.relkind = 'i'
+                    JOIN pg_class t ON t.oid = pi.indrelid AND t.relkind = 'r'
+                    JOIN pg_namespace n ON n.oid = t.relnamespace
+                    CROSS JOIN LATERAL unnest(pi.indkey) WITH ORDINALITY AS u(attnum, ord)
+                    JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = u.attnum
+            WHERE n.nspname = schema_name
+            AND a.attnum &gt; 0
+            AND pi.indisprimary is false
+            GROUP BY n.nspname, t.relname, c.relname, pi.indkey, pi.indisunique, pi.indexrelid, pi.indpred, pi.indrelid;
+            $function$;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" id="idx-val-ddl-sysrms-audit" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <sqlCheck expectedResult="1">SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM pg_proc p
+  JOIN pg_namespace n ON p.pronamespace = n.oid
+  WHERE n.nspname = 'sysrms'
+    AND p.proname = 'validate_indexes_get_index_info'
+) THEN 1 ELSE 0 END
+</sqlCheck>
+        </preConditions>
+        <sql splitStatements="false" stripComments="false">CREATE TABLE IF NOT EXISTS sysrms.index000validation000audit (
+    id bigserial PRIMARY KEY,
+    created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    migration_version integer,
+    action_result text NOT NULL,
+    action_detail text NOT NULL,
+    tablename text,
+    indexname text,
+    message text
+);
+
+CREATE OR REPLACE PROCEDURE sysrms.output_index_validation_result(
+    IN p_action_result text,
+    IN p_action_detail text,
+    IN p_tablename text,
+    IN p_indexname text,
+    IN p_message text,
+    IN p_migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+            BEGIN
+                -- SUGGESTION / EXCEPTION: не вставлять повторно при том же action_result + migration_version + action_detail + tablename + indexname
+                -- (без учёта message).
+                IF p_action_result IN ('SUGGESTION', 'EXCEPTION') THEN
+                    IF p_action_result = 'SUGGESTION'
+                       AND p_tablename IS NOT DISTINCT FROM 'index000validation000audit' THEN
+                        RETURN;
+                    END IF;
+                    IF EXISTS (
+                        SELECT 1
+                        FROM sysrms.index000validation000audit iv_prev
+                        WHERE iv_prev.action_result = p_action_result
+                          AND iv_prev.action_detail IS NOT DISTINCT FROM p_action_detail
+                          AND iv_prev.tablename IS NOT DISTINCT FROM p_tablename
+                          AND iv_prev.indexname IS NOT DISTINCT FROM p_indexname
+                          AND iv_prev.migration_version IS NOT DISTINCT FROM p_migration_version
+                    ) THEN
+                        RETURN;
+                    END IF;
+                -- INDEX_DROPPED: порядок validate_indexes — сначала сверка с моделью (в т.ч. предложения по "лишним"
+                -- индексам), затем снятие дубликатов. Индекс, удалённый как дубликат, уже отсутствует в БД;
+                -- ранее записанное по нему SUGGESTION (например ручной DROP) теряет смысл — удаляем такие строки.
+                ELSIF p_action_result = 'INDEX_DROPPED' THEN
+                    DELETE FROM sysrms.index000validation000audit iv_sug
+                    WHERE iv_sug.action_result = 'SUGGESTION'
+                      AND iv_sug.tablename IS NOT DISTINCT FROM p_tablename
+                      AND iv_sug.indexname IS NOT DISTINCT FROM p_indexname
+                      AND iv_sug.migration_version IS NOT DISTINCT FROM p_migration_version;
+                END IF;
+                INSERT INTO sysrms.index000validation000audit (
+                    migration_version,
+                    action_result,
+                    action_detail,
+                    tablename,
+                    indexname,
+                    message
+                ) VALUES (
+                    p_migration_version,
+                    p_action_result,
+                    p_action_detail,
+                    p_tablename,
+                    p_indexname,
+                    p_message
+                );
+            END;
+            $procedure$;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" id="idx-val-ddl-sysrms-backup-procedures" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <sqlCheck expectedResult="1">SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM pg_proc p
+  JOIN pg_namespace n ON p.pronamespace = n.oid
+  WHERE n.nspname = 'sysrms'
+    AND p.proname = 'output_index_validation_result'
+) THEN 1 ELSE 0 END
+</sqlCheck>
+        </preConditions>
+        <sql splitStatements="false" stripComments="false">-- true — только ручное снятие оператором (отдельный SQL): PK или UNIQUE не ^uc_;
+-- false — автоматическое снятие скриптом БД (drop_index_blocking_dependencies и шаги процедуры дальше).
+CREATE OR REPLACE FUNCTION sysrms.index_drop_blocked_if_uc_only(
+    p_schema_name text,
+    p_index_name text
+)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE
+AS $function$
+    SELECT COALESCE(bool_or(
+        c.contype = 'p'
+        OR (c.contype = 'u' AND c.conname !~* '^uc_')
+    ), false)
+    FROM pg_constraint c
+            JOIN pg_class idx ON idx.oid = c.conindid
+            JOIN pg_namespace n ON n.oid = idx.relnamespace
+    WHERE n.nspname = p_schema_name
+      AND idx.relname = p_index_name
+      AND c.contype IN ('p', 'u');
+$function$;
+
+CREATE OR REPLACE FUNCTION sysrms.index_validation_constraint_rollback_suffix(
+    p_constraint_oid oid
+)
+ RETURNS text
+ LANGUAGE sql
+ STABLE
+AS $function$
+    SELECT CASE
+        WHEN p_constraint_oid IS NULL THEN ''
+        ELSE chr(10) || 'Rollback: ' || pg_get_constraintdef(p_constraint_oid)
+    END;
+$function$;
+
+-- drop_index_blocking_dependencies: автоматическое снятие зависимостей скриптом БД, затем DROP INDEX
+-- по имени index_name в схеме schema_name. Порядок: (1) FK на родительскую таблицу, которые опираются
+-- именно на этот индекс как на уникальный опорный; (2) PK/UNIQUE, для которых индекс — conindid.
+CREATE OR REPLACE FUNCTION sysrms.drop_index_blocking_dependencies(
+    schema_name character varying,
+    index_name character varying,
+    migration_version integer
+)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+            DECLARE
+                constraint_rec RECORD;
+                fk_rec RECORD;
+                constraint_rollback_msg text;
+            BEGIN
+                FOR constraint_rec IN
+                    SELECT c.conname,
+                           c.contype,
+                           c.oid AS constraint_oid,
+                           t.relname AS tablename,
+                           t.oid AS table_oid,
+                           idx.oid AS referenced_index_oid
+                    FROM pg_constraint c
+                            JOIN pg_class idx ON idx.oid = c.conindid
+                            JOIN pg_class t ON t.oid = c.conrelid
+                            JOIN pg_namespace n ON n.oid = idx.relnamespace
+                    WHERE n.nspname = schema_name
+                    AND idx.relname = index_name
+                    AND c.contype IN ('p', 'u')
+                    LOOP
+                        -- Внутренний цикл: внешний перебирает PK/UNIQUE на этом индексе (родительская таблица).
+                        -- Сначала снимаем дочерние FK, которые ссылаются на эту таблицу именно через этот индекс
+                        -- (conindid = опорный уникальный индекс); иначе DROP CONSTRAINT по PK/UNIQUE упадёт.
+                        FOR fk_rec IN
+                            SELECT fk.oid AS fk_oid,
+                                   fk.conname AS fk_name,
+                                   fk_table.relname AS fk_tablename
+                            FROM pg_constraint fk
+                                    JOIN pg_class fk_table ON fk_table.oid = fk.conrelid
+                                    JOIN pg_namespace fk_ns ON fk_ns.oid = fk_table.relnamespace
+                            WHERE fk.contype = 'f'
+                              AND fk.confrelid = constraint_rec.table_oid
+                              AND fk.conindid = constraint_rec.referenced_index_oid
+                              AND fk_ns.nspname = schema_name
+                            LOOP
+                                constraint_rollback_msg := sysrms.index_validation_constraint_rollback_suffix(fk_rec.fk_oid);
+                                EXECUTE format('ALTER TABLE %I.%I DROP CONSTRAINT IF EXISTS %I', schema_name, fk_rec.fk_tablename, fk_rec.fk_name);
+                                CALL sysrms.output_index_validation_result('CONSTRAINT_DROPPED',
+                                    'ASSOCIATED_CONSTRAINT',
+                                    constraint_rec.tablename,
+                                    index_name,
+                                    format('Dropped foreign key constraint %I (prerequisite for index removal)%s',
+                                        fk_rec.fk_name,
+                                        constraint_rollback_msg
+                                    ),
+                                    migration_version
+                                );
+                            END LOOP;
+
+                        constraint_rollback_msg := sysrms.index_validation_constraint_rollback_suffix(constraint_rec.constraint_oid);
+                        EXECUTE format('ALTER TABLE %I.%I DROP CONSTRAINT IF EXISTS %I', schema_name, constraint_rec.tablename, constraint_rec.conname);
+                        CALL sysrms.output_index_validation_result('CONSTRAINT_DROPPED',
+                            'ASSOCIATED_CONSTRAINT',
+                            constraint_rec.tablename,
+                            index_name,
+                            format('Dropped primary/unique constraint %I (backed this index)%s',
+                                    constraint_rec.conname,
+                                    constraint_rollback_msg
+                            ),
+                            migration_version
+                        );
+
+                    END LOOP;
+
+                EXECUTE format('DROP INDEX IF EXISTS %I.%I', schema_name, index_name);
+                RETURN true;
+            END;
+            $function$;
+
+CREATE OR REPLACE FUNCTION sysrms.drop_index_with_constraints(
+    schema_name character varying,
+    index_name character varying,
+    migration_version integer,
+    constraint_drop_scope character varying
+)
+ RETURNS boolean
+ LANGUAGE plpgsql
+AS $function$
+            DECLARE
+                idx_tablename text;
+            BEGIN
+                IF constraint_drop_scope = 'uc_only' THEN
+                    -- uc_only и индекс нельзя снять автоматически (PK / UNIQUE не ^uc_): без скрипта
+                    -- снятия зависимостей — только SUGGESTION в аудит и выход. Имя таблицы — для текста сообщения.
+                    IF sysrms.index_drop_blocked_if_uc_only(schema_name, index_name) THEN
+                        SELECT tbl.relname INTO idx_tablename
+                        FROM pg_class idx
+                                JOIN pg_index i ON i.indexrelid = idx.oid
+                                JOIN pg_class tbl ON tbl.oid = i.indrelid
+                                JOIN pg_namespace n ON n.oid = idx.relnamespace
+                        WHERE n.nspname = schema_name
+                          AND idx.relname = index_name
+                          AND idx.relkind = 'i'
+                        LIMIT 1;
+                        CALL sysrms.output_index_validation_result('SUGGESTION',
+                            'DUPLICATE',
+                            COALESCE(idx_tablename, '?'),
+                            index_name,
+                            format(
+                                'Cannot auto-drop duplicate index %I: automatic removal is allowed only for UNIQUE constraints with names matching ^uc_ (e.g. ALTER TABLE ... ADD CONSTRAINT uc_tablenamecol UNIQUE (...)). Primary key or other UNIQUE names require manual steps.',
+                                index_name
+                            ),
+                            migration_version
+                        );
+                        RETURN false;
+                    END IF;
+                END IF;
+                RETURN sysrms.drop_index_blocking_dependencies(schema_name, index_name, migration_version);
+            END;
+            $function$;
+
+CREATE OR REPLACE PROCEDURE sysrms.validate_indexes_on_backup_columns(
+    IN schema_name character varying,
+    IN migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+            DECLARE
+                rec RECORD;
+                dropped boolean;
+            BEGIN
+                FOR rec IN
+                    SELECT g.schemaname,
+                        g.tablename,
+                        g.indexname,
+                        trim(column_name) AS column_name
+                    FROM sysrms.validate_indexes_get_index_info(schema_name) g
+                            CROSS JOIN LATERAL unnest(string_to_array(g.columns, ',')) AS column_name
+                    WHERE column_name ~ '__bk[0-9]+$'
+                    LOOP
+                        -- Как при пересоздании UNIQUE под soft-delete: drop_index_with_constraints(..., uc_only).
+                        dropped := sysrms.drop_index_with_constraints(schema_name, rec.indexname, migration_version, 'uc_only');
+                        IF dropped THEN
+                        CALL sysrms.output_index_validation_result('INDEX_DROPPED',
+                            'BACKUP_COLUMN',
+                            rec.tablename,
+                            rec.indexname,
+                            format('Dropped index (backup column name pattern: %s)',
+                                rec.column_name),
+                            migration_version
+                        );
+                        END IF;
+                    END LOOP;
+            END;
+            $procedure$;
+
+CREATE OR REPLACE PROCEDURE sysrms.validate_indexes_on_backup_tables(
+    IN schema_name character varying,
+    IN migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+            DECLARE
+                rec RECORD;
+                dropped boolean;
+            BEGIN
+                FOR rec IN
+                    SELECT schemaname, tablename, indexname
+                    FROM sysrms.validate_indexes_get_index_info(schema_name)
+                    WHERE tablename ~ '__bk[0-9]+$'
+                    LOOP
+                        dropped := sysrms.drop_index_with_constraints(schema_name, rec.indexname, migration_version, 'all');
+                        IF dropped THEN
+                        CALL sysrms.output_index_validation_result('INDEX_DROPPED',
+                            'BACKUP_TABLE',
+                            rec.tablename,
+                            rec.indexname,
+                            'Dropped index (backup table name pattern)',
+                            migration_version
+                        );
+                        END IF;
+                    END LOOP;
+            END;
+            $procedure$;</sql>
+    </changeSet>
+    <changeSet author="colvir-ms" dbms="postgresql" id="idx-val-ddl-sysrms-procedures" objectQuotingStrategy="LEGACY">
+        <preConditions onError="HALT" onFail="MARK_RAN" onSqlOutput="IGNORE">
+            <sqlCheck expectedResult="1">SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM pg_proc p
+  JOIN pg_namespace n ON p.pronamespace = n.oid
+  WHERE n.nspname = 'sysrms'
+    AND p.proname = 'output_index_validation_result'
+) THEN 1 ELSE 0 END
+</sqlCheck>
+        </preConditions>
+        <sql splitStatements="false" stripComments="false">-- validate_duplicate_indexes: при одинаковом (таблица, колонки) снимаем лишние индексы;
+-- индексы, заданные в модели (index_definitions), не удаляем — они задают приоритет и исключаются из drop.
+CREATE OR REPLACE PROCEDURE sysrms.validate_duplicate_indexes(
+    IN schema_name character varying,
+    IN index_definitions sysrms.index_definition[] DEFAULT NULL,
+    IN migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+            DECLARE
+                duplicate RECORD;
+                preferred_names TEXT[];
+                rollback_msg      TEXT;
+                dup_dropped       BOOLEAN;
+            BEGIN
+                -- Список имён индексов из модели (приоритет при ранжировании; не удалять как дубликат).
+                SELECT COALESCE(
+                    (
+                        SELECT array_agg(d.index_name ORDER BY d.index_name)
+                        FROM unnest(COALESCE(index_definitions, ARRAY[]::sysrms.index_definition[])) AS d
+                    ),
+                    ARRAY[]::TEXT[]
+                ) INTO preferred_names;
+                -- Дубликаты по (таблица, колонки): кандидаты на снятие — rank&gt;1.
+                -- Индекс с именем из модели (index_definitions → preferred_names) из drop не снимаем:
+                -- условие NOT (indexname = ANY(preferred_names)).
+                FOR duplicate IN
+                    WITH info AS (
+                        SELECT
+                            tablename,
+                            columns,
+                            indexname,
+                            (indexname = ANY(preferred_names))::INT AS is_preferred,
+                            (indexname LIKE 'FK%')::INT AS is_fk,
+                            (condition IS NOT NULL)::INT AS has_condition
+                        FROM sysrms.validate_indexes_get_index_info(schema_name)
+                    ),
+                        ranked AS (
+                            SELECT
+                                tablename,
+                                columns,
+                                indexname,
+                                ROW_NUMBER() OVER (
+                                    PARTITION BY tablename, columns
+                                    ORDER BY is_preferred DESC, is_fk DESC, has_condition DESC, indexname
+                                    ) AS rank
+                            FROM info
+                        )
+                    SELECT tablename, indexname, columns
+                    FROM ranked
+                    WHERE rank &gt; 1
+                      AND NOT (indexname = ANY(preferred_names))
+                    LOOP
+                        rollback_msg := sysrms.index_validation_rollback_message_suffix(
+                            schema_name,
+                            duplicate.indexname,
+                            '(index definition unavailable)');
+                        dup_dropped := sysrms.drop_index_with_constraints(schema_name, duplicate.indexname, migration_version, 'uc_only');
+                        IF dup_dropped THEN
+                        CALL sysrms.output_index_validation_result('INDEX_DROPPED',
+                        'DUPLICATE',
+                        duplicate.tablename,
+                        duplicate.indexname,
+                        format(
+                            'Removed duplicate index %I with same column list as another on this table. Columns: %s. ',
+                            duplicate.indexname,
+                            duplicate.columns) || rollback_msg,
+                        migration_version
+                        );
+                        END IF;
+                    END LOOP;
+            END;
+            $procedure$;
+
+-- Дополняет message в аудите: рекомендация отката («Rollback:» + DDL восстановления индекса
+-- через pg_get_indexdef; если индекс уже снят — подставляется p_if_missing).
+CREATE OR REPLACE FUNCTION sysrms.index_validation_rollback_message_suffix(
+    p_schema_name text,
+    p_index_name text,
+    p_if_missing text DEFAULT NULL
+)
+ RETURNS text
+ LANGUAGE sql
+ STABLE
+AS $function$
+SELECT CASE
+    WHEN d.def IS NULL AND p_if_missing IS NULL THEN NULL
+    ELSE 'Rollback: ' || COALESCE(d.def, p_if_missing)
+END
+FROM (
+    SELECT (
+        SELECT pg_get_indexdef(i.indexrelid)
+        FROM pg_index i
+        JOIN pg_class c ON c.oid = i.indexrelid
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = p_schema_name
+          AND c.relname = p_index_name
+    ) AS def
+) d;
+$function$;
+
+-- Текст ручных шагов если UNIQUE-индекс привязан к ограничению (нельзя снять только DROP INDEX).
+CREATE OR REPLACE FUNCTION sysrms.index_validation_soft_delete_unique_constraint_suggestion(
+    p_schema_name text,
+    p_indexname text
+)
+ RETURNS text
+ LANGUAGE sql
+ STABLE
+AS $function$
+-- Индекс = UNIQUE constraint: подсказка DROP CONSTRAINT / DROP INDEX для ручного снятия.
+SELECT format(
+    E'Cannot auto-recreate partial unique index: %I is backed by UNIQUE constraint %I on %I.%I.\n\n' ||
+    E'Run manually in this order:\n' ||
+    E'1. ALTER TABLE %I.%I DROP CONSTRAINT IF EXISTS %I;\n' ||
+    E'2. DROP INDEX IF EXISTS %I.%I;\n',
+    p_indexname,
+    c.conname,
+    ns_tbl.nspname,
+    tbl.relname,
+    ns_tbl.nspname,
+    tbl.relname,
+    c.conname,
+    p_schema_name,
+    p_indexname
+)
+FROM pg_constraint c
+JOIN pg_class idx ON idx.oid = c.conindid
+JOIN pg_namespace n_idx ON n_idx.oid = idx.relnamespace
+JOIN pg_class tbl ON tbl.oid = c.conrelid
+JOIN pg_namespace ns_tbl ON ns_tbl.oid = tbl.relnamespace
+WHERE n_idx.nspname = p_schema_name
+  AND idx.relname = p_indexname
+  AND c.contype = 'u'
+LIMIT 1;
+$function$;
+
+-- Общий хвост подсказок: DROP INDEX IF EXISTS schema.indexname.
+CREATE OR REPLACE FUNCTION sysrms.index_validation_drop_index_footer(
+    p_schema_name text,
+    p_indexname text
+)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE
+AS $function$
+    SELECT format(
+        'Drop manually if appropriate. DROP INDEX IF EXISTS %I.%I',
+        p_schema_name,
+        p_indexname
+    );
+$function$;
+
+-- Единая точка SUGGESTION в аудит; p_kind: NOT_IN_MODEL_*, SOFT_DELETE_RECREATE_FAILED; иначе выход без записи.
+CREATE OR REPLACE PROCEDURE sysrms.index_validation_suggestion(
+    IN p_schema_name character varying,
+    IN p_tablename text,
+    IN p_indexname text,
+    IN p_kind text,
+    IN p_migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+    DECLARE
+        v_action_detail text;
+        v_message       text;
+        v_body          text;
+    BEGIN
+        IF p_kind = 'NOT_IN_MODEL_PREDICATE' THEN
+            v_action_detail := 'NOT_IN_MODEL';
+            v_message := 'Index not in model and predicate incompatible.'
+                || sysrms.index_validation_drop_index_footer(p_schema_name, p_indexname);
+        ELSIF p_kind = 'NOT_IN_MODEL_AUTOFIX' THEN
+            v_action_detail := 'NOT_IN_MODEL';
+            v_message := 'Cannot auto-fix:'
+                || sysrms.index_validation_drop_index_footer(p_schema_name, p_indexname);
+        ELSIF p_kind = 'SOFT_DELETE_RECREATE_FAILED' THEN
+            v_action_detail := 'SOFT_DELETE_PREDICATE';
+            v_body := COALESCE(
+                sysrms.index_validation_soft_delete_unique_constraint_suggestion(p_schema_name, p_indexname),
+                format(
+                    'Could not remove index %I for soft-delete recreation (uc_only drop did not complete). Drop dependencies manually, then re-run validation.',
+                    p_indexname
+                )
+            );
+            v_message := v_body || sysrms.index_validation_drop_index_footer(p_schema_name, p_indexname);
+        ELSE
+            RETURN;
+        END IF;
+        CALL sysrms.output_index_validation_result(
+            'SUGGESTION',
+            v_action_detail,
+            p_tablename,
+            p_indexname,
+            v_message,
+            p_migration_version
+        );
+    END;
+    $procedure$;
+
+-- Проверка: можно ли создать UNIQUE-индекс (нет дубликатов ключа под предикатом). Перед CREATE или DROP+CREATE.
+CREATE OR REPLACE FUNCTION sysrms.index_validation_unique_index_precreate_check(
+    p_schema_name text,
+    p_table_name text,
+    p_index_name text,
+    p_column_names text[],
+    p_where_clause text
+)
+ RETURNS TABLE(can_create boolean, suggestion_message text, suggestion_conclusion text)
+ LANGUAGE plpgsql
+ STABLE
+AS $function$
+    DECLARE
+        col_expr        text;
+        col_display     text;
+        where_sql       text;
+        recommended_ddl text;
+        dup_exists      boolean;
+        dup_payload     text;
+        dup_having_extra text;
+    BEGIN
+        IF p_column_names IS NULL OR cardinality(p_column_names) = 0 THEN
+            RETURN QUERY SELECT true, NULL::text, NULL::text;
+            RETURN;
+        END IF;
+        SELECT string_agg(format('%I', trim(both FROM c)), ', ' ORDER BY ord)
+        INTO col_expr
+        FROM unnest(p_column_names) WITH ORDINALITY AS u(c, ord);
+
+        -- Колонки собраны в непустое выражение: проверяем, нет ли дубликатов значений ключа
+        -- по строкам, попадающим под предикат индекса (WHERE); плюс текст примера CREATE UNIQUE для SUGGESTION.
+        IF col_expr IS NULL OR btrim(col_expr) = '' THEN
+            RETURN QUERY SELECT true, NULL::text, NULL::text;
+            RETURN;
+        END IF;
+        SELECT string_agg(trim(both FROM c), ', ' ORDER BY ord)
+        INTO col_display
+        FROM unnest(p_column_names) WITH ORDINALITY AS u(c, ord);
+        where_sql := CASE
+            WHEN p_where_clause IS NULL OR btrim(p_where_clause) = '' THEN 'TRUE'
+            ELSE '(' || p_where_clause || ')'
+        END;
+        -- Рекомендуемый DDL для ручного создания индекса, если автоматическое создание
+        -- невозможно (конфликт данных): попадёт в сообщение SUGGESTION для оператора.
+        recommended_ddl := CASE
+            WHEN p_where_clause IS NULL OR btrim(p_where_clause) = '' THEN
+                format(
+                    'CREATE UNIQUE INDEX %I ON %I.%I (%s)',
+                    p_index_name, p_schema_name, p_table_name, col_expr)
+            ELSE
+                format(
+                    'CREATE UNIQUE INDEX %I ON %I.%I (%s) WHERE %s',
+                    p_index_name, p_schema_name, p_table_name, col_expr, p_where_clause)
+        END;
+        dup_having_extra := CASE
+            WHEN cardinality(p_column_names) = 1 THEN format(' AND (%s) IS NOT NULL', col_expr)
+            ELSE ''
+        END;
+        EXECUTE format(
+                'SELECT EXISTS (SELECT 1 FROM (SELECT %s FROM %I.%I WHERE %s GROUP BY %s HAVING count(*) &gt; 1%s) _w)',
+                col_expr, p_schema_name, p_table_name, where_sql, col_expr, dup_having_extra
+            )
+            INTO dup_exists;
+        -- Конфликт уникальности: выходим с SUGGESTION, индекс не создаём.
+        IF dup_exists THEN
+            EXECUTE format(
+                    'SELECT row_to_json(_q)::text FROM (SELECT %s FROM %I.%I WHERE %s GROUP BY %s HAVING count(*) &gt; 1%s LIMIT 1) _q',
+                    col_expr, p_schema_name, p_table_name, where_sql, col_expr, dup_having_extra
+                )
+                INTO dup_payload;
+            RETURN QUERY SELECT
+                false,
+                (format(
+                        'Cannot create this unique index: duplicate values exist. Key (%s)=%s. Recommended SQL: ',
+                        col_display,
+                        COALESCE(dup_payload, 'unknown'))
+                    || recommended_ddl)::text,
+                'UNIQUE_DATA_CONFLICT'::text;
+            RETURN;
+        END IF;
+        RETURN QUERY SELECT true, NULL::text, NULL::text;
+    END;
+$function$;
+
+-- Пересоздание уникального индекса с is_deleted в предикате (soft-delete), после uc_only drop.
+CREATE OR REPLACE PROCEDURE sysrms.validate_indexes_recreate_undeclared_unique_for_soft_delete(
+    IN p_schema_name character varying,
+    IN p_tablename text,
+    IN p_indexname text,
+    IN p_columns text,
+    IN p_condition text,
+    IN p_migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+    DECLARE
+        undeclared_col_list text;
+        new_where            text;
+        rollback_msg         text;
+        dropped              boolean;
+    BEGIN
+        SELECT string_agg(format('%I', trim(both FROM u.c)), ', ' ORDER BY u.ord)
+        INTO undeclared_col_list
+        FROM unnest(string_to_array(p_columns, ',')) WITH ORDINALITY AS u(c, ord);
+        IF undeclared_col_list IS NOT NULL AND btrim(undeclared_col_list) &lt;&gt; '' THEN
+            new_where := CASE
+                WHEN p_condition IS NULL OR btrim(p_condition) = '' THEN 'is_deleted = false'
+                ELSE '(' || p_condition || ') AND is_deleted = false'
+            END;
+            dropped := sysrms.drop_index_with_constraints(p_schema_name, p_indexname, p_migration_version, 'uc_only');
+            IF dropped THEN
+                rollback_msg := sysrms.index_validation_rollback_message_suffix(
+                    p_schema_name,
+                    p_indexname,
+                    '(index definition unavailable)');
+                EXECUTE format(
+                    'CREATE UNIQUE INDEX %I ON %I.%I (%s) WHERE %s',
+                    p_indexname,
+                    p_schema_name,
+                    p_tablename,
+                    undeclared_col_list,
+                    new_where
+                );
+                CALL sysrms.output_index_validation_result(
+                    'RECREATED',
+                    'SOFT_DELETE_PREDICATE',
+                    p_tablename,
+                    p_indexname,
+                    'Recreated unique index with is_deleted in predicate (is_deleted column present; previous index omitted it). '
+                        || rollback_msg,
+                    p_migration_version
+                );
+                CALL sysrms.index_validation_suggestion(
+                    p_schema_name,
+                    p_tablename,
+                    p_indexname,
+                    'NOT_IN_MODEL_AUTOFIX',
+                    p_migration_version
+                );
+            ELSE
+                CALL sysrms.index_validation_suggestion(
+                    p_schema_name,
+                    p_tablename,
+                    p_indexname,
+                    'SOFT_DELETE_RECREATE_FAILED',
+                    p_migration_version
+                );
+            END IF;
+        ELSE
+            CALL sysrms.index_validation_suggestion(
+                p_schema_name,
+                p_tablename,
+                p_indexname,
+                'NOT_IN_MODEL_AUTOFIX',
+                p_migration_version
+            );
+        END IF;
+    END;
+$procedure$;
+
+-- index_validation_try_create_model_index: привести индекс к модели — перед CREATE/DROP+CREATE
+-- проверка UNIQUE через index_validation_unique_index_precreate_check; затем drop (uc_only) при необходимости и CREATE.
+CREATE OR REPLACE FUNCTION sysrms.index_validation_try_create_model_index(
+    p_schema_name text,
+    p_table_name text,
+    p_index_name text,
+    p_column_names text[],
+    p_is_unique boolean,
+    p_where_clause text,
+    p_conclusion text,
+    p_base_message text,
+    p_migration_version integer DEFAULT NULL
+)
+ RETURNS TABLE(result_status text, result_message text, result_conclusion text)
+ LANGUAGE plpgsql
+AS $function$
+    DECLARE
+        precheck_rec       RECORD;
+        rollback_msg       text;
+        col_list           text;
+        v_status           text;
+        v_msg              text;
+        dropped            boolean;
+    BEGIN
+        -- UNIQUE и заданы колонки: перед созданием проверяем, нет ли дубликатов ключа (в т.ч. с предикатом).
+        IF p_is_unique
+           AND p_column_names IS NOT NULL
+           AND cardinality(p_column_names) &gt; 0 THEN
+            SELECT v.can_create, v.suggestion_message, v.suggestion_conclusion
+            INTO precheck_rec
+            FROM sysrms.index_validation_unique_index_precreate_check(
+                p_schema_name,
+                p_table_name,
+                p_index_name,
+                p_column_names,
+                p_where_clause
+            ) AS v(can_create, suggestion_message, suggestion_conclusion);
+            IF NOT precheck_rec.can_create THEN
+                RETURN QUERY SELECT
+                    'SUGGESTION'::text,
+                    precheck_rec.suggestion_message,
+                    precheck_rec.suggestion_conclusion;
+                RETURN;
+            END IF;
+        END IF;
+
+        -- Индекс уже был в БД: снять через drop_index_with_constraints(uc_only), как при пересоздании UNIQUE с is_deleted.
+        IF p_conclusion &lt;&gt; 'MISSING' THEN
+            rollback_msg := sysrms.index_validation_rollback_message_suffix(
+                p_schema_name,
+                p_index_name,
+                NULL);
+            dropped := sysrms.drop_index_with_constraints(p_schema_name, p_index_name, p_migration_version, 'uc_only');
+            IF NOT dropped THEN
+                RETURN QUERY SELECT
+                    'SUGGESTION'::text,
+                    p_base_message,
+                    p_conclusion;
+                RETURN;
+            END IF;
+        ELSE
+            -- Индекса не было (MISSING): снятие не нужно, откат по снятому индексу не добавляем.
+            rollback_msg := NULL;
+        END IF;
+
+        SELECT string_agg(format('%I', c), ', ') INTO col_list
+        FROM unnest(p_column_names) AS c;
+
+        -- Создание индекса по модели: UNIQUE или обычный; предикат — только если задан в модели.
+        EXECUTE format(
+                'CREATE %s INDEX %I ON %I.%I (%s)%s',
+                CASE WHEN p_is_unique THEN 'UNIQUE' ELSE '' END,
+                p_index_name,
+                p_schema_name,
+                p_table_name,
+                col_list,
+                CASE WHEN p_where_clause IS NOT NULL THEN ' WHERE ' || p_where_clause ELSE '' END
+            );
+
+        -- CREATED — новый индекс; RECREATED — заменили существующий после DROP выше.
+        v_status := CASE WHEN p_conclusion = 'MISSING' THEN 'CREATED' ELSE 'RECREATED' END;
+        v_msg := p_base_message;
+        -- При пересоздании дописать к сообщению текст отката, если он собран.
+        IF rollback_msg IS NOT NULL THEN
+            v_msg := v_msg || '. ' || rollback_msg;
+        END IF;
+
+        RETURN QUERY SELECT v_status, v_msg, p_conclusion;
+    END;
+$function$;
+
+-- Определение индекса из модели (сверка с tmp_index_info, при необходимости try_create + аудит).
+CREATE OR REPLACE PROCEDURE sysrms.index_validation_match_model_index_def(
+    IN p_schema_name character varying,
+    IN p_idx_def sysrms.index_definition,
+    IN p_migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+    DECLARE
+        info       RECORD;
+        conclusion TEXT;
+        status     TEXT;
+        message    TEXT;
+        valid      BOOLEAN;
+    BEGIN
+        message := 'Matches model definition';
+        conclusion := 'CORRECT';
+        status := 'VALID';
+        valid := TRUE;
+        SELECT *
+        INTO info
+        FROM tmp_index_info
+        WHERE indexname = p_idx_def.index_name
+        LIMIT 1;
+        IF NOT FOUND THEN
+            valid := FALSE;
+            conclusion := 'MISSING';
+            message := 'Index not present in database';
+        ELSIF info.tablename IS DISTINCT FROM p_idx_def.table_name THEN
+            valid := FALSE;
+            conclusion := 'WRONG_TABLE';
+            message := format(
+                    'Index name exists on table %I, model expects table %I',
+                    info.tablename,
+                    p_idx_def.table_name);
+        ELSIF info.is_unique IS DISTINCT FROM p_idx_def.is_unique THEN
+            valid := FALSE;
+            conclusion := 'UNIQUE_PREDICATE_MISMATCH';
+            message :=
+                    format('Uniqueness mismatch: model expects %s, database index is %s',
+                        CASE WHEN p_idx_def.is_unique THEN 'UNIQUE' ELSE 'non-unique' END,
+                        CASE WHEN info.is_unique THEN 'UNIQUE' ELSE 'non-unique' END);
+        ELSIF (
+            CASE
+                WHEN p_idx_def.predicate_match_pattern IS NOT NULL
+                    AND btrim(p_idx_def.predicate_match_pattern) &lt;&gt; '' THEN
+                    (info.condition IS NULL OR info.condition !~ p_idx_def.predicate_match_pattern)
+                ELSE
+                    (p_idx_def.where_clause IS DISTINCT FROM info.condition)
+            END
+        ) THEN
+            valid := FALSE;
+            conclusion := 'CONFLICT_IN_PREDICATE';
+            message :=
+                    format('WHERE clause mismatch: model %s, database %s',
+                        COALESCE(NULLIF(TRIM(BOTH FROM p_idx_def.where_clause), ''), '(none)'),
+                        COALESCE(NULLIF(TRIM(BOTH FROM info.condition), ''), '(empty)'));
+        END IF;
+        IF NOT valid THEN
+            SELECT r.result_status, r.result_message, r.result_conclusion
+            INTO status, message, conclusion
+            FROM sysrms.index_validation_try_create_model_index(
+                    p_schema_name,
+                    p_idx_def.table_name,
+                    p_idx_def.index_name,
+                    p_idx_def.column_names,
+                    p_idx_def.is_unique,
+                    p_idx_def.where_clause,
+                    conclusion,
+                    message,
+                    p_migration_version
+                ) AS r(result_status, result_message, result_conclusion);
+        END IF;
+        IF conclusion &lt;&gt; 'CORRECT' THEN
+            CALL sysrms.output_index_validation_result(
+                CASE WHEN status = 'VALID' THEN 'CHECKED' ELSE status END,
+                conclusion,
+                p_idx_def.table_name,
+                p_idx_def.index_name,
+                message,
+                p_migration_version
+            );
+        END IF;
+    END;
+$procedure$;
+
+-- Индекс в БД без пары в модели (NOT_IN_MODEL / uniq_recreate).
+CREATE OR REPLACE PROCEDURE sysrms.index_validation_process_not_in_model_index(
+    IN p_schema_name character varying,
+    IN p_tablename text,
+    IN p_indexname text,
+    IN p_columns text,
+    IN p_is_unique boolean,
+    IN p_condition text,
+    IN p_index_definitions sysrms.index_definition[],
+    IN p_migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+    BEGIN
+        PERFORM 1
+        FROM unnest(p_index_definitions)
+        WHERE p_indexname = index_name
+          AND p_tablename = table_name
+        LIMIT 1;
+        IF NOT FOUND THEN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM unnest(p_index_definitions) AS d
+                WHERE d.index_name = p_indexname
+            ) THEN
+                IF p_is_unique
+                    AND EXISTS (
+                        SELECT 1
+                        FROM pg_attribute a
+                                 JOIN pg_class t ON t.oid = a.attrelid
+                                 JOIN pg_namespace n ON n.oid = t.relnamespace
+                        WHERE n.nspname = p_schema_name
+                          AND t.relname = p_tablename
+                          AND a.attname = 'is_deleted'
+                          AND a.attnum &gt; 0
+                          AND NOT a.attisdropped
+                    )
+                    AND (p_condition IS NULL OR p_condition !~* 'is_deleted')
+                THEN
+                    CALL sysrms.validate_indexes_recreate_undeclared_unique_for_soft_delete(
+                        p_schema_name,
+                        p_tablename,
+                        p_indexname,
+                        p_columns,
+                        p_condition,
+                        p_migration_version
+                    );
+                ELSE
+                    CALL sysrms.index_validation_suggestion(
+                        p_schema_name,
+                        p_tablename,
+                        p_indexname,
+                        'NOT_IN_MODEL_PREDICATE',
+                        p_migration_version
+                    );
+                END IF;
+            END IF;
+        END IF;
+    END;
+$procedure$;
+
+-- Сверка индексов с моделью: tmp_index_info + два цикла (итерации вынесены; ошибка одной итерации не прерывает остальные).
+CREATE OR REPLACE PROCEDURE sysrms.match_indexes_to_model(
+    IN schema_name character varying,
+    IN index_definitions sysrms.index_definition[],
+    IN migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+    DECLARE
+        idx_def sysrms.index_definition;
+        rec     RECORD;
+    BEGIN
+        CREATE TEMP TABLE IF NOT EXISTS tmp_index_info
+        (
+            schemaname TEXT,
+            tablename  TEXT,
+            indexname  TEXT,
+            columns    TEXT,
+            is_unique  BOOLEAN,
+            condition  TEXT
+        ) ON COMMIT PRESERVE ROWS;
+        TRUNCATE tmp_index_info;
+        INSERT INTO tmp_index_info
+        SELECT *
+        FROM sysrms.validate_indexes_get_index_info(schema_name);
+        FOR idx_def IN SELECT * FROM unnest(index_definitions)
+            LOOP
+                BEGIN
+                    CALL sysrms.index_validation_match_model_index_def(schema_name, idx_def, migration_version);
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        CALL sysrms.output_index_validation_result(
+                            'EXCEPTION',
+                            'MATCH_TO_MODEL',
+                            idx_def.table_name,
+                            idx_def.index_name,
+                            format(
+                                'Match-to-model step failed: %s (SQLSTATE %s)',
+                                SQLERRM,
+                                SQLSTATE),
+                            migration_version
+                        );
+                END;
+            END LOOP;
+        FOR rec IN SELECT * FROM tmp_index_info
+            LOOP
+                BEGIN
+                    CALL sysrms.index_validation_process_not_in_model_index(
+                        schema_name,
+                        rec.tablename,
+                        rec.indexname,
+                        rec.columns,
+                        rec.is_unique,
+                        rec.condition,
+                        index_definitions,
+                        migration_version
+                    );
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        CALL sysrms.output_index_validation_result(
+                            'EXCEPTION',
+                            'NOT_IN_MODEL',
+                            rec.tablename,
+                            rec.indexname,
+                            format(
+                                'Not-in-model index step failed: %s (SQLSTATE %s)',
+                                SQLERRM,
+                                SQLSTATE),
+                            migration_version
+                        );
+                END;
+            END LOOP;
+    END;
+$procedure$;
+
+-- validate_indexes: бэкап-колонки/таблицы, сопоставление с моделью, дубликаты.
+CREATE OR REPLACE PROCEDURE sysrms.validate_indexes(
+    IN schema_name character varying,
+    IN index_definitions sysrms.index_definition[],
+    IN migration_version integer DEFAULT NULL
+)
+ LANGUAGE plpgsql
+AS $procedure$
+            BEGIN
+                BEGIN
+                    CALL sysrms.validate_indexes_on_backup_columns(schema_name, migration_version);
+                    CALL sysrms.validate_indexes_on_backup_tables(schema_name, migration_version);
+                    CALL sysrms.match_indexes_to_model(schema_name, index_definitions, migration_version);
+                    CALL sysrms.validate_duplicate_indexes(schema_name, index_definitions, migration_version);
+                EXCEPTION
+                    WHEN OTHERS THEN
+                        CALL sysrms.output_index_validation_result(
+                            'EXCEPTION',
+                            'VALIDATE_INDEXES',
+                            NULL,
+                            NULL,
+                            format(
+                                'validate_indexes failed: %s (SQLSTATE %s)',
+                                SQLERRM,
+                                SQLSTATE),
+                            migration_version
+                        );
+                END;
+            END;
+            $procedure$;</sql>
+    </changeSet>
+</databaseChangeLog>

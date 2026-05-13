@@ -8,7 +8,7 @@ import com.colvir.ms.sys.rms.dto.RefundJournalDto;
 import com.colvir.ms.sys.rms.dto.RefundOfRequirementsResultDto;
 import com.colvir.ms.sys.rms.dto.RefundOfRequirementsRunnerDto;
 import com.colvir.ms.sys.rms.manual.handler.RefundOfRequirementsHandler;
-import com.colvir.ms.sys.rms.manual.util.StepsNames;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

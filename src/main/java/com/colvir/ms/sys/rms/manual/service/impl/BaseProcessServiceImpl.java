@@ -1,12 +1,12 @@
 package com.colvir.ms.sys.rms.manual.service.impl;
 
 import com.colvir.ms.common.router.DDCRouterClient;
+import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
-import com.colvir.ms.sys.rms.manual.util.RmsConstants;
-import com.colvir.ms.sys.rms.dto.BaseProcessResultDto;
+import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +17,7 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Map;
 
@@ -206,11 +207,14 @@ public class BaseProcessServiceImpl implements BaseProcessService {
 
         String errorMessage = String.format("Combination of states %s : %s is not allowed", prevStatus, newStatus);
 
+        log.infof("getBbpUpdateEvent: newReqState = %s , prevReqState = %s", newReqState, prevReqState);
+
         // 1. Если статус не поменялся — проверяем движение суммы
         if (newStatus.equals(prevStatus)) {
-            int cmp = newReqState.payedAmount.compareTo(prevReqState.paidAmount);
-            if (cmp > 0) return RmsConstants.BBP_RUN_PAYMENT_EVENT;
-            if (cmp < 0) return RmsConstants.BBP_RUN_REFUND_EVENT;
+            if (newReqState.payedAmount.compareTo(BigDecimal.ZERO) > 0
+                && newReqState.payedAmount.compareTo(newReqState.amount) < 0) {
+                return RmsConstants.BBP_RUN_PAYMENT_EVENT;
+            }
             return "";
         }
 
