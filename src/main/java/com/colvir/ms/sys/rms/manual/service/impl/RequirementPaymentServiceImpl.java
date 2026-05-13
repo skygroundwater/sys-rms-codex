@@ -318,6 +318,173 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     }
 
 
+    @Override
+    @Transactional
+    public RegistrationOfPaymentResponse registrationOfPaymentForDistribution(RegistrationOfPaymentDto request,
+                                                                                List<Requirement> sortedRequirements) {
+        log.infof("registrationOfPaymentForDistribution: payments=%s, requirements=%s",
+            request == null || request.payments == null ? 0 : request.payments.size(),
+            sortedRequirements == null ? 0 : sortedRequirements.size());
+
+        RegistrationOfPaymentResponse response = new RegistrationOfPaymentResponse();
+        RegistrationOfPaymentJournalDto journal = new RegistrationOfPaymentJournalDto();
+
+        if (sortedRequirements == null || sortedRequirements.isEmpty()) {
+            throw new RuntimeException("Incorrect request: requirements data is empty");
+        }
+        if (request == null || request.payments == null || request.payments.isEmpty()) {
+            throw new RuntimeException("Incorrect request: payments data is empty");
+        }
+
+        for (Requirement requirement : sortedRequirements) {
+            if (requirement == null || requirement.id == null || Boolean.TRUE.equals(requirement.isDeleted)) {
+                throw new RuntimeException("Incorrect request: requirement data contains null or deleted requirement");
+            }
+            // сохраняем первоначальные значения для отката
+            journal.requirementJournal.add(RequirementMapperUtils.fillRequirementJournal(requirement));
+        }
+
+        List<PaymentInfoExtendedDto> payments = new ArrayList<>(request.payments.size());
+        Map<PaymentLookupKey, Payment> paymentLookupCache = new HashMap<>();
+        Map<Long, UsedPaymentAmounts> usedAmountsCache = new HashMap<>();
+        for (WithdrawalResultDto withdrawal : request.payments) {
+            PaymentInfoExtendedDto paymentInfo = new PaymentInfoExtendedDto();
+            // сумма платежа в валюте требования
+            paymentInfo.amount = withdrawal.amount;
+
+            PaymentLookupKey paymentLookupKey = new PaymentLookupKey(withdrawal);
+            Payment payment = paymentLookupCache.computeIfAbsent(paymentLookupKey, key ->
+                paymentDao.findActiveByReferenceCurrencyAmountAndWithdrawalType(
+                    withdrawal.reference,
+                    withdrawal.currency.id,
+                    withdrawal.amountPaid,
+                    withdrawal.withdrawalType.id
+                )
+            );
+
+            if (payment != null) {
+                paymentInfo.payment = paymentMapper.toDto(payment);
+                paymentInfo.isNewPayment = false;
+
+                UsedPaymentAmounts usedAmounts = usedAmountsCache.computeIfAbsent(payment.id, paymentId -> {
+                    BigDecimal usedAmount = BigDecimal.ZERO;
+                    BigDecimal usedAmountOfPayment = BigDecimal.ZERO;
+                    for (RelatedPayment relatedPayment : relatedPaymentDao.findNonDeletedByPaymentId(paymentId)) {
+                        usedAmount = usedAmount.add(Objects.requireNonNullElse(relatedPayment.amount, BigDecimal.ZERO));
+                        usedAmountOfPayment = usedAmountOfPayment.add(
+                            Objects.requireNonNullElse(relatedPayment.amountOfPayment, BigDecimal.ZERO));
+                    }
+                    return new UsedPaymentAmounts(usedAmount, usedAmountOfPayment);
+                });
+                paymentInfo.usedAmount = usedAmounts.usedAmount;
+                paymentInfo.usedAmountOfPayment = usedAmounts.usedAmountOfPayment;
+            } else {
+                payment = new Payment();
+                payment.amount = withdrawal.amountPaid;
+                payment.currencyId = withdrawal.currency.id;
+                payment.createTime = Instant.now();
+                payment.paymentLinkType = PaymentLinkType.REQUIREMENT;
+                payment.paymentResult = PaymentResult.PAID;
+                payment.reference = withdrawal.reference;
+                payment.withdrawalTypeId = withdrawal.withdrawalType.id;
+                payment.persist();
+                journal.createdPayments.add(payment.id);
+                paymentLookupCache.put(paymentLookupKey, payment);
+
+                paymentInfo.payment = paymentMapper.toDto(payment);
+                paymentInfo.isNewPayment = false;
+                paymentInfo.usedAmount = BigDecimal.ZERO;
+                paymentInfo.usedAmountOfPayment = BigDecimal.ZERO;
+            }
+            payments.add(paymentInfo);
+        }
+
+        Set<Long> requirementsForUpdate = new HashSet<>();
+        for (int p = 0, r = 0; p < payments.size() && r < sortedRequirements.size(); ) {
+            PaymentInfoExtendedDto paymentInfo = payments.get(p);
+            PaymentDTO currentPayment = paymentInfo.payment;
+            Requirement currentRequirement = sortedRequirements.get(r);
+
+            BigDecimal availableInPaymentCurrency = currentPayment.amount.subtract(paymentInfo.usedAmountOfPayment);
+            BigDecimal availableInRequirementCurrency = paymentInfo.amount.subtract(paymentInfo.usedAmount);
+
+            if (currentRequirement.unpaidAmount.compareTo(BigDecimal.ZERO) == 0) {
+                r += 1;
+            } else if (availableInRequirementCurrency.compareTo(BigDecimal.ZERO) == 0) {
+                p += 1;
+            } else if (availableInRequirementCurrency.compareTo(currentRequirement.unpaidAmount) <= 0) {
+                RelatedPayment relatedPayment = createRelatedPayment(
+                    availableInRequirementCurrency,
+                    availableInPaymentCurrency,
+                    currentRequirement.id,
+                    currentPayment.id
+                );
+                relatedPayment.persist();
+                journal.createdRelatedPayments.add(relatedPayment.id);
+
+                p += 1;
+                if (availableInRequirementCurrency.compareTo(currentRequirement.unpaidAmount) == 0) {
+                    r += 1;
+                }
+                currentRequirement.paidAmount = currentRequirement.paidAmount.add(availableInRequirementCurrency);
+                currentRequirement.unpaidAmount = currentRequirement.unpaidAmount.subtract(availableInRequirementCurrency);
+                paymentInfo.usedAmount = paymentInfo.usedAmount.add(availableInRequirementCurrency);
+                paymentInfo.usedAmountOfPayment = paymentInfo.usedAmountOfPayment.add(availableInPaymentCurrency);
+                requirementsForUpdate.add(currentRequirement.id);
+                response.currentTransactionAmounts.merge(currentRequirement.id, availableInRequirementCurrency, BigDecimal::add);
+            } else if (paymentInfo.amount.compareTo(currentRequirement.unpaidAmount) > 0) {
+                BigDecimal requirementUnpaidAmount = currentRequirement.unpaidAmount;
+                BigDecimal amountOfPayment;
+                if (currentPayment.currencyId.equals(currentRequirement.currencyId)) {
+                    amountOfPayment = requirementUnpaidAmount;
+                } else {
+                    BigDecimal rateValue = currentPayment.amount.divide(paymentInfo.amount, 10, RoundingMode.HALF_UP);
+                    amountOfPayment = requirementUnpaidAmount.multiply(rateValue).setScale(2, RoundingMode.HALF_UP);
+                }
+
+                RelatedPayment relatedPayment = createRelatedPayment(
+                    requirementUnpaidAmount,
+                    amountOfPayment,
+                    currentRequirement.id,
+                    currentPayment.id
+                );
+                relatedPayment.persist();
+                journal.createdRelatedPayments.add(relatedPayment.id);
+
+                paymentInfo.usedAmount = paymentInfo.usedAmount.add(requirementUnpaidAmount);
+                paymentInfo.usedAmountOfPayment = paymentInfo.usedAmountOfPayment.add(amountOfPayment);
+                r += 1;
+                currentRequirement.paidAmount = currentRequirement.paidAmount.add(requirementUnpaidAmount);
+                currentRequirement.unpaidAmount = BigDecimal.ZERO;
+                requirementsForUpdate.add(currentRequirement.id);
+                response.currentTransactionAmounts.merge(currentRequirement.id, amountOfPayment, BigDecimal::add);
+            }
+        }
+
+        for (PaymentInfoExtendedDto payment : payments) {
+            PaymentInfoDto paymentInfoDto = new PaymentInfoDto();
+            paymentInfoDto.payment = payment.payment;
+            paymentInfoDto.usedAmountOfPayment = payment.usedAmountOfPayment;
+            paymentInfoDto.usedAmount = payment.usedAmount;
+            paymentInfoDto.isNewPayment = payment.isNewPayment;
+            response.paymentsInfo.add(paymentInfoDto);
+        }
+
+        response.journal = journal;
+        for (Requirement requirement : sortedRequirements) {
+            if (requirementsForUpdate.contains(requirement.id)) {
+                processRequirementUpdateWithoutBbpUpdate(requirement, true, false);
+            }
+            response.requirements.add(requirementMapper.toDto(requirement));
+        }
+        log.infof(
+            "registrationOfPaymentForDistribution response: requirements=%s, paymentsInfo=%s, createdPayments=%s, createdRelatedPayments=%s",
+            response.requirements.size(), response.paymentsInfo.size(),
+            journal.createdPayments.size(), journal.createdRelatedPayments.size());
+        return response;
+    }
+
+
     // формируем связанный платеж
     private RelatedPayment createRelatedPayment(BigDecimal amount, BigDecimal amountOfPayment, Long requirementId, Long paymentId) {
         RelatedPayment relatedPayment = new RelatedPayment();
@@ -1230,6 +1397,51 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
                 refundingPayment.amount = refundJournal.refundingPaymentAmount;
                 refundingPayment.update();
             }
+        }
+    }
+
+
+    private static final class PaymentLookupKey {
+        private final String reference;
+        private final Long currencyId;
+        private final BigDecimal amount;
+        private final Long withdrawalTypeId;
+
+        private PaymentLookupKey(WithdrawalResultDto withdrawal) {
+            this.reference = withdrawal.reference;
+            this.currencyId = withdrawal.currency.id;
+            this.amount = withdrawal.amountPaid;
+            this.withdrawalTypeId = withdrawal.withdrawalType.id;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) {
+                return true;
+            }
+            if (!(object instanceof PaymentLookupKey)) {
+                return false;
+            }
+            PaymentLookupKey that = (PaymentLookupKey) object;
+            return Objects.equals(reference, that.reference)
+                && Objects.equals(currencyId, that.currencyId)
+                && Objects.equals(amount, that.amount)
+                && Objects.equals(withdrawalTypeId, that.withdrawalTypeId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(reference, currencyId, amount, withdrawalTypeId);
+        }
+    }
+
+    private static final class UsedPaymentAmounts {
+        private final BigDecimal usedAmount;
+        private final BigDecimal usedAmountOfPayment;
+
+        private UsedPaymentAmounts(BigDecimal usedAmount, BigDecimal usedAmountOfPayment) {
+            this.usedAmount = usedAmount;
+            this.usedAmountOfPayment = usedAmountOfPayment;
         }
     }
 
