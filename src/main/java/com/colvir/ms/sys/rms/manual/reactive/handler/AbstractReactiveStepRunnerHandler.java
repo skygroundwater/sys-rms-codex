@@ -24,16 +24,32 @@ public abstract class AbstractReactiveStepRunnerHandler<P, J extends JournalDto,
         this.log = log;
     }
 
-    public final Uni<ProcessStageResponse<J, R>> handle(StepMethod.RequestItem.Request<P, J> request) {
+    public final ProcessStageResponse<J, R> handle(StepMethod.RequestItem.Request<P, J> request) {
+        return handleReactive(request).await().indefinitely();
+    }
+
+    public final CompensateStageResponse<J> compensate(StepMethod.RequestItem.Request<P, J> request) {
+        return compensateReactive(request).await().indefinitely();
+    }
+
+    public final CompensateStageResponse<J> undoHandle(StepMethod.RequestItem.Request<P, J> request) {
+        return compensate(request);
+    }
+
+    public final Uni<ProcessStageResponse<J, R>> handleReactive(StepMethod.RequestItem.Request<P, J> request) {
         return Uni.createFrom()
             .deferred(() -> QuarkusTransaction.joiningExisting()
                 .call(() -> handleInTransaction(request)));
     }
 
-    public final Uni<CompensateStageResponse<J>> undoHandle(StepMethod.RequestItem.Request<P, J> request) {
+    public final Uni<CompensateStageResponse<J>> compensateReactive(StepMethod.RequestItem.Request<P, J> request) {
         return Uni.createFrom()
             .deferred(() -> QuarkusTransaction.joiningExisting()
-                .call(() -> undoHandleInTransaction(request)));
+                .call(() -> compensateInTransaction(request)));
+    }
+
+    public final Uni<CompensateStageResponse<J>> undoHandleReactive(StepMethod.RequestItem.Request<P, J> request) {
+        return compensateReactive(request);
     }
 
     private Uni<ProcessStageResponse<J, R>> handleInTransaction(StepMethod.RequestItem.Request<P, J> request) {
@@ -68,7 +84,7 @@ public abstract class AbstractReactiveStepRunnerHandler<P, J extends JournalDto,
             .build());
     }
 
-    private Uni<CompensateStageResponse<J>> undoHandleInTransaction(StepMethod.RequestItem.Request<P, J> request) {
+    private Uni<CompensateStageResponse<J>> compensateInTransaction(StepMethod.RequestItem.Request<P, J> request) {
         P properties = request.getProperties();
         J journal = request.getJournal();
         log.infof("%s compensate process properties: %s, journal: %s", stepRunnerName, properties, journal);
