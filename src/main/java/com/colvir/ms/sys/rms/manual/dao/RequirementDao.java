@@ -29,4 +29,6 @@ public interface RequirementDao {
     Requirement findOverdueByRequirementIdAndBusinessDate(Long requirementId, LocalDate businessDate);
 
     void refresh(Requirement requirement);
+
+    void bulkInsert(List<Requirement> requirements);
 }

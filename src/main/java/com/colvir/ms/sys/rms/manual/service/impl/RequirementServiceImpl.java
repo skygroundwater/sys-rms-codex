@@ -20,6 +20,8 @@ import com.colvir.ms.sys.rms.generated.domain.RefundingPayment;
 import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
+import com.colvir.ms.sys.rms.generated.service.dto.RequirementTypeDTO;
+import com.colvir.ms.sys.rms.generated.service.mapper.RequirementTypeMapper;
 import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.colvir.ms.sys.rms.manual.dao.PaymentDao;
 import com.colvir.ms.sys.rms.manual.dao.RefundingPaymentDao;
@@ -27,6 +29,7 @@ import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementRouterService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
+import com.colvir.ms.sys.rms.manual.service.RequirementTypeService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
 import com.colvir.ms.sys.rms.manual.util.RequirementMapperUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -68,7 +71,16 @@ public class RequirementServiceImpl implements RequirementService {
     RefundingPaymentDao refundingPaymentDao;
 
     @Inject
+    RequirementTypeService requirementTypeService;
+
+    @Inject
     RequirementRouterService requirementRouterService;
+
+    @Inject
+    SystemParameterService systemParameterService;
+
+    @Inject
+    RequirementTypeMapper requirementTypeMapper;
 
     public static final DateTimeFormatter LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern(Constants.LOCAL_DATE_FORMAT);
 
@@ -89,19 +101,30 @@ public class RequirementServiceImpl implements RequirementService {
                 paymentData.size()
             ));
         }
+        List<Requirement> builtRequirements = new ArrayList<>(paymentData.size());
         List<RequirementStateInfoDto> result = new ArrayList<>(paymentData.size());
+
+        Long systemLocale = systemParameterService.getSystemLocale(RmsConstants.SYSTEM_LOCALE_PARAM);
 
         for (int i = 0; i < paymentData.size(); i++) {
             RequirementStateInfoDto payment = paymentData.get(i);
-            Requirement requirement = buildRequirement(payment, initialBbpStates.get(i), request);
-            Requirement.persist(requirement);
-            result.add(RequirementMapperUtils.mapRequirementStateInfoDto(payment, requirement.id, RequirementAction.SAVE, RequirementStatus.WAIT));
+            Requirement requirement = buildRequirement(payment, initialBbpStates.get(i), request, systemLocale);
+            builtRequirements.add(requirement);
+
+            result.add(RequirementMapperUtils.mapRequirementStateInfoDto(
+                payment,
+                requirement.id,
+                RequirementAction.SAVE,
+                RequirementStatus.WAIT
+            ));
         }
+
+        requirementDao.bulkInsert(builtRequirements);
 
         return result;
     }
 
-    private Requirement buildRequirement(RequirementStateInfoDto paymentData, String initialBbpState, BuildRequirementsDto request) {
+    private Requirement buildRequirement(RequirementStateInfoDto paymentData, String initialBbpState, BuildRequirementsDto request, Long systemLocale) {
         Requirement requirement = new Requirement();
 
         requirement.id = paymentData.requirementId;
@@ -118,8 +141,10 @@ public class RequirementServiceImpl implements RequirementService {
         requirement.paymentEndDate = request.getBusinessDate();
         requirement.isContractBound = true;
         requirement.baseDocument = request.getContract().toString();
-        requirement.priority = calculatePriority(paymentData);
         fillBbpState(requirement, initialBbpState);
+        RequirementTypeDTO requirementTypeDTO = requirementTypeService.getRequirementType(paymentData.indicator.indicatorDescr, systemLocale);
+        requirement.priority = calculatePriority(paymentData, requirementTypeDTO);
+        requirement.requirementType = requirementTypeMapper.toEntity(requirementTypeDTO);
 
         return requirement;
     }
@@ -146,13 +171,13 @@ public class RequirementServiceImpl implements RequirementService {
         }
     }
 
-    private BigDecimal calculatePriority(RequirementStateInfoDto paymentData) {
+    private BigDecimal calculatePriority(RequirementStateInfoDto paymentData, RequirementTypeDTO requirementTypeDTO) {
         // ВАЖНО: здесь нужен тот же source, из которого раньше брался RequirementTypeDTO.
         // Если requirementType уже есть в paymentData — лучше брать оттуда.
         BigDecimal integerPriority = BigDecimal.ZERO;
 
         BigDecimal decimalPriority = new BigDecimal(paymentData.priority)
-            .divide(new BigDecimal("100"), 2, RoundingMode.UP);
+            .divide(new BigDecimal("100"), 2, RoundingMode.UP).add(BigDecimal.valueOf(requirementTypeDTO.priority));
 
         return integerPriority.add(decimalPriority);
     }

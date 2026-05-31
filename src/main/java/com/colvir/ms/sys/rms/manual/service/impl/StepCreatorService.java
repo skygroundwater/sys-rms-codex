@@ -5,6 +5,7 @@ import com.colvir.ms.sys.opr.api.step.runner.method.response.SubstepParameter;
 import com.colvir.ms.sys.rms.dto.BbpObjectProperties;
 import com.colvir.ms.sys.rms.dto.RequirementJournalDto;
 import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
+import com.colvir.ms.sys.rms.dto.StartBbpRunnerProperties;
 import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.BaseProcessService;
@@ -59,6 +60,19 @@ public class StepCreatorService {
         parameters.put("objectResult", SubstepParameter.value(true));
 
         return createSubStep(StepsNames.SYS_BP_BBP_START, parameters, SYS_BP_BBP_DP);
+    }
+
+    public Substep createSysBbpBatchStartSubStep(
+        String resultField,
+        Map<String, StartBbpRunnerProperties> startDataProperties
+    ) {
+        Map<String, SubstepParameter> parameters = new HashMap<>();
+
+        parameters.put("startBatchResult", SubstepParameter.result(resultField));
+        parameters.put("machineId", SubstepParameter.value(requirementsMachineId));
+        parameters.put("startDataProperties", SubstepParameter.value(startDataProperties));
+
+        return createSubStep(StepsNames.SYS_BP_BBP_BATCH_START, parameters, SYS_BP_BBP_DP);
     }
 
     private BbpObjectProperties buildObjectProperties(Pair<RequirementJournalDto, RequirementStateInfoDto> pair) {

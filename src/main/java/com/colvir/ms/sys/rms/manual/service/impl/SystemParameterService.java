@@ -32,7 +32,11 @@ public class SystemParameterService {
 
     @CacheResult(cacheName = "systemLocale")
     public Long getSystemLocale(final String parameterCode) {
+        try {
         return Long.valueOf(getStringValue(parameterCode));
+        } catch (RuntimeException re) {
+            return Long.valueOf("3301");
+        }
     }
 
     @CacheResult(cacheName = "holdTypeForRequirement")

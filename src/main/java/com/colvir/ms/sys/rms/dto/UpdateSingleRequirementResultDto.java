@@ -10,7 +10,7 @@ public class UpdateSingleRequirementResultDto {
 
     @Override
     public String toString() {
-        return "UpdateSingleRequirementJournalDto{" +
+        return "UpdateSingleRequirementResultDto{" +
             "requirement=" + requirement +
             '}';
     }

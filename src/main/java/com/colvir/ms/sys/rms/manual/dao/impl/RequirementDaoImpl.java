@@ -6,8 +6,12 @@ import com.colvir.ms.sys.rms.manual.dao.RequirementDao;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.hibernate.Session;
 
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -120,5 +124,107 @@ public class RequirementDaoImpl implements RequirementDao {
     @Override
     public void refresh(Requirement requirement) {
         entityManager.refresh(requirement);
+    }
+
+    @Override
+    public void bulkInsert(List<Requirement> requirements) {
+        if (requirements == null || requirements.isEmpty()) {
+            return;
+        }
+
+        Session session = entityManager.unwrap(Session.class);
+
+        session.doWork(connection -> {
+            try (PreparedStatement ps = connection.prepareStatement("""
+            insert into requirement (
+                id,
+                state,
+                amount,
+                unpaid_amount,
+                paid_amount,
+                write_off_amount,
+                currency_id,
+                client_id,
+                indicator_id,
+                date,
+                start_payment_date,
+                payment_end_date,
+                is_contract_bound,
+                base_document,
+                bbp_state_000_state_code,
+                bbp_state_000_process_id,
+                bbp_state_000_journal_id,
+                priority,
+                requirement_type_id
+            ) values (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )
+            """)) {
+
+                for (Requirement r : requirements) {
+                    int i = 1;
+
+                    ps.setLong(i++, r.id);
+
+                    if (r.state != null) {
+                        ps.setString(i++, r.state.name());
+                    } else {
+                        ps.setNull(i++, Types.VARCHAR);
+                    }
+
+                    ps.setBigDecimal(i++, r.amount);
+                    ps.setBigDecimal(i++, r.unpaidAmount);
+                    ps.setBigDecimal(i++, r.paidAmount);
+                    ps.setBigDecimal(i++, r.writeOffAmount);
+
+                    setLongOrNull(ps, i++, r.currencyId);
+                    setLongOrNull(ps, i++, r.clientId);
+                    setLongOrNull(ps, i++, r.indicatorId);
+
+                    setLocalDateOrNull(ps, i++, r.date);
+                    setLocalDateOrNull(ps, i++, r.startPaymentDate);
+                    setLocalDateOrNull(ps, i++, r.paymentEndDate);
+
+                    if (r.isContractBound != null) {
+                        ps.setBoolean(i++, r.isContractBound);
+                    } else {
+                        ps.setNull(i++, Types.BOOLEAN);
+                    }
+
+                    ps.setString(i++, r.baseDocument);
+                    ps.setString(i++, r.bbpState000StateCode);
+                    ps.setString(i++, r.bbpState000ProcessId);
+                    ps.setString(i++, r.bbpState000JournalId);
+
+                    ps.setBigDecimal(i++, r.priority);
+
+                    if (r.requirementType != null && r.requirementType.id != null) {
+                        ps.setLong(i++, r.requirementType.id);
+                    } else {
+                        ps.setNull(i++, Types.BIGINT);
+                    }
+
+                    ps.addBatch();
+                }
+
+                ps.executeBatch();
+            }
+        });
+    }
+
+    private static void setLongOrNull(PreparedStatement ps, int index, Long value) throws java.sql.SQLException {
+        if (value != null) {
+            ps.setLong(index, value);
+        } else {
+            ps.setNull(index, Types.BIGINT);
+        }
+    }
+
+    private static void setLocalDateOrNull(PreparedStatement ps, int index, LocalDate value) throws java.sql.SQLException {
+        if (value != null) {
+            ps.setDate(index, Date.valueOf(value));
+        } else {
+            ps.setNull(index, Types.DATE);
+        }
     }
 }

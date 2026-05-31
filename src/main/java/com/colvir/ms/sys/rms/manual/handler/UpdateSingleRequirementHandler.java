@@ -111,6 +111,8 @@ public class UpdateSingleRequirementHandler extends AbstractStepRunnerHandler<Up
                     requirement.state = newRequirementState.status;
                 }
                 requirement.unpaidAmount = unpaidAmount;
+            } else {
+                requirement.state = newRequirementState.status;
             }
 
             requirement.indicatorId = newRequirementState.indicator.id;

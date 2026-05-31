@@ -15,13 +15,12 @@ import com.colvir.ms.sys.rms.generated.domain.Requirement;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementAction;
 import com.colvir.ms.sys.rms.generated.domain.enumeration.RequirementStatus;
 import com.colvir.ms.sys.rms.generated.service.dto.RequirementDTO;
+import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.colvir.ms.sys.rms.manual.service.RequirementPaymentService;
 import com.colvir.ms.sys.rms.manual.service.RequirementService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
 import com.colvir.ms.sys.rms.manual.util.ContextObjectMapper;
-import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Functions;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.antlr.v4.runtime.misc.Pair;
@@ -30,9 +29,12 @@ import org.jboss.logging.Logger;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.colvir.ms.sys.rms.manual.constant.RmsConstants.SYS_RMS_REQUIREMENT_NAMESPACE;
@@ -57,42 +59,40 @@ public class DistributePaidAmountsHandler extends AbstractStepRunnerHandler<Dist
     }
 
     @Override
-    public void validateProperties(DistributePaidAmountsDto properties) {
-        // что делать с требованием = сохранить
-        List<RequirementStateInfoDto> incorrectRequirementData = properties.requirements.stream()
-            .filter(r -> !RequirementAction.SAVE.equals(r.action) || r.requirementId == null)
-            .toList();
-        if (!incorrectRequirementData.isEmpty()) {
-            throw new RuntimeException(String.format("Incorrect Requirements: %s", incorrectRequirementData));
-        }
-        // общая сумма по атрибуту "оплаченная сумма" из массива "исполненные платежи"
-        // должна быть меньше или равна общей сумме по атрибуту "сумма к оплате" из массива "измененные требования по договору"
-        // WithdrawalResultDto.amount - сумма в валюте договора/требования
-        BigDecimal paymentsTotalAmount = properties.payments.stream()
-            .map(p -> p.amount)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // все требования создаются в одной валюте (по крайней мере, сейчас это так)
-        BigDecimal requirementsTotalAmount = properties.requirements.stream()
-            .map(r -> r.amount)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        log.infof("paymentsTotalAmount = %s", paymentsTotalAmount);
-        log.infof("requirementsTotalAmount = %s", requirementsTotalAmount);
-
-        if (paymentsTotalAmount.compareTo(requirementsTotalAmount) > 0) {
-            throw new RuntimeException(String.format("Total amount by payments (%s) is more than requirements total amount (%s)",
-                paymentsTotalAmount, requirementsTotalAmount));
-        }
-    }
-
-    @Override
     public AggregationResult<DistributePaidAmountsDto, DistributePaidAmountsJournalDto, DistributePaidAmountsResultDto> process(StepMethod.RequestItem.Request<DistributePaidAmountsDto, DistributePaidAmountsJournalDto> request) {
         DistributePaidAmountsResultDto result = new DistributePaidAmountsResultDto();
         DistributePaidAmountsJournalDto journal = request.getJournal();
         DistributePaidAmountsDto properties = request.getProperties();
 
         if (journal.isFirstRun) {
+
+            // что делать с требованием = сохранить
+            BigDecimal requirementsTotalAmount = BigDecimal.ZERO;
+            Set<Long> requirementIds = new HashSet<>(properties.requirements.size());
+            for (RequirementStateInfoDto requirement : properties.requirements) {
+                if (!RequirementAction.SAVE.equals(requirement.action) || requirement.requirementId == null) {
+                    throw new RuntimeException(String.format("Incorrect Requirement: %s", requirement));
+                }
+                requirementIds.add(requirement.requirementId);
+                requirementsTotalAmount = requirementsTotalAmount.add(Objects.requireNonNullElse(requirement.amount, BigDecimal.ZERO));
+            }
+
+            // общая сумма по атрибуту "оплаченная сумма" из массива "исполненные платежи"
+            // должна быть меньше или равна общей сумме по атрибуту "сумма к оплате" из массива "измененные требования по договору"
+            // WithdrawalResultDto.amount - сумма в валюте договора/требования
+            BigDecimal paymentsTotalAmount = BigDecimal.ZERO;
+            for (var payment : properties.payments) {
+                paymentsTotalAmount = paymentsTotalAmount.add(Objects.requireNonNullElse(payment.amount, BigDecimal.ZERO));
+            }
+
+            log.infof("paymentsTotalAmount = %s", paymentsTotalAmount);
+            log.infof("requirementsTotalAmount = %s", requirementsTotalAmount);
+
+            if (paymentsTotalAmount.compareTo(requirementsTotalAmount) > 0) {
+                throw new RuntimeException(String.format("Total amount by payments (%s) is more than requirements total amount (%s)",
+                    paymentsTotalAmount, requirementsTotalAmount));
+            }
+
             journal.isFirstRun = false;
             // метод является частью общего метода "Изменение требований по договору"
             if (properties.requirements == null || properties.requirements.isEmpty()) {
@@ -107,17 +107,25 @@ public class DistributePaidAmountsHandler extends AbstractStepRunnerHandler<Dist
             // регистрируем оплату (распределяем суммы платежей, меняем статус ББП)
             RegistrationOfPaymentDto registrationRequest = new RegistrationOfPaymentDto();
             registrationRequest.payments = properties.payments;
+            List<Requirement> sortedRequirements = requirementService.getRequirementsByIds(requirementIds)
+                .stream()
+                .sorted(Comparator
+                    .comparing((Requirement r) -> r.priority)
+                    .thenComparing((Requirement r) -> r.startPaymentDate)
+                )
+                .toList();
+            if (sortedRequirements.size() != requirementIds.size()) {
+                throw new RuntimeException(String.format("Some requirements were not found or marked as deleted: %s", requirementIds));
+            }
             registrationRequest.requirements.addAll(
-                properties.requirements.stream()
-                    .map(r -> requirementService.getRequirementById(r.requirementId))
-                    .sorted(Comparator
-                        .comparing((Requirement r) -> r.priority)
-                        .thenComparing((Requirement r) -> r.startPaymentDate)
-                    )
+                sortedRequirements.stream()
                     .map((Requirement r) -> new ReferenceDto(r.id, SYS_RMS_REQUIREMENT_NAMESPACE))
                     .toList()
             );
-            RegistrationOfPaymentResponse registrationResponse = paymentService.registrationOfPayment(registrationRequest);
+            RegistrationOfPaymentResponse registrationResponse = paymentService.registrationOfPaymentForDistribution(
+                registrationRequest,
+                sortedRequirements
+            );
             // заполняем журнал
             journal.createdPayments.addAll(registrationResponse.journal.createdPayments);
             journal.createdRelatedPayments.addAll(registrationResponse.journal.createdRelatedPayments);
@@ -125,7 +133,7 @@ public class DistributePaidAmountsHandler extends AbstractStepRunnerHandler<Dist
                 .stream().collect(Collectors.toMap(reqJournal -> reqJournal.id, requirementJournalDto -> requirementJournalDto));
 
             Map<Long, RequirementDTO> updatedRequirementsMap = registrationResponse.requirements.stream()
-                .collect(Collectors.toMap(r -> r.id, Functions.identity()));
+                .collect(Collectors.toMap(r -> r.id, Function.identity()));
 
             // копируем весь массив информации о требованиях в результат
             properties.requirements.forEach(r -> {

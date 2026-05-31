@@ -27,5 +27,6 @@ public final class StepsNames {
 
     public static final String SYS_RMS_BUILD_REQUIREMENTS = "rms-build-requirements";
     public static final String SYS_BP_BBP_START = "start";
+    public static final String SYS_BP_BBP_BATCH_START = "start-batch";
 
 }

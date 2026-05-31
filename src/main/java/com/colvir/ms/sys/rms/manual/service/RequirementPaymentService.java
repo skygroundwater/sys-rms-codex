@@ -21,6 +21,9 @@ public interface RequirementPaymentService {
 
     RegistrationOfPaymentResponse registrationOfPayment (RegistrationOfPaymentDto request);
 
+    RegistrationOfPaymentResponse registrationOfPaymentForDistribution(RegistrationOfPaymentDto request,
+                                                                         List<Requirement> sortedRequirements);
+
     RefundResponse refundOfPayment (RefundOfRequirementsDto request);
 
     RefundResponse refundOfPayment (RefundOfPaymentDto request);
