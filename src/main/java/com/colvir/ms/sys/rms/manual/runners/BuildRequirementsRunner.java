@@ -8,7 +8,7 @@ import com.colvir.ms.sys.opr.api.step.runner.method.response.ProcessStageRespons
 import com.colvir.ms.sys.rms.dto.BuildRequirementsDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsJournalDto;
 import com.colvir.ms.sys.rms.dto.BuildRequirementsResultDto;
-import com.colvir.ms.sys.rms.manual.handler.BuildRequirementsHandler;
+import com.colvir.ms.sys.rms.manual.reactive.handler.BuildRequirementsReactiveHandler;
 import com.colvir.ms.sys.rms.manual.constant.StepsNames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -18,15 +18,15 @@ import jakarta.inject.Inject;
 public class BuildRequirementsRunner implements StepRunner<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> {
 
     @Inject
-    BuildRequirementsHandler buildRequirementsHandler;
+    BuildRequirementsReactiveHandler buildRequirementsReactiveHandler;
 
     @Override
     public ProcessStageResponse<BuildRequirementsJournalDto, BuildRequirementsResultDto> process(RequestItem.Request<BuildRequirementsDto, BuildRequirementsJournalDto> request) {
-        return buildRequirementsHandler.handle(request);
+        return buildRequirementsReactiveHandler.handle(request);
     }
 
     @Override
     public CompensateStageResponse<BuildRequirementsJournalDto> compensate(RequestItem.Request<BuildRequirementsDto, BuildRequirementsJournalDto> request) {
-        return buildRequirementsHandler.undoHandle(request);
+        return buildRequirementsReactiveHandler.compensate(request);
     }
 }

@@ -6,15 +6,16 @@
     <parent>
         <groupId>com.colvir.ms</groupId>
         <artifactId>colvirv4-parent-bom</artifactId>
-        <version>3.1.983</version>
+        <version>3.2.62</version>
         <relativePath />
     </parent>
 
     <artifactId>sysrms</artifactId>
-    <version>3.0.31</version>
+    <version>3.1.31</version>
     <packaging>jar</packaging>
 
     <properties>
+        <lombok.version>1.18.46</lombok.version>
         <!-- Build properties -->
         <!-- Dependency properties -->
         <!-- Plugin versions -->
@@ -110,6 +111,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>
             <scope>test</scope>
@@ -162,6 +169,10 @@
         <dependency>
             <groupId>com.colvir.ms</groupId>
             <artifactId>common-alg-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.colvir.ms</groupId>
+            <artifactId>common-alg-extension-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.colvir.ms</groupId>
@@ -237,6 +248,25 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.hibernate.orm</groupId>
+                            <artifactId>hibernate-jpamodelgen</artifactId>
+                            <version>${hibernate-jpamodelgen.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
