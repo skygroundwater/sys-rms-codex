@@ -1,6 +1,9 @@
 package com.colvir.ms.sys.rms.dto;
 
 import com.colvir.ms.sys.opr.api.step.runner.method.response.Substep;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +14,9 @@ import java.util.List;
  * @param <J> journal
  * @param <R> result
  */
+@Getter
+@Setter
+@ToString
 public class AggregationResult<P, J, R> {
 
     protected P properties;
@@ -33,47 +39,5 @@ public class AggregationResult<P, J, R> {
         this.journal = journal;
         this.subSteps = subSteps;
         this.result = result;
-    }
-
-    public P getProperties() {
-        return this.properties;
-    }
-
-    public J getJournal() {
-        return this.journal;
-    }
-
-    public R getResult() {
-        return this.result;
-    }
-
-    public void setProperties(P properties) {
-        this.properties = properties;
-    }
-
-    public void setJournal(J journal) {
-        this.journal = journal;
-    }
-
-    public void setResult(R result) {
-        this.result = result;
-    }
-
-    public void setSubSteps(List<Substep> subSteps) {
-        this.subSteps = subSteps;
-    }
-
-    public List<Substep> getSubSteps() {
-        return this.subSteps;
-    }
-
-    @Override
-    public String toString() {
-        return "AggregationResult{" +
-            "properties=" + properties +
-            ", journal=" + journal +
-            ", result=" + result +
-            ", subSteps=" + subSteps +
-            '}';
     }
 }

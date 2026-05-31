@@ -15,6 +15,7 @@
     <packaging>jar</packaging>
 
     <properties>
+        <lombok.version>1.18.46</lombok.version>
         <!-- Build properties -->
         <!-- Dependency properties -->
         <!-- Plugin versions -->
@@ -107,6 +108,12 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -237,6 +244,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessors>
+                        <annotationProcessor>lombok.launch.AnnotationProcessorHider$AnnotationProcessor</annotationProcessor>
+                        <annotationProcessor>org.mapstruct.ap.MappingProcessor</annotationProcessor>
+                    </annotationProcessors>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
