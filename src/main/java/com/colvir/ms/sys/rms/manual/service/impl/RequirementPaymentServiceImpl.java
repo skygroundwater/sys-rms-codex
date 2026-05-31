@@ -322,19 +322,9 @@ public class RequirementPaymentServiceImpl implements RequirementPaymentService 
     @Transactional
     public RegistrationOfPaymentResponse registrationOfPaymentForDistribution(RegistrationOfPaymentDto request,
                                                                                 List<Requirement> sortedRequirements) {
-        log.infof("registrationOfPaymentForDistribution: payments=%s, requirements=%s",
-            request == null || request.payments == null ? 0 : request.payments.size(),
-            sortedRequirements == null ? 0 : sortedRequirements.size());
 
         RegistrationOfPaymentResponse response = new RegistrationOfPaymentResponse();
         RegistrationOfPaymentJournalDto journal = new RegistrationOfPaymentJournalDto();
-
-        if (sortedRequirements == null || sortedRequirements.isEmpty()) {
-            throw new RuntimeException("Incorrect request: requirements data is empty");
-        }
-        if (request == null || request.payments == null || request.payments.isEmpty()) {
-            throw new RuntimeException("Incorrect request: payments data is empty");
-        }
 
         for (Requirement requirement : sortedRequirements) {
             if (requirement == null || requirement.id == null || Boolean.TRUE.equals(requirement.isDeleted)) {

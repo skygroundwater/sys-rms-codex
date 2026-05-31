@@ -59,45 +59,40 @@ public class DistributePaidAmountsHandler extends AbstractStepRunnerHandler<Dist
     }
 
     @Override
-    public void validateProperties(DistributePaidAmountsDto properties) {
-        // что делать с требованием = сохранить
-        RequirementStateInfoDto incorrectRequirementData = null;
-        BigDecimal requirementsTotalAmount = BigDecimal.ZERO;
-        for (RequirementStateInfoDto requirement : properties.requirements) {
-            if (incorrectRequirementData == null
-                && (!RequirementAction.SAVE.equals(requirement.action) || requirement.requirementId == null)) {
-                incorrectRequirementData = requirement;
-            }
-            requirementsTotalAmount = requirementsTotalAmount.add(Objects.requireNonNullElse(requirement.amount, BigDecimal.ZERO));
-        }
-        if (incorrectRequirementData != null) {
-            throw new RuntimeException(String.format("Incorrect Requirement: %s", incorrectRequirementData));
-        }
-
-        // общая сумма по атрибуту "оплаченная сумма" из массива "исполненные платежи"
-        // должна быть меньше или равна общей сумме по атрибуту "сумма к оплате" из массива "измененные требования по договору"
-        // WithdrawalResultDto.amount - сумма в валюте договора/требования
-        BigDecimal paymentsTotalAmount = BigDecimal.ZERO;
-        for (var payment : properties.payments) {
-            paymentsTotalAmount = paymentsTotalAmount.add(Objects.requireNonNullElse(payment.amount, BigDecimal.ZERO));
-        }
-
-        log.infof("paymentsTotalAmount = %s", paymentsTotalAmount);
-        log.infof("requirementsTotalAmount = %s", requirementsTotalAmount);
-
-        if (paymentsTotalAmount.compareTo(requirementsTotalAmount) > 0) {
-            throw new RuntimeException(String.format("Total amount by payments (%s) is more than requirements total amount (%s)",
-                paymentsTotalAmount, requirementsTotalAmount));
-        }
-    }
-
-    @Override
     public AggregationResult<DistributePaidAmountsDto, DistributePaidAmountsJournalDto, DistributePaidAmountsResultDto> process(StepMethod.RequestItem.Request<DistributePaidAmountsDto, DistributePaidAmountsJournalDto> request) {
         DistributePaidAmountsResultDto result = new DistributePaidAmountsResultDto();
         DistributePaidAmountsJournalDto journal = request.getJournal();
         DistributePaidAmountsDto properties = request.getProperties();
 
         if (journal.isFirstRun) {
+
+            // что делать с требованием = сохранить
+            BigDecimal requirementsTotalAmount = BigDecimal.ZERO;
+            Set<Long> requirementIds = new HashSet<>(properties.requirements.size());
+            for (RequirementStateInfoDto requirement : properties.requirements) {
+                if (!RequirementAction.SAVE.equals(requirement.action) || requirement.requirementId == null) {
+                    throw new RuntimeException(String.format("Incorrect Requirement: %s", requirement));
+                }
+                requirementIds.add(requirement.requirementId);
+                requirementsTotalAmount = requirementsTotalAmount.add(Objects.requireNonNullElse(requirement.amount, BigDecimal.ZERO));
+            }
+
+            // общая сумма по атрибуту "оплаченная сумма" из массива "исполненные платежи"
+            // должна быть меньше или равна общей сумме по атрибуту "сумма к оплате" из массива "измененные требования по договору"
+            // WithdrawalResultDto.amount - сумма в валюте договора/требования
+            BigDecimal paymentsTotalAmount = BigDecimal.ZERO;
+            for (var payment : properties.payments) {
+                paymentsTotalAmount = paymentsTotalAmount.add(Objects.requireNonNullElse(payment.amount, BigDecimal.ZERO));
+            }
+
+            log.infof("paymentsTotalAmount = %s", paymentsTotalAmount);
+            log.infof("requirementsTotalAmount = %s", requirementsTotalAmount);
+
+            if (paymentsTotalAmount.compareTo(requirementsTotalAmount) > 0) {
+                throw new RuntimeException(String.format("Total amount by payments (%s) is more than requirements total amount (%s)",
+                    paymentsTotalAmount, requirementsTotalAmount));
+            }
+
             journal.isFirstRun = false;
             // метод является частью общего метода "Изменение требований по договору"
             if (properties.requirements == null || properties.requirements.isEmpty()) {
@@ -112,10 +107,6 @@ public class DistributePaidAmountsHandler extends AbstractStepRunnerHandler<Dist
             // регистрируем оплату (распределяем суммы платежей, меняем статус ББП)
             RegistrationOfPaymentDto registrationRequest = new RegistrationOfPaymentDto();
             registrationRequest.payments = properties.payments;
-            Set<Long> requirementIds = new HashSet<>(properties.requirements.size());
-            for (RequirementStateInfoDto requirement : properties.requirements) {
-                requirementIds.add(requirement.requirementId);
-            }
             List<Requirement> sortedRequirements = requirementService.getRequirementsByIds(requirementIds)
                 .stream()
                 .sorted(Comparator
