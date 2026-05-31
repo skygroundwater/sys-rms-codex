@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.colvir.ms</groupId>
         <artifactId>colvirv4-parent-bom</artifactId>
-        <version>3.1.983</version>
+        <version>3.2.62</version>
         <relativePath />
     </parent>
 
     <artifactId>sysrms</artifactId>
-    <version>3.0.31</version>
+    <version>3.1.31</version>
     <packaging>jar</packaging>
 
     <properties>
