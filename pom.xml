@@ -172,6 +172,10 @@
         </dependency>
         <dependency>
             <groupId>com.colvir.ms</groupId>
+            <artifactId>common-alg-extension-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.colvir.ms</groupId>
             <artifactId>common-generator-id</artifactId>
         </dependency>
         <dependency>
@@ -247,13 +251,19 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
+                            <groupId>org.hibernate.orm</groupId>
+                            <artifactId>hibernate-jpamodelgen</artifactId>
+                            <version>${hibernate-jpamodelgen.version}</version>
                         </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
