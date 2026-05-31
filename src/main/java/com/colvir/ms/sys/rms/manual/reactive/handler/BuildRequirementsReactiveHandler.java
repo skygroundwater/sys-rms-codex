@@ -10,7 +10,7 @@ import com.colvir.ms.sys.rms.dto.RequirementStateInfoDto;
 import com.colvir.ms.sys.rms.dto.StartBbpRunnerProperties;
 import com.colvir.ms.sys.rms.manual.constant.RmsConstants;
 import com.colvir.ms.sys.rms.manual.constant.StepsNames;
-import com.colvir.ms.sys.rms.manual.service.RequirementService;
+import com.colvir.ms.sys.rms.manual.reactive.service.RequirementReactiveService;
 import com.colvir.ms.sys.rms.manual.service.impl.StepCreatorService;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.smallrye.mutiny.Uni;
@@ -24,28 +24,28 @@ import java.util.Optional;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-public class BuildRequirementsHandler extends AbstractReactiveStepRunnerHandler<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> {
+public class BuildRequirementsReactiveHandler extends AbstractReactiveStepRunnerHandler<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> {
 
-    RequirementService requirementService;
+    RequirementReactiveService requirementReactiveService;
 
     StepCreatorService stepCreatorService;
 
     @Inject
-    public BuildRequirementsHandler(RequirementService requirementService,
-                                    StepCreatorService stepCreatorService,
-                                    Logger log) {
+    public BuildRequirementsReactiveHandler(RequirementReactiveService requirementReactiveService,
+                                            StepCreatorService stepCreatorService,
+                                            Logger log) {
         super(StepsNames.SYS_RMS_BUILD_REQUIREMENTS, log);
-        this.requirementService = requirementService;
+        this.requirementReactiveService = requirementReactiveService;
         this.stepCreatorService = stepCreatorService;
     }
 
     @Override
     public Uni<AggregationResult<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto>> process(
         StepMethod.RequestItem.Request<BuildRequirementsDto, BuildRequirementsJournalDto> request) {
-        return Uni.createFrom().item(() -> processBuildRequirements(request));
+        return processBuildRequirements(request);
     }
 
-    private AggregationResult<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> processBuildRequirements(
+    private Uni<AggregationResult<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto>> processBuildRequirements(
         StepMethod.RequestItem.Request<BuildRequirementsDto, BuildRequirementsJournalDto> request) {
         BuildRequirementsJournalDto journal = request.getJournal();
         if (journal == null) {
@@ -59,7 +59,7 @@ public class BuildRequirementsHandler extends AbstractReactiveStepRunnerHandler<
 
         log.infof("rms-build-requirements process isFirstRun: %s properties:%n%s", isFirstRun, properties);
         if (properties.getPaymentData() == null || properties.getPaymentData().isEmpty()) {
-            return new AggregationResult<>(properties, journal, result);
+            return Uni.createFrom().item(new AggregationResult<>(properties, journal, result));
         }
 
         if (isFirstRun) {
@@ -69,28 +69,29 @@ public class BuildRequirementsHandler extends AbstractReactiveStepRunnerHandler<
         return createRequirementsAfterBatchStart(request, properties, journal, result);
     }
 
-    private AggregationResult<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> createBatchStartSubstep(
+    private Uni<AggregationResult<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto>> createBatchStartSubstep(
         BuildRequirementsDto properties,
         BuildRequirementsJournalDto journal) {
-        requirementService.checkBuildRequirements(properties);
+        return requirementReactiveService.checkBuildRequirements(properties)
+            .map(unused -> {
+                String batchResultField = RmsConstants.START_BASE_BUSINESS_PROCESS_STATE_FIELD_PREFIX;
 
-        String batchResultField = RmsConstants.START_BASE_BUSINESS_PROCESS_STATE_FIELD_PREFIX;
+                Map<String, StartBbpRunnerProperties> startDataProperties = new LinkedHashMap<>();
 
-        Map<String, StartBbpRunnerProperties> startDataProperties = new LinkedHashMap<>();
-
-        List<Substep> subSteps = new ArrayList<>();
-        for (RequirementStateInfoDto reqStateInfo : properties.getPaymentData()) {
-            if (reqStateInfo != null && reqStateInfo.requirementId != null) {
-                String requirementId = reqStateInfo.requirementId.toString();
-                startDataProperties.put(requirementId, new StartBbpRunnerProperties(null, null, null, null, true));
-                journal.getProcessStateIds().add(requirementId);
-            }
-        }
-        subSteps.add(stepCreatorService.createSysBbpBatchStartSubStep(batchResultField, startDataProperties));
-        return new AggregationResult<>(journal, subSteps);
+                List<Substep> subSteps = new ArrayList<>();
+                for (RequirementStateInfoDto reqStateInfo : properties.getPaymentData()) {
+                    if (reqStateInfo != null && reqStateInfo.requirementId != null) {
+                        String requirementId = reqStateInfo.requirementId.toString();
+                        startDataProperties.put(requirementId, new StartBbpRunnerProperties(null, null, null, null, true));
+                        journal.getProcessStateIds().add(requirementId);
+                    }
+                }
+                subSteps.add(stepCreatorService.createSysBbpBatchStartSubStep(batchResultField, startDataProperties));
+                return new AggregationResult<>(journal, subSteps);
+            });
     }
 
-    private AggregationResult<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto> createRequirementsAfterBatchStart(
+    private Uni<AggregationResult<BuildRequirementsDto, BuildRequirementsJournalDto, BuildRequirementsResultDto>> createRequirementsAfterBatchStart(
         StepMethod.RequestItem.Request<BuildRequirementsDto, BuildRequirementsJournalDto> request,
         BuildRequirementsDto properties,
         BuildRequirementsJournalDto journal,
@@ -109,22 +110,22 @@ public class BuildRequirementsHandler extends AbstractReactiveStepRunnerHandler<
             .map(JsonNode::toString)
             .toList();
 
-        List<RequirementStateInfoDto> requirements = requirementService.createRequirements(properties, initialBppStates);
-        result.getRequirements().addAll(requirements);
-        journal.getRequirementIdList().addAll(requirements.stream().map(req -> req.requirementId).toList());
-
-        return new AggregationResult<>(properties, journal, result);
+        return requirementReactiveService.createRequirements(properties, initialBppStates)
+            .map(requirements -> {
+                result.getRequirements().addAll(requirements);
+                journal.getRequirementIdList().addAll(requirements.stream().map(req -> req.requirementId).toList());
+                return new AggregationResult<>(properties, journal, result);
+            });
     }
 
     @Override
     public Uni<Void> undo(BuildRequirementsJournalDto journal) {
         return Uni.createFrom().voidItem()
-            .invoke(() -> {
-                log.infof("rms-build-requirements compensate:%n%s", journal);
-                Optional.ofNullable(journal)
-                    .map(BuildRequirementsJournalDto::getRequirementIdList)
-                    .filter(req -> !req.isEmpty())
-                    .ifPresent(requirementService::deleteRequirements);
-            });
+            .invoke(() -> log.infof("rms-build-requirements compensate:%n%s", journal))
+            .chain(() -> Optional.ofNullable(journal)
+                .map(BuildRequirementsJournalDto::getRequirementIdList)
+                .filter(req -> !req.isEmpty())
+                .map(requirementReactiveService::deleteRequirements)
+                .orElseGet(() -> Uni.createFrom().voidItem()));
     }
 }
